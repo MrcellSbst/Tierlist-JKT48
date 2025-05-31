@@ -444,6 +444,7 @@ const Tierlist = () => {
     const navigate = useNavigate();
     const tierlistRef = useRef(null);
     const tierRowsRef = useRef(null);
+    const [searchTerm, setSearchTerm] = useState('');
     const [rows, setRows] = useState(initialRows);
     const [images, setImages] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -1029,21 +1030,37 @@ const Tierlist = () => {
                                 </span>
                             )}
                         </h2>
+                         {/* Akan Aktif jika member/setlist lebih dari 50 */}
+                        {getImagesForContainer('image-pool').length > 50 && (
+                        <TextField
+                            variant="outlined"
+                            size="small"
+                            placeholder={`Search ${tierlistType === 'setlist' ? 'Setlists' : 'Members'}...`}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            sx={{ mb: 2, width: '100%' }}
+                        />
+                        )}
+
                         <Droppable id="image-pool">
                             <div className="image-pool">
                                 <SortableContext 
-                                    items={getImagesForContainer('image-pool').map(img => img.id)}
+                                    items={getImagesForContainer('image-pool')
+                                    .filter(img => img.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .map(img => img.id)}
                                     strategy={rectSortingStrategy}
                                 >
-                                    {getImagesForContainer('image-pool').map((image) => (
-                                        <SortableImage 
-                                            key={image.id} 
-                                            image={image}
-                                            isDragging={image.id === activeId}
-                                            onImageClick={handleImageClick}
-                                            onContextMenu={handleImageRightClick}
-                                            isSelected={selectedImage?.id === image.id}
-                                        />
+                                    {getImagesForContainer('image-pool')
+                                    .filter(img => img.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .map((image) => (
+                                    <SortableImage
+                                    key={image.id}
+                                    image={image}
+                                    isDragging={image.id === activeId}
+                                    onImageClick={handleImageClick}
+                                    onContextMenu={handleImageRightClick}
+                                    isSelected={selectedImage?.id === image.id}
+                                />
                                     ))}
                                 </SortableContext>
                             </div>
