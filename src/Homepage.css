@@ -95,17 +95,14 @@
 
 .start-button {
     width: 100%;
-    padding: 15px 20px;
+    padding: 12px;
     background-color: #be2016;
     color: white;
     border: none;
     border-radius: 5px;
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 16px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    transition: background-color 0.5s;
 }
 
 .start-button:disabled {
@@ -115,5 +112,4 @@
 
 .start-button:hover:not(:disabled) {
     background-color: #a11b13;
-    transform: scale(1.02);
 }
