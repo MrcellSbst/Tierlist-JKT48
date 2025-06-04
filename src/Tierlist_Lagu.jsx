@@ -36,7 +36,9 @@ import {
     Tooltip,
     Switch,
     FormControlLabel,
-    Typography
+    Typography,
+    InputAdornment,
+    Paper
 } from '@mui/material';
 import { 
     Settings, 
@@ -48,9 +50,11 @@ import {
     Refresh, 
     Save,
     Check,
-    ArrowBack
+    ArrowBack,
+    Search
 } from '@mui/icons-material';
 import domtoimage from 'dom-to-image-more';
+import { setlistSongs } from './data/setlistSongs';
 import './Tierlist.css';
 import './TierlistPage_Lagu.css';
 import logo from './assets/icon/TierlistIcon.png';
@@ -101,167 +105,13 @@ const initialRows = [
     { id: 'D', name: 'D Tier', color: '#7FFF7F' }
 ];
 
-<<<<<<< Updated upstream
-const activeMemberFiles = [
-    'Gen3_feni_fitriyanti.jpg', 'Gen3_shania_gracia.jpg',
-    'Gen6_gita_sekar_andarini.jpg',
-    'Gen7_angelina_christy.jpg', 'Gen7_febriola_sinambela.jpg',
-    'Gen7_freya_jayawardana.jpg', 'Gen7_helisma_putri.jpg',
-    'Gen7_jessica_chandra.jpg', 'Gen7_mutiara_azzahra.jpg',
-    'Gen8_cornelia_vanisa.jpg', 'Gen8_fiony_alveria.jpg',
-    'Gen8_lulu_salsabila.jpg',
-    'Gen9_indah_cahya.jpg', 'Gen9_kathrina_irene.jpg',
-    'Gen9_marsha_lenathea.jpg',
-    'Gen10_amanda_sukma.jpg', 'Gen10_aurellia.jpg',
-    'Gen10_gabriela_abigail.jpg', 'Gen10_indira_seruni.jpg',
-    'Gen10_jesslyn_elly.jpg', 'Gen10_raisha_syifa.jpg',
-    'Gen11_alya_amanda.jpg', 'Gen11_anindya_ramadhani.jpg',
-    'Gen11_cathleen_nixie.jpg', 'Gen11_celline_thefani.jpg',
-    'Gen11_chelsea_davina.jpg', 'Gen11_cynthia_yaputera.jpg',
-    'Gen11_dena_natalia.jpg', 'Gen11_desy_natalia.jpg',
-    'Gen11_gendis_mayrannisa.jpg', 'Gen11_grace_octaviani.jpg',
-    'Gen11_greesella_adhalia.jpg', 'Gen11_michelle_alexandra.jpg',
-    'Gen12_abigail_rachel.jpg', 'Gen12_adeline_wijaya.jpg',
-    'Gen12_aurhel_alana.jpg', 'Gen12_catherina_vallencia.jpg',
-    'Gen12_fritzy_rosmerian.jpg', 'Gen12_hillary_abigail.jpg',
-    'Gen12_jazzlyn_trisha.jpg', 'Gen12_michelle_levia.jpg',
-    'Gen12_nayla_suji.jpg', 'Gen12_nina_tutachia.jpg',
-    'Gen12_oline_manuel.jpg', 'Gen12_regina_wilian.jpg',
-    'Gen12_ribka_budiman.jpg', 'Gen12_shabilqis_naila.jpg',
-    'Gen12_victoria_kimberly.jpg',
-    'Gen13_Astrella_Virgiananda.jpg', 'Gen13_Aulia_Riza.jpg',
-    'Gen13_Bong_Aprilli.jpg', 'Gen13_Hagia_Sopia.jpg',
-    'Gen13_Humaira_Ramadhani.jpg', 'Gen13_Jacqueline_Immanuela.jpg',
-    'Gen13_Jemima_Evodie.jpg', 'Gen13_Mikaela_Kusjanto.jpg',
-    'Gen13_Nur_Intan.jpg', 'JKT48V_Gen1_Kanaia_Asa.webp', 'JKT48V_Gen1_Pia_Meraleo.webp', 'JKT48V_Gen1_Tana_Nona.webp',
-];
-
-const exMemberFiles = [
-    // Gen1 members
-    'Gen1/Gen1_aki_takajo.jpg', 'Gen1/Gen1_alissa_galliamova.webp', 'Gen1/Gen1_allisa_astri.webp',
-    'Gen1/Gen1_ayana_shahab.webp', 'Gen1/Gen1_beby_chaesara_anadila.webp', 'Gen1/Gen1_cindy_gulla.webp',
-    'Gen1/Gen1_cleopatra.webp', 'Gen1/Gen1_delima_rizky.webp', 'Gen1/Gen1_devi_kinal_putri.webp',
-    'Gen1/Gen1_diasta_priswarini.webp', 'Gen1/Gen1_fahira.webp', 'Gen1/Gen1_frieska_anastasia_laksani.webp',
-    'Gen1/Gen1_gabriella.jpg', 'Gen1/Gen1_ghaida_farisya.webp', 'Gen1/Gen1_haruka_nakagawa.jpg',
-    'Gen1/Gen1_intania_pratama_ilham.webp', 'Gen1/Gen1_jessica_vania.webp', 'Gen1/Gen1_jessica_veranda.jpg',
-    'Gen1/Gen1_melody_nurramdhani_laksani.webp', 'Gen1/Gen1_nabilah_ratna_ayu_azalia.jpg', 'Gen1/Gen1_neneng_rosediana.webp', 'Gen1/Gen1_nozawa_rena.webp',
-    'Gen1/Gen1_rezky_wiranti_dhike.webp', 'Gen1/Gen1_rica_leyona.webp', 'Gen1/Gen1_sendy_ariani.webp',
-    'Gen1/Gen1_shania_junianatha.webp', 'Gen1/Gen1_siti_gayatri.webp', 'Gen1/Gen1_sonia_natalia.webp',
-    'Gen1/Gen1_sonya_pandarmawan.webp', 'Gen1/Gen1_stella_cornelia.webp',
-    
-    // Gen2 members
-    'Gen2/Gen2_alicia_chanzia.webp', 'Gen2/Gen2_althea_callista.webp', 'Gen2/Gen2_annisa_athia.webp',
-    'Gen2/Gen2_chikano_rina.jpg', 'Gen2/Gen2_cindy_yuvia.webp', 'Gen2/Gen2_della_delila.webp',
-    'Gen2/Gen2_dellia_erdita.webp', 'Gen2/Gen2_dena_siti_rohyati.webp', 'Gen2/Gen2_dwi_putri_bonita.webp',
-    'Gen2/Gen2_fakhriyani_shafariyanti.webp', 'Gen2/Gen2_intar_putri_kariina.webp', 'Gen2/Gen2_jennifer_hanna.webp',
-    'Gen2/Gen2_jennifer_rachel_natasya.webp', 'Gen2/Gen2_lidya_maulida_djuhandar.webp', 'Gen2/Gen2_nadhifa_karimah.webp',
-    'Gen2/Gen2_nadila_cindi_wantari.webp', 'Gen2/Gen2_natalia.webp', 'Gen2/Gen2_noella_sisterina.webp',
-    'Gen2/Gen2_novinta_dhini.webp', 'Gen2/Gen2_nurhalima_oktavianti.webp', 'Gen2/Gen2_octi_sevpin.webp',
-    'Gen2/Gen2_olivia_robberecht.webp', 'Gen2/Gen2_priscillia_sari_dewi.webp', 'Gen2/Gen2_ratu_vienny_fitrilya.webp',
-    'Gen2/Gen2_riskha_fairunissa.webp', 'Gen2/Gen2_rona_anggreani.webp', 'Gen2/Gen2_saktia_oktapyani.webp',
-    'Gen2/Gen2_shinta_naomi.webp', 'Gen2/Gen2_sinka_juliani.webp', 'Gen2/Gen2_thalia.webp',
-    'Gen2/Gen2_thalia_ivanka_elizabeth.webp', 'Gen2/Gen2_viviyona_apriani.webp',
-    
-    // Gen3 members
-    'Gen3/Gen3_alycia_ferryana.webp', 'Gen3/Gen3_amanda_dwi_arista.webp', 'Gen3/Gen3_andela_yuwono.webp',
-    'Gen3/Gen3_anggie_putri_kurniasari.webp', 'Gen3/Gen3_aninditha_rahma_cahyadi.webp', 'Gen3/Gen3_ayu_safira_oktaviani.webp',
-    'Gen3/Gen3_chikita_ravenska_mamesah.webp', 'Gen3/Gen3_elaine_hartanto.webp', 'Gen3/Gen3_farina_yogi_devani.webp',
-    'Gen3/Gen3_fransisca_saraswati_puspa_dewi.webp', 'Gen3/Gen3_indah_permata_sari.webp', 'Gen3/Gen3_kezia_putri_andinta.webp',
-    'Gen3/Gen3_maria_genoveva_natalia_desy_purnamasari_gunawan.webp', 'Gen3/Gen3_martha_graciela.webp',
-    'Gen3/Gen3_michelle_christo_kusnadi.webp', 'Gen3/Gen3_milenia_christien_glory_goenawan.webp',
-    'Gen3/Gen3_nadhifa_salsabila.webp', 'Gen3/Gen3_nina_hamidah.webp', 'Gen3/Gen3_ni_made_ayu_vania_aurellia.webp',
-    'Gen3/Gen3_pipit_ananda.webp', 'Gen3/Gen3_putri_farin_kartika.webp', 'Gen3/Gen3_rizka_khalila.webp',
-    'Gen3/Gen3_shaffa_nabila.webp', 'Gen3/Gen3_shani_indira_natio.webp', 'Gen3/Gen3_sofia_meifaliani.webp',
-    'Gen3/Gen3_stephanie_pricilla_indarto_putri.webp', 'Gen3/Gen3_syahfira_angela_nurhaliza.webp',
-    'Gen3/Gen3_triarona_kusuma.webp', 'Gen3/Gen3_yansen_indiani.webp', 'Gen3/Gen3_zebi_magnolia_fawwaz.webp',
-    
-    // Gen4 members
-    'Gen4/Gen4_adriani_elisabeth.webp', 'Gen4/Gen4_christi.webp', 'Gen4/Gen4_cindy_hapsari.webp',
-    'Gen4/Gen4_fidly_immanda.webp', 'Gen4/Gen4_jessica_berliana.webp', 'Gen4/Gen4_jinan_safa_safira.webp',
-    'Gen4/Gen4_made_devi.webp', 'Gen4/Gen4_mega_suryani.webp', 'Gen4/Gen4_melati_putri.webp',
-    'Gen4/Gen4_sri_lintang.webp', 'Gen4/Gen4_tan_zhi_hui_celine.jpg',
-    'Gen4/Gen4_zahra_yuriva.webp',
-
-    // Gen5 members
-    'Gen5/Gen5_adhisty_zara.webp', 'Gen5/Gen5_anggita_destiana.webp', 'Gen5/Gen5_chintya_hanindhitakirana.webp',
-    'Gen5/Gen5_citra_ayu.webp', 'Gen5/Gen5_diani_amalia.webp', 'Gen5/Gen5_elizabeth_gloria.webp',
-    'Gen5/Gen5_eve_antoinette.webp', 'Gen5/Gen5_gabryela_marcelina.webp', 'Gen5/Gen5_hasyakyla_utami.webp',
-    'Gen5/Gen5_helma_sonya.webp', 'Gen5/Gen5_nurhayati.webp', 'Gen5/Gen5_puti_nadhira.webp',
-    'Gen5/Gen5_regina_angelina.webp', 'Gen5/Gen5_rissanda_putri.webp', 'Gen5/Gen5_ruth_damayanti.webp',
-    'Gen5/Gen5_sania_julia.webp', 'Gen5/Gen5_violeta_burhan.webp',
-
-    // Gen6 members
-    'Gen6/Gen6_amanda_priscella.webp', 'Gen6/Gen6_anastasya_narwastu.webp', 'Gen6/Gen6_ariella_calista.webp',
-    'Gen6/Gen6_denise_caroline.webp', 'Gen6/Gen6_erika_ebisawa.webp', 'Gen6/Gen6_erika_sintia.webp',
-    'Gen6/Gen6_graciella_ruth.webp', 'Gen6/Gen6_jihan_miftahul.webp', 'Gen6/Gen6_kandiya_rafa.webp',
-    'Gen6/Gen6_putri_cahyaning.webp', 'Gen6/Gen6_rinanda_syahputri.webp', 'Gen6/Gen6_riska_amelia.webp',
-    'Gen6/Gen6_shalza_grasita.webp',
-
-    // Gen7 members
-    'Gen7/Gen7_aiko_harumi.webp', 'Gen7/Gen7_aurel_mayori.webp', 'Gen7/Gen7_azizi_asadel.webp',
-    'Gen7/Gen7_calista_lea.webp', 'Gen7/Gen7_dhea_angelia.webp', 'Gen7/Gen7_febi_komaril.webp',
-    'Gen7/Gen7_febrina_diponegoro.webp', 'Gen7/Gen7_gabriel_angelina.webp', 'Gen7/Gen7_jesslyn_callista.webp',
-    'Gen7/Gen7_kanya_caya.webp', 'Gen7/Gen7_nabila_fitriana.webp', 'Gen7/Gen7_rifa_fatmasari.webp',
-    'Gen7/Gen7_viona_fadrin.webp', 'Gen7/Gen7_yessica_tamara.webp',
-
-    // Gen8 members
-    'Gen8/Gen8_amanina_afiqah.webp', 'Gen8/Gen8_amirah_fatin.webp', 'Gen8/Gen8_cindy_nugroho.webp',
-    'Gen8/Gen8_devytha_maharani.webp', 'Gen8/Gen8_eriena_kartika.webp', 'Gen8/Gen8_flora_shafiq.webp',
-    'Gen8/Gen8_gabriella_stevany.webp', 'Gen8/Gen8_keisya_ramadhani.webp', 'Gen8/Gen8_nyimas_ratu_rafa.webp',
-    'Gen8/Gen8_pamela_krysanthe.webp', 'Gen8/Gen8_reva_adriana.webp', 'Gen8/Gen8_reva_fidela.webp',
-    'Gen8/Gen8_salma_annisa.webp', 'Gen8/Gen8_umega_maulana.webp', 'Gen8/Gen8_zahra_nur.webp',
-
-    // Gen9 members
-    'Gen9/Gen9_adzana_shaliha.webp', 'Gen9/Gen9_caithlyn_gwyneth.webp', 'Gen9/Gen9_chalista_ellysia.webp',
-    'Gen9/Gen9_christabel_jocelyn.webp', 'Gen9/Gen9_iris_vevina_prasetio.webp', 'Gen9/Gen9_nabila_gusmarlia.webp',
-    'Gen9/Gen9_olivia_payten.webp', 'Gen9/Gen9_putri_elzahra.webp', 'Gen9/Gen9_shinta_devi.webp',
-    'Gen9/Gen9_tiara_sasi.webp',
-
-    // Gen10 members
-    'Gen10/Gen10_abieza_syabira.webp', 'Gen10/Gen10_alia_giselle.jpg', 'Gen10/Gen10_callista_alifia.webp',
-    'Gen10/Gen10_danessa_valerie.webp', 'Gen10/Gen10_naura_safinatunnajah.webp',
-
-    // Gen11 members
-    'Gen11/Gen11_aulia_asyira.webp', 'Gen11/Gen11_jeane_victoria.webp',
-
-    // Gen12 members
-    'Gen12/Gen12_aisa_maharani.webp', 'Gen12/Gen12_letycia_moreen.webp'
-];
-
-const setlistFiles = [
-    'Aturan_Anti_Cinta.jpg',
-    'Banzai.jpg',
-    'Bel_Terakhir_Berbunyi.jpg',
-    'BELIEVE.jpg',
-    'Boku_No_Taiyou.jpg',
-    'Cara_Meminum_Ramune.jpg',
-    'Demi_Seseorang.jpg',
-    'Dewi_Theater.jpg',
-    'Fajar_Sang_Idola.jpg',
-    'Fly!_Team_T.jpg',
-    'Gadis_Gadis_Remaja.jpg',
-    'Himawarigumi.jpg',
-    'Ingin_Bertemu.webp',
-    'Pajama_Drive.jpg',
-    'Saka_Agari.jpg',
-    'Romansa_Sang_Gadis.jpg',
-    'Sambil_Menggandeng_Erat_Tanganku.jpg',
-    'Sekarang_Sedang_Jatuh_Cinta.jpg',
-    'Tunas_di_Balik_Seragam.jpg',
-    
-    
-
-];
-
-=======
->>>>>>> Stashed changes
 // Helper function to properly capitalize member names
 const formatMemberName = (filename) => {
     const parts = filename.split('.')[0].split('_');
     
     // Special handling for JKT48V members
     if (parts[0] === 'JKT48V') {
-        return parts.slice(2).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+        return parts.slice(3).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
     }
     
     // Regular handling for other members
@@ -321,30 +171,39 @@ const Droppable = ({id, children}) => {
     );
 };
 
-const DraggableImage = ({ image, isDragging, dragOverlay, onImageClick, onContextMenu, isSelected }) => {
+const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContextMenu, isSelected, isDragMode }) => {
     const style = {
         opacity: isSelected ? 0.5 : isDragging ? 0.3 : 1,
-        cursor: dragOverlay ? 'grabbing' : 'grab',
+        cursor: isDragMode ? (dragOverlay ? 'grabbing' : 'grab') : 'pointer',
         position: dragOverlay ? 'fixed' : 'relative',
         transform: dragOverlay ? 'scale(1.05)' : 'none',
         zIndex: dragOverlay ? 999 : 1,
         border: isSelected ? '2px solid #4CAF50' : 'none'
     };
 
+    // Get the selected setlist from localStorage
+    const selectedSetlist = localStorage.getItem('selectedSetlist') || "Aturan Anti Cinta";
+    // Convert the setlist name to the image filename format
+    const imageFilename = selectedSetlist.replace(/ /g, '_');
+
     return (
         <div
-            className={`member-image ${isDragging ? 'dragging' : ''} ${dragOverlay ? 'overlay' : ''}`}
+            className={`song-image ${isDragging ? 'dragging' : ''} ${dragOverlay ? 'overlay' : ''}`}
             style={style}
-            onClick={() => onImageClick && onImageClick(image)}
-            onContextMenu={(e) => onContextMenu && onContextMenu(e, image)}
+            onClick={() => !isDragMode && onImageClick && onImageClick(song)}
+            onContextMenu={(e) => onContextMenu && onContextMenu(e, song)}
         >
-            <img src={image.src} alt={image.name} />
-            <div className="member-name">{image.name}</div>
+            <img 
+                src={`/asset/setlist/${imageFilename}.jpg`} 
+                alt={song.name} 
+                className="song-background"
+            />
+            <div className="song-name">{song.name}</div>
         </div>
     );
 };
 
-const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelected }) => {
+const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelected, isDragMode }) => {
     const {
         attributes,
         listeners,
@@ -362,27 +221,35 @@ const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelec
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
+        cursor: isDragMode ? 'grab' : 'pointer',
     };
+
+    // Only include drag-related props if in drag mode
+    const dragProps = isDragMode ? {
+        ...attributes,
+        ...listeners
+    } : {};
 
     return (
         <div
             ref={setNodeRef}
             style={style}
-            {...attributes}
-            {...listeners}
+            {...dragProps}
+            onClick={() => !isDragMode && onImageClick && onImageClick(image)}
         >
             <DraggableImage 
-                image={image} 
+                song={image} 
                 isDragging={isDragging} 
-                onImageClick={onImageClick}
+                onImageClick={isDragMode ? onImageClick : null}
                 onContextMenu={onContextMenu}
                 isSelected={isSelected}
+                isDragMode={isDragMode}
             />
         </div>
     );
 };
 
-const TierRow = ({ row, onMove, onEdit, onClear, onDelete, children }) => {
+const TierRow = ({ row, onMove, onEdit, onClear, onDelete, isFirstRow, children }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
     
@@ -420,7 +287,14 @@ const TierRow = ({ row, onMove, onEdit, onClear, onDelete, children }) => {
     const textColor = getContrastColor(row.color);
 
     return (
-        <div className="row-header" style={{ backgroundColor: row.color }}>
+        <div 
+            className="row-header" 
+            style={{ 
+                backgroundColor: row.color,
+                borderTopLeftRadius: isFirstRow ? '8px' : '0',
+                borderTopRightRadius: '0'
+            }}
+        >
             <span style={{ color: textColor }}>{row.name}</span>
             <IconButton 
                 onClick={handleClick}
@@ -473,9 +347,10 @@ const TierRow = ({ row, onMove, onEdit, onClear, onDelete, children }) => {
 const Tierlist = () => {
     const navigate = useNavigate();
     const tierlistRef = useRef(null);
-    const tierRowsRef = useRef(null);
+    const titleInputRef = useRef(null);
+    const measureRef = useRef(null);
     const [rows, setRows] = useState(initialRows);
-    const [images, setImages] = useState([]);
+    const [songs, setSongs] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingRow, setEditingRow] = useState({ name: '', color: '' });
     const [activeId, setActiveId] = useState(null);
@@ -483,6 +358,11 @@ const Tierlist = () => {
     const [isDragMode, setIsDragMode] = useState(true);
     const [selectedImage, setSelectedImage] = useState(null);
     const [showWelcomeDialog, setShowWelcomeDialog] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [tierlistTitle, setTierlistTitle] = useState('');
+    const [titlePosition, setTitlePosition] = useState({ left: 0, width: 0 });
+    const [inputWidth, setInputWidth] = useState(300); // minimum width
+    const [selectedSetlist, setSelectedSetlist] = useState('');
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -498,111 +378,37 @@ const Tierlist = () => {
     );
 
     useEffect(() => {
-        const tierlistType = localStorage.getItem('tierlistType') || 'member';
-        const memberType = localStorage.getItem('memberType') || 'active';
-        const generation = localStorage.getItem('generation') || 'all';
-        const videoType = localStorage.getItem('videoType') || 'all';
+        const setlistName = localStorage.getItem('selectedSetlist') || "Aturan Anti Cinta";
+        setSelectedSetlist(setlistName);
+        const songList = setlistSongs[setlistName];
         
-        setTierlistType(tierlistType);
-        console.log('Loading images with:', { tierlistType, memberType, generation, videoType });
-
-        let imageList = [];
-
-        if (tierlistType === 'setlist') {
-            imageList = setlistFiles.map((filename, index) => ({
-                id: `setlist-${filename}`,
-                src: `/asset/Setlist/${filename}`,
-                name: formatSetlistName(filename),
+        if (songList) {
+            const songs = songList.map((songName, index) => ({
+                id: `song-${index}`,
+                name: songName,
                 containerId: 'image-pool',
                 originalIndex: index
             }));
-        } else if (tierlistType === 'ramadan') {
-            imageList = ssRamadanFiles.map((filename, index) => ({
-                id: `ramadan-${filename}`,
-                src: `/asset/SSramadan/${filename}`,
-                name: formatSetlistName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else if (tierlistType === 'video') {
-            let videoFiles = [];
-            if (videoType === 'all') {
-                videoFiles = [...spvFiles, ...mvFiles];
-            } else if (videoType === 'mv') {
-                videoFiles = mvFiles;
-            } else if (videoType === 'spv') {
-                videoFiles = spvFiles;
-            }
-            
-            imageList = videoFiles.map((filename, index) => ({
-                id: `video-${filename}`,
-                src: `/asset/SPV_MV/${filename}`,
-                name: formatVideoName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else {
-            // Helper function to check if a filename matches the generation
-            const matchesGeneration = (filename) => {
-                if (generation === 'all') return true;
-                if (generation === 'genv1') {
-                    return filename.startsWith('JKT48V_Gen1_');
-                }
-                const prefix = `Gen${generation.slice(3)}_`;
-                const baseFilename = filename.includes('/') ? filename.split('/').pop() : filename;
-                return baseFilename.startsWith(prefix);
-            };
-            
-            let currentIndex = 0;
-            
-            // Load active members if needed
-            if (memberType === 'active' || memberType === 'all') {
-                const activeMemberImages = activeMemberFiles
-                    .filter(filename => matchesGeneration(filename))
-                    .map((filename) => ({
-                        id: `member-${filename}`,
-                        src: `/asset/member_active/${filename}`,
-                        name: formatMemberName(filename),
-                        containerId: 'image-pool',
-                        originalIndex: currentIndex++
-                    }));
-                imageList = [...imageList, ...activeMemberImages];
-            }
-
-            // Load ex-members if needed
-            if (memberType === 'ex' || memberType === 'all') {
-                const exMembersList = exMemberFiles
-                    .filter(filename => matchesGeneration(filename))
-                    .map((filename) => ({
-                        id: `member-${filename}`,
-                        src: `/asset/exmember/${filename}`,
-                        name: formatMemberName(filename),
-                        containerId: 'image-pool',
-                        originalIndex: currentIndex++
-                    }));
-                imageList = [...imageList, ...exMembersList];
-            }
+            setSongs(songs);
         }
-
-        console.log('Final image list:', imageList);
-        setImages(imageList);
     }, []);
 
     const handleDragStart = (event) => {
+        if (!isDragMode) return;  // Add this line to prevent drag in click mode
         const { active } = event;
         setActiveId(active.id);
     };
 
     const handleDragOver = (event) => {
+        if (!isDragMode) return;  // Add this line to prevent drag in click mode
         const { active, over } = event;
-        
         if (!over) return;
-
+        
         const overId = over.id;
         
         // If we're over a droppable container
         if (rows.find(row => row.id === overId) || overId === 'image-pool') {
-            setImages(prev => {
+            setSongs(prev => {
                 const activeImage = prev.find(img => img.id === active.id);
                 if (activeImage.containerId === overId) return prev; // No change if same container
                 
@@ -635,8 +441,8 @@ const Tierlist = () => {
     };
 
     const handleDragEnd = (event) => {
+        if (!isDragMode) return;  // Add this line to prevent drag in click mode
         const { active, over } = event;
-
         if (!over) {
             setActiveId(null);
             return;
@@ -645,7 +451,7 @@ const Tierlist = () => {
         const overId = over.id;
         
         if (rows.find(row => row.id === overId) || overId === 'image-pool') {
-            setImages(prev => {
+            setSongs(prev => {
                 const activeImage = prev.find(img => img.id === active.id);
                 const overContainer = overId;
                 
@@ -676,11 +482,11 @@ const Tierlist = () => {
             });
         } else {
             // If dropping onto another image, swap positions
-            const activeIndex = images.findIndex(img => img.id === active.id);
-            const overIndex = images.findIndex(img => img.id === over.id);
+            const activeIndex = songs.findIndex(img => img.id === active.id);
+            const overIndex = songs.findIndex(img => img.id === over.id);
             
             if (activeIndex !== -1 && overIndex !== -1) {
-                setImages(prev => {
+                setSongs(prev => {
                     const activeImage = prev[activeIndex];
                     const overImage = prev[overIndex];
                     
@@ -720,18 +526,18 @@ const Tierlist = () => {
     };
 
     const handleRowClear = (rowId) => {
-        setImages(prevImages => 
-            prevImages.map(img => 
-                img.containerId === rowId 
-                    ? { ...img, containerId: 'image-pool' }
-                    : img
+        setSongs(prevSongs => 
+            prevSongs.map(song => 
+                song.containerId === rowId 
+                    ? { ...song, containerId: 'image-pool' }
+                    : song
             )
         );
     };
 
     const handleRowDelete = (rowId) => {
         // Move all images from the row to the image pool
-        setImages(prevImages => 
+        setSongs(prevImages => 
             prevImages.map(img => 
                 img.containerId === rowId 
                     ? { ...img, containerId: 'image-pool' }
@@ -752,10 +558,7 @@ const Tierlist = () => {
     };
 
     const getImagesForContainer = (containerId) => {
-<<<<<<< Updated upstream
-        return images.filter(img => img.containerId === containerId);
-=======
-        const filteredImages = images.filter(img => {
+        const filteredImages = songs.filter(img => {
             const matchesContainer = img.containerId === containerId;
             const matchesSearch = containerId === 'image-pool' 
                 ? img.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -767,163 +570,229 @@ const Tierlist = () => {
             return filteredImages.sort((a, b) => a.originalIndex - b.originalIndex);
         }
         return filteredImages;
->>>>>>> Stashed changes
     };
 
-    const activeImage = activeId ? images.find(img => img.id === activeId) : null;
+    const activeImage = activeId ? songs.find(img => img.id === activeId) : null;
 
     const handleReset = () => {
         // Reset rows to initial state
         setRows([...initialRows]);
 
-        // Reset images to initial state
-        const tierlistType = localStorage.getItem('tierlistType') || 'member';
-        const memberType = localStorage.getItem('memberType') || 'active';
-        const generation = localStorage.getItem('generation') || 'all';
-        const videoType = localStorage.getItem('videoType') || 'all';
-
-        let imageList = [];
-
-        if (tierlistType === 'setlist') {
-            imageList = setlistFiles.map((filename, index) => ({
-                id: `setlist-${filename}`,
-                src: `/asset/Setlist/${filename}`,
-                name: formatSetlistName(filename),
+        // Reset songs to initial state
+        const setlistName = localStorage.getItem('selectedSetlist') || "Aturan Anti Cinta";
+        setSelectedSetlist(setlistName);
+        const songList = setlistSongs[setlistName];
+        
+        if (songList) {
+            const songs = songList.map((songName, index) => ({
+                id: `song-${index}`,
+                name: songName,
                 containerId: 'image-pool',
                 originalIndex: index
             }));
-        } else if (tierlistType === 'ramadan') {
-            imageList = ssRamadanFiles.map((filename, index) => ({
-                id: `ramadan-${filename}`,
-                src: `/asset/SSramadan/${filename}`,
-                name: formatSetlistName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else if (tierlistType === 'video') {
-            let videoFiles = [];
-            if (videoType === 'all') {
-                videoFiles = [...spvFiles, ...mvFiles];
-            } else if (videoType === 'mv') {
-                videoFiles = mvFiles;
-            } else if (videoType === 'spv') {
-                videoFiles = spvFiles;
-            }
-            
-            imageList = videoFiles.map((filename, index) => ({
-                id: `video-${filename}`,
-                src: `/asset/SPV_MV/${filename}`,
-                name: formatVideoName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else {
-            // Helper function to check if a filename matches the generation
-            const matchesGeneration = (filename) => {
-                if (generation === 'all') return true;
-                if (generation === 'genv1') {
-                    return filename.startsWith('JKT48V_Gen1_');
-                }
-                const prefix = `Gen${generation.slice(3)}_`;
-                const baseFilename = filename.includes('/') ? filename.split('/').pop() : filename;
-                return baseFilename.startsWith(prefix);
-            };
-            
-            let currentIndex = 0;
-
-            // Load active members if needed
-            if (memberType === 'active' || memberType === 'all') {
-                const activeMemberImages = activeMemberFiles
-                    .filter(filename => matchesGeneration(filename))
-                    .map((filename) => ({
-                        id: `member-${filename}`,
-                        src: `/asset/member_active/${filename}`,
-                        name: formatMemberName(filename),
-                        containerId: 'image-pool',
-                        originalIndex: currentIndex++
-                    }));
-                imageList = [...imageList, ...activeMemberImages];
-            }
-
-            // Load ex-members if needed
-            if (memberType === 'ex' || memberType === 'all') {
-                const exMembersList = exMemberFiles
-                    .filter(filename => matchesGeneration(filename))
-                    .map((filename) => ({
-                        id: `member-${filename}`,
-                        src: `/asset/exmember/${filename}`,
-                        name: formatMemberName(filename),
-                        containerId: 'image-pool',
-                        originalIndex: currentIndex++
-                    }));
-                imageList = [...imageList, ...exMembersList];
-            }
+            setSongs(songs);
         }
-
-        setImages(imageList);
     };
 
     const handleSave = async () => {
-        if (!tierRowsRef.current) return;
+        if (!tierlistRef.current) return;
 
         try {
-            // Apply any necessary styles for better image quality
-            const node = tierRowsRef.current;
-            node.style.backgroundColor = '#1a1a2e';
+            // Get the dimensions from the original tier rows
+            const rowsContainer = tierlistRef.current.querySelector('.tier-rows-container');
+            if (!rowsContainer) return;
 
-            const blob = await domtoimage.toBlob(node, {
+            // Get the width of the actual content area (including the drop area)
+            const firstRow = rowsContainer.querySelector('.tier-row');
+            if (!firstRow) return;
+            const rowWidth = firstRow.offsetWidth;
+
+            // Create a temporary container for the title and tierlist
+            const tempContainer = document.createElement('div');
+            tempContainer.style.backgroundColor = '#1a1a2e';
+            tempContainer.style.padding = '10px 20px';  // Reduced padding
+            tempContainer.style.display = 'flex';
+            tempContainer.style.flexDirection = 'column';
+            tempContainer.style.alignItems = 'flex-start';
+
+            // Add the title if it exists
+            if (tierlistTitle) {
+                const titleContainer = document.createElement('div');
+                titleContainer.style.width = `${rowWidth}px`;
+                titleContainer.style.display = 'flex';
+                titleContainer.style.justifyContent = 'center';
+                titleContainer.style.marginBottom = '5px';
+                titleContainer.style.marginTop = '0';  // Removed top margin
+                titleContainer.style.padding = '0';
+
+                const titleDiv = document.createElement('div');
+                titleDiv.style.color = 'white';
+                titleDiv.style.fontSize = '32px';
+                titleDiv.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+                titleDiv.style.whiteSpace = 'nowrap';
+                titleDiv.textContent = tierlistTitle;
+                titleDiv.style.textAlign = 'center';
+
+                titleContainer.appendChild(titleDiv);
+                tempContainer.appendChild(titleContainer);
+            }
+
+            // Clone and prepare the tierlist
+            const tierlistClone = rowsContainer.cloneNode(true);
+            
+            // Remove any buttons and icons
+            const elementsToRemove = tierlistClone.querySelectorAll('button, .MuiSvgIcon-root, .tierlist-title-container');
+            elementsToRemove.forEach(el => el.remove());
+
+            // Set the width of the container and tierlist
+            tempContainer.style.width = `${rowWidth}px`;
+            tierlistClone.style.width = '100%';
+            tierlistClone.style.marginTop = '0';  // Ensure no extra margin at the top of the tierlist
+
+            // Make sure each row maintains its width
+            const rows = tierlistClone.querySelectorAll('.tier-row');
+            rows.forEach(row => {
+                row.style.width = '100%';
+                row.style.marginTop = '0';  // Ensure no margins between rows
+                // Make sure the droppable area takes full width
+                const droppable = row.querySelector('.droppable');
+                if (droppable) {
+                    droppable.style.width = '100%';
+                }
+                // Make sure the tier content area takes full width
+                const tierContent = row.querySelector('.tier-content');
+                if (tierContent) {
+                    tierContent.style.width = '100%';
+                }
+            });
+
+            // Add the tierlist to the container
+            tempContainer.appendChild(tierlistClone);
+            
+            // Add to document temporarily for rendering
+            document.body.appendChild(tempContainer);
+
+            const options = {
                 quality: 1.0,
                 bgcolor: '#1a1a2e',
                 style: {
                     'background-color': '#1a1a2e'
-                },
-                filter: (node) => {
-                    // Exclude any elements you don't want in the image
-                    return node.tagName !== 'BUTTON';
                 }
-            });
+            };
 
-            // Create download link
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'jkt48-tierlist.png'; // Changed to PNG for better quality
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            try {
+                const dataUrl = await domtoimage.toPng(tempContainer, options);
+                const link = document.createElement('a');
+                link.download = 'jkt48-tierlist.png';
+                link.href = dataUrl;
+                link.click();
+            } catch (pngError) {
+                console.warn('PNG generation failed, trying blob...', pngError);
+                const blob = await domtoimage.toBlob(tempContainer, options);
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'jkt48-tierlist.png';
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+
+            // Clean up
+            document.body.removeChild(tempContainer);
         } catch (error) {
             console.error('Error saving tierlist:', error);
+            alert('Failed to save image. Please try again or use a screenshot instead.');
         }
     };
 
+    // Update input width based on content
+    useEffect(() => {
+        const updateWidth = () => {
+            if (titleInputRef.current && tierlistRef.current) {
+                // Get the width of the first tier row for reference
+                const firstRow = tierlistRef.current.querySelector('.tier-row');
+                if (!firstRow) return;
+
+                const rowWidth = firstRow.offsetWidth;
+                
+                // Create a hidden span to measure text width
+                const span = document.createElement('span');
+                span.className = 'tierlist-title-measure';
+                span.style.font = window.getComputedStyle(titleInputRef.current).font;
+                span.textContent = tierlistTitle || titleInputRef.current.placeholder;
+                document.body.appendChild(span);
+                
+                // Calculate width with padding
+                const textWidth = span.offsetWidth;
+                const padding = 24; // 12px padding on each side
+                const newWidth = Math.min(Math.max(300, textWidth + padding), rowWidth); // between 300px and row width
+                
+                document.body.removeChild(span);
+                setInputWidth(newWidth);
+                
+                // Update position for header title
+                const rowRect = firstRow.getBoundingClientRect();
+                const viewportWidth = document.documentElement.clientWidth;
+                const rowCenterX = rowRect.left + (rowRect.width / 2);
+                const leftPosition = (rowCenterX / viewportWidth) * 100;
+
+                setTitlePosition({
+                    left: `${leftPosition}%`,
+                    transform: 'translateX(-50%)',
+                    width: newWidth
+                });
+            }
+        };
+
+        updateWidth();
+        window.addEventListener('resize', updateWidth);
+        return () => window.removeEventListener('resize', updateWidth);
+    }, [tierlistTitle]);
+
     const handleImageClick = (image) => {
         if (!isDragMode) {
-            setSelectedImage(selectedImage?.id === image.id ? null : image);
+            // If clicking the same image that's selected, unselect it
+            if (selectedImage?.id === image.id) {
+                setSelectedImage(null);
+            } else {
+                // If clicking a different image, select it
+                setSelectedImage(image);
+            }
+            // Add a small delay to prevent accidental double-clicks
+            const currentTarget = image;
+            setTimeout(() => {
+                if (selectedImage?.id === currentTarget.id) {
+                    setSelectedImage(null);
+                }
+            }, 300);
         }
     };
 
     const handleImageRightClick = (e, image) => {
         e.preventDefault(); // Prevent the default context menu
-        if (!isDragMode && image.containerId !== 'image-pool') {
-            setImages(prev => prev.map(img => 
-                img.id === image.id 
-                    ? { ...img, containerId: 'image-pool' }
-                    : img
-            ));
+        if (!isDragMode) {
+            if (image.containerId !== 'image-pool') {
+                setSongs(prev => prev.map(img => 
+                    img.id === image.id 
+                        ? { ...img, containerId: 'image-pool' }
+                        : img
+                ));
+            }
+            // Always clear selection when right-clicking
             setSelectedImage(null);
         }
     };
 
     const handleTierClick = (tierId) => {
         if (!isDragMode && selectedImage) {
-            setImages(prev => {
+            setSongs(prev => {
                 const newImages = prev.map(img => 
                     img.id === selectedImage.id 
                         ? { ...img, containerId: tierId }
                         : img
                 );
-                setSelectedImage(null);
+                // Clear selection after placing
+                setTimeout(() => setSelectedImage(null), 50);
                 return newImages;
             });
         }
@@ -955,8 +824,26 @@ const Tierlist = () => {
                 >
                     <ArrowBack />
                 </IconButton>
-                <img src={logo} alt="JKT48 Tierlist Logo" className="header-logo" />
-                <h1 className="header-title">JKT48 Tierlist</h1>
+                <div className="header-title-container">
+                    <div className="header-main" onClick={() => navigate('/')}>
+                        <img src={logo} alt="JKT48 Tierlist Logo" className="header-logo" />
+                        <div className="header-titles">
+                            <h1 className="header-title">JKT48 Tierlist</h1>
+                        </div>
+                    </div>
+                    {tierlistTitle && (
+                        <div 
+                            className="header-subtitle-container"
+                            style={{
+                                left: titlePosition.left,
+                                width: titlePosition.width,
+                                transform: titlePosition.transform
+                            }}
+                        >
+                            <h2 className="header-subtitle">{tierlistTitle}</h2>
+                        </div>
+                    )}
+                </div>
             </header>
 
             {/* Welcome Dialog */}
@@ -969,7 +856,7 @@ const Tierlist = () => {
                 <DialogTitle>Selamat Datang di JKT48 Tierlist! 👋</DialogTitle>
                 <DialogContent>
                     <Box sx={{ mb: 2 }}>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                             Panduan Penggunaan Tierlist:
                         </Typography>
                         <Typography variant="body1" paragraph>
@@ -989,6 +876,9 @@ const Tierlist = () => {
                         <Typography variant="body1">
                             3. Gunakan tombol-tombol di bawah untuk menambah tier, mengulang dari awal, atau menyimpan tierlist sebagai gambar.
                         </Typography>
+                        <Typography variant="body1" sx={{ mt: 2, color: 'warning.main' }}>
+                            <strong>Disclaimer:</strong> Pembuat Website ini tidak bertanggung jawab atas segala akibat dari hasil tierlist. Berani membagikan tierlist ini berarti pengguna berani menanggung segala resiko yang muncul (termasuk dongfol).
+                        </Typography>
                     </Box>
                 </DialogContent>
                 <DialogActions>
@@ -1005,16 +895,12 @@ const Tierlist = () => {
             <DndContext
                 sensors={sensors}
                 collisionDetection={pointerWithin}
-                onDragStart={isDragMode ? handleDragStart : null}
-                onDragOver={isDragMode ? handleDragOver : null}
-                onDragEnd={isDragMode ? handleDragEnd : null}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
                 onDragCancel={() => setActiveId(null)}
             >
                 <div className="tierlist-container" ref={tierlistRef}>
-<<<<<<< Updated upstream
-                    <div className="tier-rows-container" ref={tierRowsRef}>
-                        {rows.map((row) => (
-=======
                     <div className="tier-rows-container" ref={measureRef}>
                         <div className="tierlist-title-container" style={{ 
                             marginTop: '0',
@@ -1029,7 +915,7 @@ const Tierlist = () => {
                                 className="tierlist-title"
                                 value={tierlistTitle}
                                 onChange={(e) => setTierlistTitle(e.target.value)}
-                                placeholder={`My ${getTierlistTypeDisplay()} Tierlist`}
+                                placeholder={`My ${selectedSetlist} Tierlist`}
                                 spellCheck="false"
                                 style={{ 
                                     width: `${inputWidth}px`,
@@ -1040,10 +926,9 @@ const Tierlist = () => {
                             />
                         </div>
                         {rows.map((row, index) => (
->>>>>>> Stashed changes
                             <div 
                                 key={row.id} 
-                                className="tier-row"
+                                className={`tier-row ${index === 0 ? 'first-tier-row' : ''}`}
                                 onClick={() => handleTierClick(row.id)}
                                 style={{ 
                                     cursor: (!isDragMode && selectedImage) ? 'pointer' : 'default',
@@ -1056,6 +941,7 @@ const Tierlist = () => {
                                     onEdit={handleRowEdit}
                                     onClear={handleRowClear}
                                     onDelete={handleRowDelete}
+                                    isFirstRow={index === 0}
                                 />
                                 <Droppable id={row.id}>
                                     <div className="tier-content">
@@ -1071,6 +957,7 @@ const Tierlist = () => {
                                                     onImageClick={handleImageClick}
                                                     onContextMenu={handleImageRightClick}
                                                     isSelected={selectedImage?.id === image.id}
+                                                    isDragMode={isDragMode}
                                                 />
                                             ))}
                                         </SortableContext>
@@ -1133,19 +1020,9 @@ const Tierlist = () => {
                     </div>
 
                     <div className="image-pool-container">
-<<<<<<< Updated upstream
-                        <h2>
-                            Available {tierlistType === 'setlist' ? 'Setlists' : 'Members'} ({getImagesForContainer('image-pool').length})
-                            {!isDragMode && selectedImage && (
-                                <span style={{ fontSize: '0.8em', marginLeft: '10px', color: '#4CAF50' }}>
-                                    Selected: {selectedImage.name}
-                                </span>
-                            )}
-                        </h2>
-=======
                         <div className="image-pool-header">
                             <h2>
-                                Available {getTierlistTypeDisplay()}s ({getImagesForContainer('image-pool').length})
+                                {selectedSetlist} Songs ({getImagesForContainer('image-pool').length})
                                 {!isDragMode && selectedImage && (
                                     <span style={{ fontSize: '0.8em', marginLeft: '10px', color: '#4CAF50' }}>
                                         Selected: {selectedImage.name}
@@ -1187,7 +1064,7 @@ const Tierlist = () => {
                                             display: 'none',
                                         }
                                     }}
-                                    placeholder={`Search ${tierlistType === 'setlist' ? 'setlists' : 'members'}...`}
+                                    placeholder="Search songs..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     variant="standard"
@@ -1198,7 +1075,6 @@ const Tierlist = () => {
                                 />
                             </Paper>
                         </div>
->>>>>>> Stashed changes
                         <Droppable id="image-pool">
                             <div className="image-pool">
                                 <SortableContext 
@@ -1213,6 +1089,7 @@ const Tierlist = () => {
                                             onImageClick={handleImageClick}
                                             onContextMenu={handleImageRightClick}
                                             isSelected={selectedImage?.id === image.id}
+                                            isDragMode={isDragMode}
                                         />
                                     ))}
                                 </SortableContext>
@@ -1223,8 +1100,9 @@ const Tierlist = () => {
                     <DragOverlay>
                         {activeId && isDragMode ? (
                             <DraggableImage 
-                                image={images.find(img => img.id === activeId)}
+                                song={songs.find(img => img.id === activeId)}
                                 dragOverlay
+                                isDragMode={isDragMode}
                             />
                         ) : null}
                     </DragOverlay>

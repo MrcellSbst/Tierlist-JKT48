@@ -2,16 +2,27 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Homepage.css';
 import logo from './assets/icon/TierlistIcon.png';
+import { setlistSongs } from './data/setlistSongs';
 
 const Homepage = () => {
     const [tierlistType, setTierlistType] = useState('');
     const [selectedMemberType, setSelectedMemberType] = useState('active');
     const [selectedGeneration, setSelectedGeneration] = useState('all');
+    const [selectedVideoType, setSelectedVideoType] = useState('all');
+    const [selectedSetlist, setSelectedSetlist] = useState('');
     const [showPopup, setShowPopup] = useState(false);
     const navigate = useNavigate();
 
     const handleTierlistTypeChange = (event) => {
         setTierlistType(event.target.value);
+        // Reset video type when changing tierlist type
+        if (event.target.value !== 'video') {
+            setSelectedVideoType('all');
+        }
+        // Reset setlist selection when changing tierlist type
+        if (event.target.value !== 'setlist_song') {
+            setSelectedSetlist('');
+        }
     };
 
     const handleMemberTypeChange = (event) => {
@@ -22,18 +33,38 @@ const Homepage = () => {
         setSelectedGeneration(event.target.value);
     };
 
+    const handleVideoTypeChange = (event) => {
+        setSelectedVideoType(event.target.value);
+    };
+
+    const handleSetlistChange = (event) => {
+        setSelectedSetlist(event.target.value);
+    };
+
     const handleStart = () => {
         if (!tierlistType) {
             setShowPopup(true);
-            setTimeout(() => setShowPopup(false), 3000); // Hide popup after 3 seconds
+            setTimeout(() => setShowPopup(false), 3000);
             return;
         }
 
-        if (tierlistType === 'setlist') {
-            localStorage.setItem('tierlistType', 'setlist');
+        if (tierlistType === 'setlist' || tierlistType === 'ramadan') {
+            localStorage.setItem('tierlistType', tierlistType);
             navigate('/tierlist');
+        } else if (tierlistType === 'video') {
+            localStorage.setItem('tierlistType', 'video');
+            localStorage.setItem('videoType', selectedVideoType);
+            navigate('/tierlist');
+        } else if (tierlistType === 'setlist_song') {
+            if (!selectedSetlist) {
+                setShowPopup(true);
+                setTimeout(() => setShowPopup(false), 3000);
+                return;
+            }
+            localStorage.setItem('tierlistType', 'setlist_song');
+            localStorage.setItem('selectedSetlist', selectedSetlist);
+            navigate('/tierlist_lagu');
         } else {
-            // Save the member selections to localStorage
             localStorage.setItem('tierlistType', 'member');
             localStorage.setItem('memberType', selectedMemberType);
             localStorage.setItem('generation', selectedGeneration);
@@ -45,7 +76,7 @@ const Homepage = () => {
         <div className="homepage-container">
             {showPopup && (
                 <div className="popup-message">
-                    Please select a tierlist type first!
+                    {!tierlistType ? "Please select a tierlist type first!" : "Please select a setlist first!"}
                 </div>
             )}
             <img src={logo} alt="JKT48 Tierlist Logo" className="app-logo" />
@@ -59,8 +90,39 @@ const Homepage = () => {
                     <option value="">-- Select Tierlist Type --</option>
                     <option value="member">Member Tierlist</option>
                     <option value="setlist">Setlist Tierlist</option>
+                    <option value="ramadan">Special Show Ramadan</option>
+                    <option value="video">SPV and MV</option>
+                    <option value="setlist_song">Setlist's Song</option>
                 </select>
 
+                {/* Video type dropdown */}
+                <div className={`member-dropdowns-container ${tierlistType === 'video' ? 'show' : ''}`}>
+                    <select 
+                        value={selectedVideoType} 
+                        onChange={handleVideoTypeChange}
+                        className="member-dropdown"
+                    >
+                        <option value="all">SPV and MV</option>
+                        <option value="mv">MV</option>
+                        <option value="spv">SPV</option>
+                    </select>
+                </div>
+
+                {/* Setlist selection dropdown */}
+                <div className={`member-dropdowns-container ${tierlistType === 'setlist_song' ? 'show' : ''}`}>
+                    <select 
+                        value={selectedSetlist} 
+                        onChange={handleSetlistChange}
+                        className="member-dropdown"
+                    >
+                        <option value="">-- Select Setlist --</option>
+                        {Object.keys(setlistSongs).map(setlist => (
+                            <option key={setlist} value={setlist}>{setlist}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Member type dropdowns */}
                 <div className={`member-dropdowns-container ${tierlistType === 'member' ? 'show' : ''}`}>
                     <select 
                         value={selectedMemberType} 

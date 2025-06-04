@@ -1,0 +1,273 @@
+/* Global styles */
+
+* {
+    box-sizing: border-box;
+}
+
+
+/* Header styles */
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background-color: rgba(42, 42, 62, 0.95);
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.header-title-container {
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s ease;
+}
+
+.header-title-container:hover {
+    opacity: 0.8;
+}
+
+.header-logo {
+    height: 48px;
+    width: 48px;
+    margin-right: 1rem;
+}
+
+.header-title {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+.back-button {
+    margin-right: 1rem !important;
+    color: white !important;
+}
+
+
+/* Main container styles */
+
+.tierlist-container {
+    padding: 2rem;
+    padding-top: calc(64px + 2rem);
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+
+/* Tier rows styles */
+
+.tier-rows-container {
+    background-color: rgba(26, 26, 46, 0.95);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.tier-row {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(42, 42, 62, 0.75);
+}
+
+.tier-row:last-child {
+    border-bottom: none;
+}
+
+.row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    width: 150px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.row-header span {
+    font-size: 1.1rem;
+}
+
+
+/* Droppable area styles */
+
+.droppable {
+    flex: 1;
+    min-height: 140px;
+    transition: background-color 0.2s ease;
+}
+
+.droppable.is-over {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tier-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    min-height: 140px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+
+/* Member image styles */
+
+.member-image {
+    width: 100px;
+    height: 130px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #2a2a3e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    cursor: grab;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.member-image.dragging {
+    opacity: 0.5;
+    transform: scale(1.05);
+}
+
+.member-image img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    object-position: top center;
+    pointer-events: none;
+}
+
+.member-name {
+    height: 30px;
+    padding: 0px 4px;
+    line-height: 26px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 16px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+
+/* Button container styles */
+
+.button-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.action-button {
+    flex: 1;
+    min-width: 150px !important;
+}
+
+
+/* Image pool styles */
+
+.image-pool-container {
+    background-color: rgba(42, 42, 62, 0.95);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.image-pool-container h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.image-pool {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    min-height: 140px;
+    touch-action: none;
+}
+
+
+/* Drag overlay styles */
+
+[data-dnd-kit-overlay] {
+    position: fixed !important;
+}
+
+
+/* Dialog styles */
+
+.MuiDialog-paper {
+    background-color: #2a2a3e !important;
+    color: white !important;
+}
+
+.MuiDialogTitle-root {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.MuiDialogActions-root .MuiButton-root {
+    color: white !important;
+}
+
+.MuiTextField-root {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root {
+    color: white;
+}
+
+.MuiTextField-root .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.MuiTextField-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.MuiTextField-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #90caf9 !important;
+}
+
+.MuiInputLabel-root {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+    color: #90caf9 !important;
+}
+
+.MuiInput-root {
+    color: white !important;
+}
+
+
+/* Switch styles */
+
+.MuiFormControlLabel-root {
+    margin-right: 2rem !important;
+}
+
+.MuiSwitch-root {
+    margin-right: 1rem !important;
+}
