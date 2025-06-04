@@ -102,6 +102,7 @@ const initialRows = [
 ];
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 const activeMemberFiles = [
     'Gen3_feni_fitriyanti.jpg', 'Gen3_shania_gracia.jpg',
     'Gen6_gita_sekar_andarini.jpg',
@@ -253,6 +254,8 @@ const setlistFiles = [
 
 ];
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 // Helper function to properly capitalize member names
