@@ -392,7 +392,7 @@ const Tierlist = () => {
         } else if (tierlistType === 'ramadan') {
             imageList = ssRamadanFiles.map((filename, index) => ({
                 id: `ramadan-${filename}`,
-                src: `/asset/SSramadan/${filename}`,
+                src: `/asset/SSRamadan/${filename}`,
                 name: formatSetlistName(filename),
                 containerId: 'image-pool',
                 originalIndex: index
@@ -666,7 +666,7 @@ const Tierlist = () => {
         } else if (tierlistType === 'ramadan') {
             imageList = ssRamadanFiles.map((filename, index) => ({
                 id: `ramadan-${filename}`,
-                src: `/asset/SSramadan/${filename}`,
+                src: `/asset/SSRamadan/${filename}`,
                 name: formatSetlistName(filename),
                 containerId: 'image-pool',
                 originalIndex: index
