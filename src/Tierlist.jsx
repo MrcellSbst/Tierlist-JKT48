@@ -58,13 +58,17 @@ import './Tierlist.css';
 import './TierlistPage_Lagu.css';
 import logo from './assets/icon/TierlistIcon.png';
 import {
-    mvFiles,
-    spvFiles,
     activeMemberFiles,
-    exMemberFiles,
+    exMemberFiles
+} from './data/memberData';
+import {
+    mvFiles,
+    spvFiles
+} from './data/spv_mv';
+import {
     setlistFiles,
     ssRamadanFiles
-} from './data/imageFiles';
+} from './data/specialshowData';
 
 const TIER_COLORS = [
     { name: 'Red', value: '#FF7F7F' },
@@ -698,15 +702,7 @@ const Tierlist = () => {
             };
             
             let currentIndex = 0;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
             
-=======
-
->>>>>>> Stashed changes
-=======
-
->>>>>>> Stashed changes
             // Load active members if needed
             if (memberType === 'active' || memberType === 'all') {
                 const activeMemberImages = activeMemberFiles

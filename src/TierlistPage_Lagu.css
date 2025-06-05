@@ -1,12 +1,15 @@
 /* Desktop-specific styles for tierlist page */
 
 .tierlist-page {
-    min-width: 1024px;
+    min-width: 320px;
+    /* Changed from 1024px to be more mobile-friendly */
     margin: 0;
     padding: 0;
     background-color: #1a1a2e;
     color: white;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    overflow-x: hidden;
+    /* Prevent horizontal scrolling on mobile */
 }
 
 
@@ -19,7 +22,7 @@
     overflow: hidden;
     background-color: #2a2a3e;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
     cursor: grab;
     touch-action: none;
     -webkit-user-select: none;
@@ -29,9 +32,15 @@
     flex-direction: column;
 }
 
+.song-image:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
 .song-image.dragging {
     opacity: 0.5;
     transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 .song-background {
@@ -58,8 +67,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
+    display: -moz-box;
+    display: box;
     -webkit-line-clamp: 4;
+    -moz-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
+    -moz-box-orient: vertical;
+    box-orient: vertical;
     line-height: 1.2;
     pointer-events: none;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
@@ -113,20 +128,27 @@
 .header-subtitle-container {
     position: fixed;
     top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     justify-content: center;
     pointer-events: none;
     z-index: 10;
+    width: 100%;
+    padding: 0 16px;
+    box-sizing: border-box;
 }
 
 .header-subtitle {
     color: white;
-    font-size: 24px;
+    font-size: clamp(18px, 4vw, 24px);
+    /* Responsive font size */
     margin: 0;
     padding: 0;
     font-weight: bold;
     text-align: center;
     white-space: nowrap;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .tierlist-title-container {
@@ -176,12 +198,53 @@
     /* Add space for the absolute positioned title */
 }
 
-@media (max-width: 600px) {
+
+/* Responsive styles */
+
+@media (max-width: 768px) {
     .image-pool-header {
         flex-direction: column;
         align-items: stretch;
+        padding: 0 16px;
     }
-    .image-pool-header h2 {
-        text-align: center;
+    .header-title {
+        font-size: 20px;
+    }
+    .tierlist-title {
+        min-width: 200px;
+        font-size: 20px;
+    }
+    .song-image {
+        width: 80px;
+        height: 104px;
+    }
+    .song-name {
+        font-size: 14px;
+        -webkit-line-clamp: 3;
+        -moz-line-clamp: 3;
+        line-clamp: 3;
+    }
+    .tier-rows-container {
+        margin-top: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-title {
+        font-size: 18px;
+    }
+    .tierlist-title {
+        min-width: 150px;
+        font-size: 18px;
+    }
+    .song-image {
+        width: 70px;
+        height: 91px;
+    }
+    .song-name {
+        font-size: 12px;
+        -webkit-line-clamp: 2;
+        -moz-line-clamp: 2;
+        line-clamp: 2;
     }
 }

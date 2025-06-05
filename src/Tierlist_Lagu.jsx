@@ -60,12 +60,12 @@ import './TierlistPage_Lagu.css';
 import logo from './assets/icon/TierlistIcon.png';
 import {
     mvFiles,
-    spvFiles,
-    activeMemberFiles,
-    exMemberFiles,
+    spvFiles
+} from './data/spv_mv';
+import {
     setlistFiles,
     ssRamadanFiles
-} from './data/imageFiles';
+} from './data/specialshowData';
 
 const TIER_COLORS = [
     { name: 'Red', value: '#FF7F7F' },
