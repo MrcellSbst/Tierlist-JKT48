@@ -699,7 +699,11 @@ const Tierlist = () => {
             
             let currentIndex = 0;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes
