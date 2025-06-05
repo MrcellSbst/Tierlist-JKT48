@@ -698,7 +698,11 @@ const Tierlist = () => {
             };
             
             let currentIndex = 0;
+<<<<<<< Updated upstream
             
+=======
+
+>>>>>>> Stashed changes
             // Load active members if needed
             if (memberType === 'active' || memberType === 'all') {
                 const activeMemberImages = activeMemberFiles
