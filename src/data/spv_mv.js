@@ -31,6 +31,7 @@ export const mvFiles = [
     'Manatsu_no_Sounds_Good_(Musim_Panas_Sounds_Good).webp',
     'Masa_Depan_yang_Menyilaukan_Mata.webp',
     'Musim_yang_Selanjutnya_(Tsugi_no_Season).webp',
+    'Oh my pumpkin!.webp',
     'Papan_Penanda_Isi_Hati.webp',
     'Pareo_adalah_Emerald.webp',
     'Bernadya, JKT48 - Percik Kecil (Official Music Video).webp',

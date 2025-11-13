@@ -17,7 +17,7 @@ const Homepage = () => {
 
     // Configure how many standard and JKT48V generations to show in dropdowns
     const STANDARD_GEN_COUNT = 13; // Gen1..Gen13
-    const V_GEN_COUNT = 1;         // JKT48V Gen1..GenV_COUNT
+    const V_GEN_COUNT = 2;         // JKT48V Gen1..GenV_COUNT
 
     useEffect(() => {
         // Reset viewport meta tag

@@ -29,7 +29,7 @@ export const activeMemberFiles = [
     'Gen13_Bong_Aprilli.jpg', 'Gen13_Hagia_Sopia.jpg',
     'Gen13_Humaira_Ramadhani.jpg', 'Gen13_Jacqueline_Immanuela.jpg',
     'Gen13_Jemima_Evodie.jpg', 'Gen13_Mikaela_Kusjanto.jpg',
-    'Gen13_Nur_Intan.jpg', 'JKT48V_Gen1_Pia_Meraleo.webp', 'JKT48V_Gen1_Tana_Nona.webp'
+    'Gen13_Nur_Intan.jpg', 'JKT48V_Gen1_Pia_Meraleo.webp', 'JKT48V_Gen1_Tana_Nona.webp','JKT48V_Gen2_Isha_Kirana.webp','JKT48V_Gen2_Maura_Nilambari.webp','JKT48V_Gen2_Sami_Maono.webp',
 ];
 
 export const exMemberFiles = [
