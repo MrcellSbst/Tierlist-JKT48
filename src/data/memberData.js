@@ -121,7 +121,7 @@ export const exMemberFiles = [
     'Gen11/Gen11_aulia_asyira.webp', 'Gen11/Gen11_jeane_victoria.webp',
 
     // Gen12 members
-    'Gen12/Gen12_aisa_maharani.webp', 'Gen12/Gen12_letycia_moreen.webp', 'Gen12_regina_wilian.jpg',
+    'Gen12/Gen12_aisa_maharani.webp', 'Gen12/Gen12_letycia_moreen.webp', 'Gen12/Gen12_regina_wilian.jpg',
 
     // JKT48V members
     'JKT48V_GEN1/JKT48V_Gen1_Kanaia_Asa.webp'
