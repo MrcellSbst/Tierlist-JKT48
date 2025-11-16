@@ -70,6 +70,13 @@ export const wishlistPrices = {
 
     // User-defined price merchandise
     userDefinedMerch: {
+         "Membership/OFC": {
+            price: 0,
+            description: "Price for Membership/OFC",
+            unit: "service",
+            isUserDefined: true
+        },
+
         "PhotoPrint": {
             price: 0,
             description: "Photo print merchandise",
