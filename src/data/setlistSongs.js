@@ -221,6 +221,25 @@ export const setlistSongs = {
         "JKT48",
         "Skirt, Hirari"
     ],
+
+    "Kira Kira Girls": [
+    "Indahnya Senyum Manismu DST",
+    "Aishiteraburu",
+    "Sakura Kita Makan Bersama",
+    "Laptime Masa Remaja",
+    "Candy",
+    "Hubungan Kau dan Aku",
+    "Natasha yang Ku Cinta",
+    "Maafkan Hai Permataku",
+    "100 Meter Ke Minimarket",
+    "Adyth",
+    "Cool Girl",
+    "Apakah Kau Melihat Mentari Senja",
+    "Masa Depan yang Menyilaukan Mata",
+    "Everyday Kachuusa",
+    "Gadis Remaja",
+    ],
+
     "Pajama Drive": [
         "Shonichi (Hari Pertama)",
         "Hissatsu Teleport (Jurus Rahasia Teleport)",
