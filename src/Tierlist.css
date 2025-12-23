@@ -450,12 +450,13 @@
 @media (pointer: coarse) {
     .member-image {
         transition: none;
-        box-shadow: var(--shadow-sm);
+        box-shadow: none;
+        border-color: transparent;
     }
     .member-image:hover,
     .member-image:active {
         transform: none;
-        box-shadow: var(--shadow-sm);
+        box-shadow: none;
         border-color: transparent;
     }
     .member-image img {
@@ -467,11 +468,11 @@
     .member-image.overlay {
         animation: none;
     }
-    .love-hearts .heart {
-        animation-duration: 2s;
-    }
-    .member-image.love::before {
-        animation-duration: 2s;
+    /* Disable decorative effects on mobile to reduce paint cost */
+    .member-image.love::before,
+    .love-hearts {
+        display: none;
+        animation: none;
     }
 }
 
