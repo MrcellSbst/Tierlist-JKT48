@@ -767,97 +767,97 @@ const Tierlist = () => {
         if (!tierlistRef.current) return;
 
         try {
-            // Get the dimensions from the original tier rows
             const rowsContainer = tierlistRef.current.querySelector('.tier-rows-container');
             if (!rowsContainer) return;
 
-            // Get the width of the actual content area (including the drop area)
-            const firstRow = rowsContainer.querySelector('.tier-row');
-            if (!firstRow) return;
-            const rowWidth = firstRow.offsetWidth;
+            // Ensure fonts and images are ready
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready.catch(() => {});
+            }
+            const waitForImages = (root) => Promise.all(
+                Array.from(root.querySelectorAll('img')).map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(resolve => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    });
+                })
+            );
 
-            // Create a temporary container for the title and tierlist
-            const tempContainer = document.createElement('div');
-            tempContainer.style.backgroundColor = '#1a1a2e';
-            tempContainer.style.padding = '10px 20px';  // Reduced padding
-            tempContainer.style.display = 'flex';
-            tempContainer.style.flexDirection = 'column';
-            tempContainer.style.alignItems = 'flex-start';
+            await waitForImages(rowsContainer);
 
-            // Add the title if it exists
-            if (tierlistTitle) {
-                const titleContainer = document.createElement('div');
-                titleContainer.style.width = `${rowWidth}px`;
-                titleContainer.style.display = 'flex';
-                titleContainer.style.justifyContent = 'center';
-                titleContainer.style.marginBottom = '5px';
-                titleContainer.style.marginTop = '0';  // Removed top margin
-                titleContainer.style.padding = '0';
+            // Create an offscreen clone of only the tier rows for capture
+            const cloneRowsContainer = rowsContainer.cloneNode(true);
+            cloneRowsContainer.style.backgroundColor = '#1a1a2e';
+            cloneRowsContainer.style.width = `${rowsContainer.offsetWidth}px`;
+            cloneRowsContainer.style.margin = '0';
+            cloneRowsContainer.style.padding = '10px 20px';
+            cloneRowsContainer.style.boxSizing = 'border-box';
+            cloneRowsContainer.style.position = 'absolute';
+            cloneRowsContainer.style.left = '-9999px';
+            cloneRowsContainer.style.top = '0';
+            cloneRowsContainer.style.opacity = '1';
 
-                const titleDiv = document.createElement('div');
-                titleDiv.style.color = 'white';
-                titleDiv.style.fontSize = '32px';
-                titleDiv.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-                titleDiv.style.whiteSpace = 'nowrap';
-                titleDiv.textContent = tierlistTitle;
-                titleDiv.style.textAlign = 'center';
-
-                titleContainer.appendChild(titleDiv);
-                tempContainer.appendChild(titleContainer);
+            // Hide title row if title is empty; otherwise strip borders/outline
+            if (!tierlistTitle) {
+                const titleBar = cloneRowsContainer.querySelector('.tierlist-title-container');
+                if (titleBar) {
+                    titleBar.style.display = 'none';
+                }
+            } else {
+                const titleBar = cloneRowsContainer.querySelector('.tierlist-title-container');
+                const titleInput = cloneRowsContainer.querySelector('.tierlist-title');
+                if (titleBar) {
+                    titleBar.style.border = 'none';
+                    titleBar.style.boxShadow = 'none';
+                    titleBar.style.padding = '0';
+                    titleBar.style.marginBottom = '8px';
+                    titleBar.style.background = 'transparent';
+                }
+                if (titleInput) {
+                    titleInput.style.width = '100%';
+                    titleInput.style.whiteSpace = 'normal';
+                    titleInput.style.height = 'auto';
+                    titleInput.style.overflow = 'visible';
+                    titleInput.style.display = 'block';
+                    titleInput.style.border = 'none';
+                    titleInput.style.boxShadow = 'none';
+                    titleInput.style.background = 'transparent';
+                    titleInput.style.outline = 'none';
+                    titleInput.style.padding = '4px 0';
+                }
             }
 
-            // Clone and prepare the tierlist
-            const tierlistClone = rowsContainer.cloneNode(true);
-            
-            // Remove any buttons and icons
-            const elementsToRemove = tierlistClone.querySelectorAll('button, .MuiSvgIcon-root, .tierlist-title-container');
-            elementsToRemove.forEach(el => el.remove());
+            // Disable animations/transitions to avoid partially animated captures
+            const stripAnimations = (el) => {
+                if (!el || !el.style) return;
+                el.style.animation = 'none';
+                el.style.transition = 'none';
+                if (el.style.opacity) el.style.opacity = '1';
+                Array.from(el.children || []).forEach(stripAnimations);
+            };
+            stripAnimations(cloneRowsContainer);
 
-            // Set the width of the container and tierlist
-            tempContainer.style.width = `${rowWidth}px`;
-            tierlistClone.style.width = '100%';
-            tierlistClone.style.marginTop = '0';  // Ensure no extra margin at the top of the tierlist
-
-            // Make sure each row maintains its width
-            const rows = tierlistClone.querySelectorAll('.tier-row');
-            rows.forEach(row => {
-                row.style.width = '100%';
-                row.style.marginTop = '0';  // Ensure no margins between rows
-                // Make sure the droppable area takes full width
-                const droppable = row.querySelector('.droppable');
-                if (droppable) {
-                    droppable.style.width = '100%';
-                }
-                // Make sure the tier content area takes full width
-                const tierContent = row.querySelector('.tier-content');
-                if (tierContent) {
-                    tierContent.style.width = '100%';
-                }
-            });
-
-            // Add the tierlist to the container
-            tempContainer.appendChild(tierlistClone);
-            
-            // Add to document temporarily for rendering
-            document.body.appendChild(tempContainer);
+            document.body.appendChild(cloneRowsContainer);
 
             const options = {
                 quality: 1.0,
                 bgcolor: '#1a1a2e',
                 style: {
                     'background-color': '#1a1a2e'
-                }
+                },
+                cacheBust: true
             };
 
             try {
-                const dataUrl = await domtoimage.toPng(tempContainer, options);
+                const dataUrl = await domtoimage.toPng(cloneRowsContainer, options);
                 const link = document.createElement('a');
                 link.download = 'jkt48-tierlist.png';
                 link.href = dataUrl;
                 link.click();
             } catch (pngError) {
                 console.warn('PNG generation failed, trying blob...', pngError);
-                const blob = await domtoimage.toBlob(tempContainer, options);
+                const blob = await domtoimage.toBlob(cloneRowsContainer, options);
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.download = 'jkt48-tierlist.png';
@@ -867,7 +867,7 @@ const Tierlist = () => {
             }
 
             // Clean up
-            document.body.removeChild(tempContainer);
+            document.body.removeChild(cloneRowsContainer);
         } catch (error) {
             console.error('Error saving tierlist:', error);
             alert('Failed to save image. Please try again or use a screenshot instead.');
