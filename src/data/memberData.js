@@ -126,3 +126,22 @@ export const exMemberFiles = [
     // JKT48_ members
     'JKT48V_GEN1/JKT48VGen1_Kanaia_Asa.webp'
 ];
+
+
+export const tim_love = [
+    'Gen11_alya_amanda.jpg',
+    'Gen11_anindya_ramadhani.jpg',
+    'Gen12_nayla_suji.jpg',
+    'Gen10_aurellia.jpg',
+    'Gen12_aurhel_alana.jpg',
+    'Gen11_celline_thefani.jpg',
+    'Gen11_cynthia_yaputera.jpg',
+    'Gen8_fiony_alveria.jpg',
+    'Gen12_fritzy_rosmerian.jpg',
+    'Gen11_cathleen_nixie.jpg',
+    'Gen11_grace_octaviani.jpg',
+    'Gen12_hillary_abigail.jpg',
+    'Gen9_indah_cahya.jpg',
+    'Gen12_jazzlyn_trisha.jpg',
+    'Gen11_michelle_alexandra.jpg'
+];

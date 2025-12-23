@@ -57,10 +57,7 @@ import domtoimage from 'dom-to-image-more';
 import './Tierlist.css';
 import './TierlistPage_Lagu.css';
 import logo from './assets/icon/TierlistIcon.png';
-import {
-    activeMemberFiles,
-    exMemberFiles
-} from './data/memberData';
+import * as memberData from './data/memberData';
 import {
     mvFiles,
     spvFiles
@@ -180,6 +177,12 @@ const parseNameForSearch = (filename) => {
     return searchable;
 };
 
+// Data helpers
+const activeMemberFiles = memberData.activeMemberFiles || [];
+const exMemberFiles = memberData.exMemberFiles || [];
+const timLoveList = memberData.tim_love || [];
+const timLoveSet = new Set(timLoveList.map(f => f.toLowerCase()));
+
 
 
 // Helper function to properly format setlist names
@@ -255,13 +258,20 @@ const DraggableImage = ({ image, isDragging, dragOverlay, onImageClick, onContex
 
     return (
         <div
-            className={`member-image ${isDragging ? 'dragging' : ''} ${dragOverlay ? 'overlay' : ''}`}
+            className={`member-image ${isDragging ? 'dragging' : ''} ${dragOverlay ? 'overlay' : ''} ${image.isTimLove ? 'love' : ''}`}
             style={style}
             onClick={() => !isDragMode && onImageClick && onImageClick(image)}
             onContextMenu={handleContextMenu}
         >
             <img src={image.src} alt={image.name} />
             <div className="member-name">{image.name}</div>
+            {image.isTimLove && (
+                <div className="love-hearts" aria-hidden="true">
+                    <span className="heart heart-1">💖</span>
+                    <span className="heart heart-2">💕</span>
+                    <span className="heart heart-3">💗</span>
+                </div>
+            )}
         </div>
     );
 };
@@ -670,6 +680,7 @@ const Tierlist = () => {
                         id: `member-${filename}`,
                         src: `/asset/member_active/${filename}`,
                         name: formatMemberName(filename),
+                        isTimLove: timLoveSet.has(filename.toLowerCase()),
                         containerId: 'image-pool',
                         originalIndex: currentIndex++
                     }));
@@ -684,6 +695,7 @@ const Tierlist = () => {
                         id: `member-${filename}`,
                         src: `/asset/exmember/${filename.replace(/\\/g, '/')}`,
                         name: formatMemberName(filename),
+                        isTimLove: timLoveSet.has(filename.toLowerCase()),
                         containerId: 'image-pool',
                         originalIndex: currentIndex++
                     }));
@@ -1052,6 +1064,7 @@ const Tierlist = () => {
                         id: `member-${filename}`,
                         src: `/asset/member_active/${filename}`,
                         name: formatMemberName(filename),
+                        isTimLove: timLoveSet.has(filename.toLowerCase()),
                         containerId: 'image-pool',
                         originalIndex: currentIndex++
                     }));
@@ -1066,6 +1079,7 @@ const Tierlist = () => {
                         id: `member-${filename}`,
                         src: `/asset/exmember/${filename.replace(/\\/g, '/')}`,
                         name: formatMemberName(filename),
+                        isTimLove: timLoveSet.has(filename.toLowerCase()),
                         containerId: 'image-pool',
                         originalIndex: currentIndex++
                     }));
@@ -1409,8 +1423,14 @@ const Tierlist = () => {
                         <Typography variant="body1">
                             3. Gunakan tombol-tombol di bawah untuk menambah tier, mengulang dari awal, atau menyimpan tierlist sebagai gambar.
                         </Typography>
-                        <Typography variant="body1" sx={{ mt: 2, color: 'warning.main' }}>
-                            <strong>Disclaimer:</strong> Pembuat Website ini tidak bertanggung jawab atas segala akibat dari hasil tierlist. Berani membagikan tierlist ini berarti pengguna berani menanggung segala resiko yang muncul (termasuk dongfol).
+                        <Typography variant="body1" sx={{ mt: 2, color: '#ff69b4' }}>
+                            <strong>Disclaimer:</strong> Pembuat Website ini tidak bertanggung jawab atas segala akibat dari membagikan hasil tierlist ini. Berani membagikan tierlist ini berarti pengguna berani menanggung segala resiko yang muncul (termasuk donfol).
+                        </Typography>
+                        <Typography sx={{ mt: 2, color: '#ff69b4', textAlign: 'center' }}>
+                            <h2>꧁⎝ 𓆩༺✧༻𓆪 ⎠꧂</h2>
+                        </Typography>
+                        <Typography sx={{ mt: 2, color: '#ff69b4', textAlign: 'center' }}>
+                            <h2>˚˖𓍢ִ໋🌷͙֒✧˚.🎀༘⋆HIDUP TIM LOVE ˚˖𓍢ִ໋🌷͙֒✧˚.🎀༘⋆</h2>
                         </Typography>
                     </Box>
                 </DialogContent>

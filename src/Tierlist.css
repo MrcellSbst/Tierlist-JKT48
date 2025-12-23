@@ -318,7 +318,7 @@
     max-width: 120px;
     height: 120px;
     border-radius: 12px;
-    overflow: hidden;
+    overflow: visible;
     background: linear-gradient(135deg, #2a2a3e 0%, #1f1f2e 100%);
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-normal);
@@ -367,10 +367,83 @@
     object-position: top center;
     pointer-events: none;
     transition: transform var(--transition-normal);
+    border-radius: 12px;
 }
 
 .member-image:hover img {
     transform: scale(1.05);
+}
+
+.member-image.love {
+    box-shadow: 0 0 0 2px rgba(255, 105, 180, 0.35), var(--shadow-sm);
+}
+
+.member-image.love::before {
+    content: '🎀';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+    pointer-events: none;
+    animation: bowFloat 2.4s ease-in-out infinite;
+    z-index: 3;
+}
+
+.love-hearts {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.heart {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    opacity: 0;
+    animation: heartFloat 2.6s ease-in-out infinite;
+    z-index: 3;
+}
+
+.heart-2 {
+    left: 35%;
+    animation-delay: 0.6s;
+    font-size: 12px;
+}
+
+.heart-3 {
+    left: 65%;
+    animation-delay: 1.2s;
+    font-size: 11px;
+}
+
+@keyframes heartFloat {
+    0% {
+        transform: translate(-50%, 10px) scale(0.6);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    70% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translate(-50%, -30px) scale(1);
+        opacity: 0;
+    }
+}
+
+@keyframes bowFloat {
+    0%, 100% {
+        transform: translate(-50%, 0);
+    }
+    50% {
+        transform: translate(-50%, -3px);
+    }
 }
 
 .member-name {
