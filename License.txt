@@ -1,23 +1,24 @@
+Tierlist JKT48 Custom License
+Copyright (c) 2025 MrcellSbst
 
+1. Personal Use  
+   You may download, run, and modify this project for your own non-commercial use free of charge.
 
-MIT License
+2. Free Community Use  
+   Individuals, communities, or fan projects may host or distribute this application for free, provided no fees, donations, or indirect charges are required to access or use it.
 
-Copyright (c) 2022 MrcellSbst
+3. Commercial Use Requires Permission  
+   Any party who wishes to sell access to this project, bundle it inside a paid product, or monetize it through ads, sponsorships, donations, or any other revenue stream must first contact the creator (https://x.com/criscrosbre) to negotiate profit sharing or a license subscription.
+   - Profit is defined as either (a) collecting more than USD 1,000 in gross revenue related to this project during any calendar month, or (b) charging at least USD 1 (or the local equivalent) for access, licensing, or services built on this project. Exceeding either threshold triggers the commercial requirement even if the deployment previously qualified as free community use.
+   - Once a threshold is exceeded you must initiate contact and reach a written agreement within 30 days. Continuing to profit after the 30-day window without an agreement immediately revokes your rights under this license.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+4. Attribution  
+   Public deployments must include a visible attribution such as "Powered by Tierlist JKT48 by MrcellSbst" and, where practical, a link to https://tierlistjkt48.my.id or the project repository.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+5. No Liability  
+   The creator is not liable for any claim, damage, loss of data, or other consequence arising from deploying, buying, selling, or using this project, whether in personal or commercial scenarios.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+6. Provided "As Is"  
+   This software is distributed as is, without warranties of any kind, express or implied, including but not limited to merchantability, fitness for a particular purpose, or non-infringement.
+
+By using this project you agree to the terms above. If you have questions about the license or commercial arrangements, reach out before launching a monetized deployment.

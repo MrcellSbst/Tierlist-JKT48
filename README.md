@@ -1,93 +1,72 @@
-﻿<div align="center">
-  <h1 style="font-size: 3em">🎌 Tierlist JKT48</h1>
-</div>
+# Tierlist JKT48
 
-<div align="center">
-  <h2>Tierlist JKT48 Web Application</h2>
-  <p>
-    Tierlist JKT48 adalah proyek berbasis web yang memungkinkan penggemar JKT48 untuk membuat peringkat anggota/setlist favorit mereka dengan mudah dan interaktif. Terinspirasi oleh alat pemeringkat seperti <a href="https://tiermaker.com/">TierMaker</a> dan <a href="https://jkt48membersorter.vercel.app">JKT48 Member Sorter</a>, proyek ini bertujuan untuk memberikan pengalaman yang menyenangkan bagi para penggemar dalam menyusun tier list mereka sendiri.
-  </p>
-</div>
+My JKT48 Tierlist is a Vite + React web application that bundles multiple fan-made utilities for ranking members, curating dream setlists, budgeting wishlist items, and reviewing point-history exports. It is inspired by tools such as TierMaker and JKT48 Member Sorter but focuses on JKT48-specific workflows and media.
 
-## ✨ Fitur Utama
+- **Live site**: [https://tierlistjkt48.my.id](https://tierlistjkt48.my.id)
 
-<div>
-  <ul>
-    <li>🖼️ <strong>Antarmuka Interaktif:</strong> Seret dan lepas gambar anggota/setlist JKT48 untuk menyusun peringkat sesuai keinginan Anda.</li>
-    <li>📝 <strong>Kustomisasi Label Tier:</strong> Ubah nama setiap tier sesuai preferensi pribadi Anda.</li>
-    <li>📤 <strong>Ekspor dan Bagikan:</strong> Simpan tier list Anda sebagai gambar</li>
-    <li>🔄 <strong>Pembaruan Berkala:</strong> Daftar anggota diperbarui secara rutin untuk mencerminkan perubahan terbaru dalam formasi JKT48.</li>
-  </ul>
-</div>
+## Features
 
-## 🚀 Cara Menggunakan
+- **Tierlist Maker**: build tier lists for members, setlists, Special Show Ramadan units, MV/SPV releases, or individual songs inside a setlist; filter by status, generation, video type, or chosen setlist; supports drag-and-drop, tier customization, search, Tim LOVE highlights, manual saves, auto-saves, and PNG export.
+- **Setlist Song Tierlist**: `/tierlist_lagu` focuses on ranking songs while reusing the same drag-and-drop tooling and setlist data defined in `src/data/setlistSongs.js`.
+- **Dream Setlist Builder**: plan show layouts by assigning songs and members (including backups), color-code tiers, multi-select, search, and export the resulting board as a PNG.
+- **Wishlist Calculator**: compile events/merch wishlist items using `src/data/wishlistpriceData.js`, add custom entries, total the cost automatically, maintain multiple drafts, and export to either PNG or Excel.
+- **Points History Explorer**: visualize the data saved by the companion "JKT48 Points History Exporter" browser extension through tables, summary chips, and Recharts-based graphs, then export the dataset as CSV.
 
-<div>
-  <ol>
-    <li>Kunjungi <strong>Halaman Proyek:</strong> <a href="https://tierlist-member-jkt-48.vercel.app">Tierlist Member JKT48</a></li>
-    <li>Susun Tier List: Seret gambar anggota/setlist ke tier yang diinginkan.</li>
-    <li>Kustomisasi: Ubah nama tier sesuai keinginan Anda.</li>
-    <li>Simpan atau Bagikan: Ekspor tier list Anda sebagai gambar atau Screenshot untuk hasil lebih baik, lalu bagikan!</li>
-  </ol>
-</div>
+### Data sources
 
-## 🛠️ Teknologi yang Digunakan
+- `src/data/memberData.js`: list of active/ex-member photos and filenames.
+- `src/data/SetlistData.js`, `src/data/setlistSongs.js`, `src/data/specialshowData.js`, `src/data/spv_mv.js`: assets for each tierlist category.
+- `src/data/wishlistpriceData.js`: base price catalog for the calculator.
+- `src/data/PointHistoryData.js`: color palettes and config for the analytics screen.
 
-<div>
-  <ul>
-    <li><strong>HTML5 & CSS3:</strong> Struktur dan desain halaman.</li>
-    <li><strong>JavaScript:</strong> Logika interaktif untuk drag-and-drop dan penyimpanan data.</li>
-    <li><strong>TierMaker API:</strong> Untuk inspirasi dan referensi dalam pembuatan tier list.</li>
-  </ul>
-</div>
+Update the files above (and the matching images in `public/asset`) to add new members, songs, or prices.
 
-## 🤝 Kontribusi
+## Usage
 
-<div>
-  <p>
-    Kontribusi sangat diterima! Jika Anda memiliki ide, saran, atau ingin menambahkan fitur baru, silakan fork repositori ini dan ajukan pull request.
+1. The landing page lets you choose between the Tierlist Maker and the Dream Setlist builder. From Tierlist Maker you can jump to tier lists, calculators, point history, and other utilities.
+2. For tier lists, pick the desired category, adjust filters, optionally load a saved draft, then click **Start Making Tierlist**.
+3. Use the toolbar inside each feature (for example "Save Draft", "Export PNG/CSV/Excel") to keep or share your work.
 
-  Note: Bila ada kesalahan nama, foto, generasi member, atau setlist silahkan hubungi saya di <a href="https://x.com/criscrosbre">https://x.com/criscrosbre</a>
-  </p>
-</div>
+## Getting started locally
 
-## 📄 Lisensi
+### Requirements
 
-<div>
-  <p>
-    Proyek ini dilisensikan di bawah <a href="https://github.com/MrcellSbst/Tierlist-JKT48/blob/main/LICENSE">MIT License</a>.
-  </p>
-</div>
+- Node.js 18 or newer (matches Vite 5's minimum)
+- npm 9+ (or any Node-compatible package manager)
 
-# JKT48 This or That Game
+### Installation & development
 
-## Environment Setup
-
-### Local Development
-1. Copy `.env.example` to `.env.local`:
 ```bash
-cp .env.example .env.local
+npm install
+npm run dev
 ```
 
-2. Get your Supabase credentials:
-   - Go to your Supabase project dashboard
-   - Click on Settings -> API
-   - Copy the following values:
-     - Project URL (from "Project Configuration")
-     - anon/public key (from "Project API keys")
-     - service_role key (Optional, from "Project API keys")
+The dev server runs on the port printed by Vite (default `http://localhost:5173`). Hot Module Replacement is enabled.
 
-3. Update `.env.local` with your actual credentials
+### Production build
 
-### Vercel Deployment
-1. Go to your Vercel project dashboard
-2. Navigate to Settings -> Environment Variables
-3. Add the following environment variables:
-   - `REACT_APP_SUPABASE_URL`: Your Supabase project URL
-   - `REACT_APP_SUPABASE_ANON_KEY`: Your Supabase anon/public key
-4. Deploy your project
+```bash
+npm run build
+# optional preview of the production bundle
+npm run preview
+```
 
-⚠️ IMPORTANT: 
-- Never commit `.env.local` to version control
-- Always use Vercel's Environment Variables for production deployments
-- Keep your Supabase keys secure and rotate them if they ever get exposed
+The static build is output to `dist/` and can be deployed directly to services such as Vercel or Netlify.
+
+### Environment variables
+
+No environment variables are required for the currently enabled features.
+
+## Deployment
+
+1. Push the code to your Git provider.
+2. Create a Vercel project (or another static host) and point it at the repo.
+3. Set build command `npm run build` and output directory `dist`.
+
+## Contributing
+
+Contributions, bug fixes, and data updates are welcome. Fork the repository, create a topic branch, and submit a pull request. Please keep tierlist assets and data sources in sync (e.g., when adding a member image, also update the relevant `*.js` data file).
+
+## License
+
+This project uses the custom [Tierlist JKT48 License](License.txt).
