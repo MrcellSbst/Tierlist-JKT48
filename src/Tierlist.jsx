@@ -1110,6 +1110,10 @@ const Tierlist = () => {
             tempContainer.style.display = 'flex';
             tempContainer.style.flexDirection = 'column';
             tempContainer.style.alignItems = 'flex-start';
+            tempContainer.style.position = 'absolute';
+            tempContainer.style.top = '0';
+            tempContainer.style.left = '-9999px';
+            tempContainer.style.opacity = '1';
 
             // Add the title if it exists
             if (tierlistTitle) {
@@ -1168,6 +1172,22 @@ const Tierlist = () => {
             // Add to document temporarily for rendering
             document.body.appendChild(tempContainer);
 
+            // Ensure fonts and images are ready
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready.catch(() => {});
+            }
+            // Ensure all images are loaded before capture
+            const waitForImages = (root) => Promise.all(
+                Array.from(root.querySelectorAll('img')).map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(resolve => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    });
+                })
+            );
+
+            await waitForImages(tempContainer);
             const options = {
                 quality: 1.0,
                 bgcolor: '#1a1a2e',
