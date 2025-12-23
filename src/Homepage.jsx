@@ -22,19 +22,13 @@ const Homepage = () => {
     return (
         <div className="homepage-container">
             <img src={logo} alt="JKT48 Fan Tools Logo" className="app-logo" />
-            <h1 className="title">JKT48 Fan Tools</h1>
+            <h1 className="title">MY JKT48 TIERLIST</h1>
             <div className="nav-buttons-container">
                 <button 
                     className="nav-button"
                     onClick={() => navigate('/homepagetierlist')}
                 >
                     Tierlist Maker
-                </button>
-                <button 
-                    className="nav-button"
-                    onClick={() => navigate('/calculator')}
-                >
-                    Wishlist Calculator
                 </button>
                 <button 
                     className="nav-button"

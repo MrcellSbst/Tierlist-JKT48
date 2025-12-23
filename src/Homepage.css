@@ -9,7 +9,7 @@
 }
 
 .app-logo {
-    width: 240px;
+    width: 500px;
     height: auto;          /* keep aspect ratio of the image */
     max-height: 40vh;      /* prevent it from growing too tall */
     object-fit: contain;   /* fit within box without distortion */
