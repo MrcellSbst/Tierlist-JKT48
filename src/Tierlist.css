@@ -446,6 +446,35 @@
     }
 }
 
+/* Reduce costly effects on touch devices for smoother scrolling/drag */
+@media (pointer: coarse) {
+    .member-image {
+        transition: none;
+        box-shadow: var(--shadow-sm);
+    }
+    .member-image:hover,
+    .member-image:active {
+        transform: none;
+        box-shadow: var(--shadow-sm);
+        border-color: transparent;
+    }
+    .member-image img {
+        transition: none;
+    }
+    .member-image:hover img {
+        transform: none;
+    }
+    .member-image.overlay {
+        animation: none;
+    }
+    .love-hearts .heart {
+        animation-duration: 2s;
+    }
+    .member-image.love::before {
+        animation-duration: 2s;
+    }
+}
+
 .member-name {
     height: 28px;
     padding: 4px 6px;
