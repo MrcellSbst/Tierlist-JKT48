@@ -103,7 +103,7 @@ const initialRows = [
     { id: 'D', name: 'D Tier', color: '#7FFF7F' }
 ];
 
-// Helper function to properly capitalize member names
+// Format member names from filenames (handles JKT48V prefixes)
 const formatMemberName = (filename) => {
     if (!filename || typeof filename !== 'string') return '';
 

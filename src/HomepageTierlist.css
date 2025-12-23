@@ -1,8 +1,4 @@
-/* ============================================
-/* ============================================
-   IMPROVED HOMEPAGE TIERLIST STYLES
-   Focus: Visual Design, UX, Performance
-   ============================================ */
+/* Homepage Tierlist styles (visual polish + smooth UX) */
 
 :root {
     --primary-color: #E50014;
@@ -14,8 +10,8 @@
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
-    --transition-fast: 0.2s ease;
-    --transition-normal: 0.3s ease;
+    --transition-fast: 0.4s ease;
+    --transition-normal: 1s ease;
 }
 
 /* ============================================
@@ -152,7 +148,7 @@
     border-radius: 20px;
     box-shadow: var(--shadow-lg);
     z-index: 1;
-    animation: fadeInUp 0.6s ease 0.2s both;
+    animation: fadeInUp 1s ease 1s both;
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -180,6 +176,7 @@
     box-sizing: border-box;
     overflow: visible;
     position: relative;
+    
 }
 
 .nav-buttons-container .nav-button {
@@ -271,7 +268,7 @@
     right: 0;
     overflow: visible;
     pointer-events: none;
-    transition: opacity 0.35s ease, transform 0.35s ease;
+    transition: opacity 1s ease, transform 1s ease;
     transform: translateY(-10px);
 }
 
@@ -279,7 +276,7 @@
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
-    animation: dropdownReveal 0.4s ease-out both;
+    animation: dropdownReveal 1s ease-out both;
     will-change: opacity, transform;
 }
 
