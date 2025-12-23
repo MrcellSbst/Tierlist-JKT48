@@ -14,6 +14,13 @@ const Homepage = () => {
     const [showPopup, setShowPopup] = useState(false);
     const [drafts, setDrafts] = useState([]);
     const navigate = useNavigate();
+    const hasSecondary =
+        tierlistType === 'member' ||
+        tierlistType === 'video' ||
+        tierlistType === 'setlist_song';
+    const secondaryHeight =
+        tierlistType === 'member' ? 110 :
+        tierlistType === 'video' || tierlistType === 'setlist_song' ? 60 : 0;
 
     // Configure how many standard and JKT48V generations to show in dropdowns
     const STANDARD_GEN_COUNT = 13; // Gen1..Gen13
@@ -182,8 +189,8 @@ const Homepage = () => {
                         fontSize: '16px',
                         fontWeight: 'bold',
                         cursor: 'pointer',
-                        margin: '10px',
-                        minWidth: '200px'
+                        minWidth: '200px',
+                        width: '100%'
                     }}
                 >
                     <option value="">-- Select Tierlist Type --</option>
@@ -208,8 +215,8 @@ const Homepage = () => {
                             fontSize: '16px',
                             fontWeight: 'bold',
                             cursor: 'pointer',
-                            margin: '10px',
-                            minWidth: '200px'
+                            minWidth: '200px',
+                            width: '100%'
                         }}
                     >
                         <option value="">-- Load Draft --</option>
@@ -244,105 +251,117 @@ const Homepage = () => {
                     </select>
                 )}
 
-                {/* Video type dropdown */}
-                <div className={`member-dropdowns-container ${tierlistType === 'video' ? 'show' : ''}`}>
-                    <select
-                        value={selectedVideoType}
-                        onChange={handleVideoTypeChange}
-                        className="nav-button"
-                        style={{
-                            backgroundColor: 'white',
-                            color: 'black',
-                            border: '2px solid #E50014',
-                            borderRadius: '10px',
-                            padding: '12px 20px',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            margin: '10px',
-                            minWidth: '200px'
-                        }}
-                    >
-                        <option value="all">SPV and MV</option>
-                        <option value="mv">MV</option>
-                        <option value="spv">SPV</option>
-                    </select>
-                </div>
+                <div
+                    className={`secondary-slot ${hasSecondary ? 'has-secondary' : ''}`}
+                    style={{ minHeight: secondaryHeight }}
+                >
+                    {/* Video type dropdown */}
+                    {tierlistType === 'video' && (
+                        <div className="member-dropdowns-container show">
+                            <select
+                                value={selectedVideoType}
+                                onChange={handleVideoTypeChange}
+                                className="nav-button"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                    border: '2px solid #E50014',
+                                    borderRadius: '10px',
+                                    padding: '12px 20px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    minWidth: '200px',
+                                    width: '100%'
+                                }}
+                            >
+                                <option value="all">SPV and MV</option>
+                                <option value="mv">MV</option>
+                                <option value="spv">SPV</option>
+                            </select>
+                        </div>
+                    )}
 
-                {/* Setlist selection dropdown */}
-                <div className={`member-dropdowns-container ${tierlistType === 'setlist_song' ? 'show' : ''}`}>
-                    <select
-                        value={selectedSetlist}
-                        onChange={handleSetlistChange}
-                        className="nav-button"
-                        style={{
-                            backgroundColor: 'white',
-                            color: 'black',
-                            border: '2px solid #E50014',
-                            borderRadius: '10px',
-                            padding: '12px 20px',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            margin: '10px',
-                            minWidth: '200px'
-                        }}
-                    >
-                        <option value="">-- Select Setlist --</option>
-                        {Object.keys(setlistSongs).map(setlist => (
-                            <option key={setlist} value={setlist}>{setlist}</option>
-                        ))}
-                    </select>
-                </div>
+                    {/* Setlist selection dropdown */}
+                    {tierlistType === 'setlist_song' && (
+                        <div className="member-dropdowns-container show">
+                            <select
+                                value={selectedSetlist}
+                                onChange={handleSetlistChange}
+                                className="nav-button"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                    border: '2px solid #E50014',
+                                    borderRadius: '10px',
+                                    padding: '12px 20px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    minWidth: '200px',
+                                    width: '100%'
+                                }}
+                            >
+                                <option value="">-- Select Setlist --</option>
+                                {Object.keys(setlistSongs).map(setlist => (
+                                    <option key={setlist} value={setlist}>{setlist}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
-                {/* Member type dropdowns */}
-                <div className={`member-dropdowns-container ${tierlistType === 'member' ? 'show' : ''}`}>
-                    <select
-                        value={selectedMemberType}
-                        onChange={handleMemberTypeChange}
-                        className="nav-button"
-                        style={{
-                            backgroundColor: 'white',
-                            color: 'black',
-                            border: '2px solid #E50014',
-                            borderRadius: '10px',
-                            padding: '12px 20px',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            margin: '10px',
-                            minWidth: '200px'
-                        }}
-                    >
-                        <option value="active">Active Member</option>
-                        <option value="ex">Ex Member</option>
-                        <option value="all">All Member</option>
-                    </select>
-                    <select
-                        value={selectedGeneration}
-                        onChange={handleGenerationChange}
-                        className="nav-button"
-                        style={{
-                            backgroundColor: 'white',
-                            color: 'black',
-                            border: '2px solid #E50014',
-                            borderRadius: '10px',
-                            padding: '12px 20px',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            margin: '10px',
-                            minWidth: '200px'
-                        }}
+                    {/* Member type dropdowns */}
+                    {tierlistType === 'member' && (
+                        <div className="member-dropdowns-container show">
+                            <select
+                                value={selectedMemberType}
+                                onChange={handleMemberTypeChange}
+                                className="nav-button"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                    border: '2px solid #E50014',
+                                    borderRadius: '10px',
+                                    padding: '12px 20px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    minWidth: '200px',
+                                    width: '100%'
+                                }}
+                            >
+                                <option value="active">Active Member</option>
+                                <option value="ex">Ex Member</option>
+                                <option value="all">All Member</option>
+                            </select>
+                            <select
+                                value={selectedGeneration}
+                                onChange={handleGenerationChange}
+                                className="nav-button"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                    border: '2px solid #E50014',
+                                    borderRadius: '10px',
+                                    padding: '12px 20px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    minWidth: '200px',
+                                    width: '100%'
+                                }}
                     >
                         <option value="all">All Generations</option>
                         {Array.from({ length: STANDARD_GEN_COUNT }, (_, i) => i + 1).map(gen => (
                             <option key={`std-${gen}`} value={`gen${gen}`}>Generation {gen}</option>
                         ))}
+                        <option value="genvall">All Virtual Generations</option>
                         {Array.from({ length: V_GEN_COUNT }, (_, i) => i + 1).map(vgen => (
                             <option key={`v-${vgen}`} value={`genv${vgen}`}>JKT48V Gen {vgen}</option>
                         ))}
                     </select>
+                </div>
+                    )}
                 </div>
 
                 <button
@@ -357,8 +376,8 @@ const Homepage = () => {
                         cursor: 'pointer',
                         fontWeight: 'bold',
                         fontSize: '16px',
-                        margin: '10px',
-                        minWidth: '200px'
+                        minWidth: '200px',
+                        width: '100%'
                     }}
                 >
                     Start Making Tierlist

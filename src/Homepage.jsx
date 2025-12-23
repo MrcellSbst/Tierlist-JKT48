@@ -42,12 +42,6 @@ const Homepage = () => {
                 >
                     Dream Setlist
                 </button>
-                <button 
-                    className="nav-button"
-                    onClick={() => navigate('/this-or-that')}
-                >
-                    This or That Game
-                </button>
             </div>
         </div>
     );

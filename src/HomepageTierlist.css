@@ -1,4 +1,5 @@
 /* ============================================
+/* ============================================
    IMPROVED HOMEPAGE TIERLIST STYLES
    Focus: Visual Design, UX, Performance
    ============================================ */
@@ -29,6 +30,7 @@
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     padding: 40px 20px;
     position: relative;
+    /* Clip overflow to avoid double scrollbars; inner stacks handle their own overflow needs */
     overflow: hidden;
 }
 
@@ -166,6 +168,48 @@
     min-width: 200px;
 }
 
+/* Consistent stacked layout for homepage tierlist controls */
+.nav-buttons-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    width: 100%;
+    max-width: 420px;
+    padding: 16px 12px;
+    box-sizing: border-box;
+    overflow: visible;
+    position: relative;
+}
+
+.nav-buttons-container .nav-button {
+    width: 100%;
+    margin: 0;
+    transform-origin: center;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+/* Keep hover animation gentle; prevent select "shake" on click */
+.nav-buttons-container .nav-button:hover {
+    transform: translateY(-2px) scale(1.01);
+}
+
+.nav-buttons-container .nav-button:active {
+    transform: translateY(-1px) scale(1);
+}
+
+.nav-buttons-container select.nav-button:hover,
+.nav-buttons-container select.nav-button:active,
+.nav-buttons-container select.nav-button:focus {
+    transform: none;
+}
+
+.secondary-slot {
+    position: relative;
+    width: 100%;
+    padding: 4px 0;
+}
+
 /* ============================================
    DROPDOWN STYLES
    ============================================ */
@@ -218,19 +262,36 @@
 .member-dropdowns-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     width: 100%;
     opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow: visible;
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
     transform: translateY(-10px);
 }
 
 .member-dropdowns-container.show {
     opacity: 1;
-    max-height: 300px;
     transform: translateY(0);
+    pointer-events: auto;
+    animation: dropdownReveal 0.4s ease-out both;
+    will-change: opacity, transform;
+}
+
+@keyframes dropdownReveal {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ============================================

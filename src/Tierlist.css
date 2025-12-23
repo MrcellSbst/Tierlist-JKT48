@@ -270,6 +270,7 @@
     min-height: 140px;
     transition: all var(--transition-normal);
     position: relative;
+    width: 100%;
 }
 
 .droppable.is-over {
@@ -300,18 +301,21 @@
 
 .tier-content {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    grid-auto-flow: dense;
     gap: 1rem;
     padding: 1rem;
     min-height: 140px;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    width: 100%;
 }
 
 /* ============================================
    MEMBER/ITEM IMAGE STYLES
    ============================================ */
 .member-image {
-    width: 100px;
+    width: 100%;
+    max-width: 120px;
     height: 120px;
     border-radius: 12px;
     overflow: hidden;
@@ -454,6 +458,10 @@
     box-shadow: var(--shadow-lg);
     border: 1px solid rgba(255, 255, 255, 0.1);
     animation: slideInUp 0.6s ease 0.1s both;
+    max-width: 1175px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }
 
 .image-pool-header {
