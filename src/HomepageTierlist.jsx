@@ -14,6 +14,13 @@ const Homepage = () => {
     const [showPopup, setShowPopup] = useState(false);
     const [drafts, setDrafts] = useState([]);
     const navigate = useNavigate();
+    const hasSecondary =
+        tierlistType === 'member' ||
+        tierlistType === 'video' ||
+        tierlistType === 'setlist_song';
+    const secondaryHeight =
+        tierlistType === 'member' ? 110 :
+        tierlistType === 'video' || tierlistType === 'setlist_song' ? 60 : 0;
 
     // Configure how many standard and JKT48V generations to show in dropdowns
     const STANDARD_GEN_COUNT = 13; // Gen1..Gen13
@@ -41,7 +48,7 @@ const Homepage = () => {
 
         const manualDrafts = JSON.parse(localStorage.getItem('tierlistManualDrafts') || '[]');
         const autoDrafts = JSON.parse(localStorage.getItem('tierlistAutoSaveDrafts') || '[]');
-        
+
         // Filter drafts based on tierlist type and sort by date
         const relevantDrafts = [...manualDrafts, ...autoDrafts]
             .filter(draft => draft.type === tierlistType)
@@ -142,7 +149,7 @@ const Homepage = () => {
 
     return (
         <div className="homepage-container">
-            <button 
+            <button
                 onClick={() => navigate('/')}
                 style={{
                     position: 'absolute',
@@ -168,12 +175,23 @@ const Homepage = () => {
             )}
             <img src={logo} alt="JKT48 Tierlist Logo" className="app-logo" />
             <h1 className="title">JKT48 Tierlist</h1>
-            <div className="dropdown-container">
-                <div className="dropdown-row">
-                <select 
-                    value={tierlistType} 
+            <div className="nav-buttons-container">
+                <select
+                    value={tierlistType}
                     onChange={handleTierlistTypeChange}
-                    className="member-dropdown"
+                    className="nav-button"
+                    style={{
+                        backgroundColor: 'white',
+                        color: 'black',
+                        border: '2px solid #E50014',
+                        borderRadius: '10px',
+                        padding: '12px 20px',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        minWidth: '200px',
+                        width: '100%'
+                    }}
                 >
                     <option value="">-- Select Tierlist Type --</option>
                     <option value="member">Member Tierlist</option>
@@ -183,109 +201,184 @@ const Homepage = () => {
                     <option value="setlist_song">Setlist's Song</option>
                 </select>
 
-                    {drafts.length > 0 && (
-                        <select
-                            onChange={handleDraftSelect}
-                            className="draft-dropdown"
-                            defaultValue=""
-                            style={{
-                                backgroundColor: 'white',
-                                color: 'black',
-                                padding: '8px 12px',
-                                borderRadius: '4px',
-                                border: '1px solid rgba(0, 0, 0, 0.23)',
-                                fontSize: '16px'
-                            }}
-                        >
-                            <option value="">-- Load Draft --</option>
-                            {drafts.map(draft => {
-                                const timeAgo = formatDistanceToNow(new Date(draft.savedAt), { addSuffix: true });
-                                const shortTimeAgo = timeAgo
-                                    .replace(' minutes', 'm')
-                                    .replace(' minute', 'm')
-                                    .replace(' hours', 'h')
-                                    .replace(' hour', 'h')
-                                    .replace(' days', 'd')
-                                    .replace(' day', 'd')
-                                    .replace(' ago', '')
-                                    .replace('about ', '');
-                                
-                                const draftName = draft.title || 'Untitled';
-                                const displayName = draft.isAutoSave ? `${draftName} (AutoSaved)` : draftName;
-                                
-                                return (
-                                    <option 
-                                        key={draft.id} 
-                                        value={draft.id}
-                                        style={{
-                                            backgroundColor: 'white',
-                                            color: 'black'
-                                        }}
-                                    >
-                                        {displayName} • {draft.completion}% • {shortTimeAgo}
-                                    </option>
-                                );
-                            })}
-                        </select>
+                {drafts.length > 0 && (
+                    <select
+                        onChange={handleDraftSelect}
+                        className="nav-button"
+                        defaultValue=""
+                        style={{
+                            backgroundColor: 'white',
+                            color: 'black',
+                            border: '2px solid #E50014',
+                            borderRadius: '10px',
+                            padding: '12px 20px',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            minWidth: '200px',
+                            width: '100%'
+                        }}
+                    >
+                        <option value="">-- Load Draft --</option>
+                        {drafts.map(draft => {
+                            const timeAgo = formatDistanceToNow(new Date(draft.savedAt), { addSuffix: true });
+                            const shortTimeAgo = timeAgo
+                                .replace(' minutes', 'm')
+                                .replace(' minute', 'm')
+                                .replace(' hours', 'h')
+                                .replace(' hour', 'h')
+                                .replace(' days', 'd')
+                                .replace(' day', 'd')
+                                .replace(' ago', '')
+                                .replace('about ', '');
+
+                            const draftName = draft.title || 'Untitled';
+                            const displayName = draft.isAutoSave ? `${draftName} (AutoSaved)` : draftName;
+
+                            return (
+                                <option
+                                    key={draft.id}
+                                    value={draft.id}
+                                    style={{
+                                        backgroundColor: 'white',
+                                        color: 'black'
+                                    }}
+                                >
+                                    {displayName} • {draft.completion}% • {shortTimeAgo}
+                                </option>
+                            );
+                        })}
+                    </select>
+                )}
+
+                <div
+                    className={`secondary-slot ${hasSecondary ? 'has-secondary' : ''}`}
+                    style={{ minHeight: secondaryHeight }}
+                >
+                    {/* Video type dropdown */}
+                    {tierlistType === 'video' && (
+                        <div className="member-dropdowns-container show">
+                            <select
+                                value={selectedVideoType}
+                                onChange={handleVideoTypeChange}
+                                className="nav-button"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                    border: '2px solid #E50014',
+                                    borderRadius: '10px',
+                                    padding: '12px 20px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    minWidth: '200px',
+                                    width: '100%'
+                                }}
+                            >
+                                <option value="all">SPV and MV</option>
+                                <option value="mv">MV</option>
+                                <option value="spv">SPV</option>
+                            </select>
+                        </div>
                     )}
-                </div>
 
-                {/* Video type dropdown */}
-                <div className={`member-dropdowns-container ${tierlistType === 'video' ? 'show' : ''}`}>
-                    <select 
-                        value={selectedVideoType} 
-                        onChange={handleVideoTypeChange}
-                        className="member-dropdown"
-                    >
-                        <option value="all">SPV and MV</option>
-                        <option value="mv">MV</option>
-                        <option value="spv">SPV</option>
-                    </select>
-                </div>
+                    {/* Setlist selection dropdown */}
+                    {tierlistType === 'setlist_song' && (
+                        <div className="member-dropdowns-container show">
+                            <select
+                                value={selectedSetlist}
+                                onChange={handleSetlistChange}
+                                className="nav-button"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                    border: '2px solid #E50014',
+                                    borderRadius: '10px',
+                                    padding: '12px 20px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    minWidth: '200px',
+                                    width: '100%'
+                                }}
+                            >
+                                <option value="">-- Select Setlist --</option>
+                                {Object.keys(setlistSongs).map(setlist => (
+                                    <option key={setlist} value={setlist}>{setlist}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
-                {/* Setlist selection dropdown */}
-                <div className={`member-dropdowns-container ${tierlistType === 'setlist_song' ? 'show' : ''}`}>
-                    <select 
-                        value={selectedSetlist} 
-                        onChange={handleSetlistChange}
-                        className="member-dropdown"
-                    >
-                        <option value="">-- Select Setlist --</option>
-                        {Object.keys(setlistSongs).map(setlist => (
-                            <option key={setlist} value={setlist}>{setlist}</option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Member type dropdowns */}
-                <div className={`member-dropdowns-container ${tierlistType === 'member' ? 'show' : ''}`}>
-                    <select 
-                        value={selectedMemberType} 
-                        onChange={handleMemberTypeChange}
-                        className="member-dropdown"
-                    >
-                        <option value="active">Active Member</option>
-                        <option value="ex">Ex Member</option>
-                        <option value="all">All Member</option>
-                    </select>
-                    <select 
-                        value={selectedGeneration} 
-                        onChange={handleGenerationChange}
-                        className="member-dropdown"
+                    {/* Member type dropdowns */}
+                    {tierlistType === 'member' && (
+                        <div className="member-dropdowns-container show">
+                            <select
+                                value={selectedMemberType}
+                                onChange={handleMemberTypeChange}
+                                className="nav-button"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                    border: '2px solid #E50014',
+                                    borderRadius: '10px',
+                                    padding: '12px 20px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    minWidth: '200px',
+                                    width: '100%'
+                                }}
+                            >
+                                <option value="active">Active Member</option>
+                                <option value="ex">Ex Member</option>
+                                <option value="all">All Member</option>
+                            </select>
+                            <select
+                                value={selectedGeneration}
+                                onChange={handleGenerationChange}
+                                className="nav-button"
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                    border: '2px solid #E50014',
+                                    borderRadius: '10px',
+                                    padding: '12px 20px',
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    minWidth: '200px',
+                                    width: '100%'
+                                }}
                     >
                         <option value="all">All Generations</option>
                         {Array.from({ length: STANDARD_GEN_COUNT }, (_, i) => i + 1).map(gen => (
                             <option key={`std-${gen}`} value={`gen${gen}`}>Generation {gen}</option>
                         ))}
+                        <option value="genvall">All Virtual Generations</option>
                         {Array.from({ length: V_GEN_COUNT }, (_, i) => i + 1).map(vgen => (
                             <option key={`v-${vgen}`} value={`genv${vgen}`}>JKT48V Gen {vgen}</option>
                         ))}
                     </select>
                 </div>
+                    )}
+                </div>
 
-                <button 
+                <button
                     onClick={handleStart}
-                    className="start-button"
+                    className="nav-button"
+                    style={{
+                        backgroundColor: '#E50014',
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px 20px',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '16px',
+                        minWidth: '200px',
+                        width: '100%'
+                    }}
                 >
                     Start Making Tierlist
                 </button>
@@ -294,4 +387,4 @@ const Homepage = () => {
     );
 };
 
-export default Homepage; 
+export default Homepage;

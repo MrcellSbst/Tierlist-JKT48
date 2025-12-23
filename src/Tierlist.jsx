@@ -111,16 +111,20 @@ const formatMemberName = (filename) => {
     if (!filename || typeof filename !== 'string') return '';
 
     const baseName = filename.split('/').pop().split('.')[0]; // ambil bagian terakhir dari path & tanpa extension
-    const parts = baseName.split('_');
+    const parts = baseName.split('_').filter(Boolean);
+    const firstPart = parts[0] || '';
+
+    // New naming: JKT48VGen1_Name...
+    if (/^jkt48vgen\d+$/i.test(firstPart)) {
+        return parts.slice(1).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+    }
 
     // Kalau prefix JKT48V
-    if (parts[0] && parts[0].toUpperCase() === 'JKT48V') {
-        const genIndex = parts.findIndex(part => part.toLowerCase().startsWith('gen'));
-        if (genIndex !== -1 && parts.length > genIndex + 1) {
-            return parts.slice(genIndex + 1).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-        }
-        // fallback kalau tidak ada gen atau nama
-        return parts.slice(1).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+    if (firstPart && firstPart.toUpperCase() === 'JKT48V') {
+        // Hilangkan prefix JKT48V dan gen token jika ada (Gen1, Gen2, ...)
+        const rest = parts.slice(1);
+        const afterGen = rest[0]?.toLowerCase().startsWith('gen') ? rest.slice(1) : rest;
+        return afterGen.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
     }
 
     // Untuk GenX members (seperti Gen3_shania_gracia)
@@ -137,19 +141,25 @@ const parseNameForSearch = (filename) => {
     if (!filename || typeof filename !== 'string') return '';
 
     const baseName = filename.split('/').pop().split('.')[0];
-    const parts = baseName.split('_');
+    const parts = baseName.split('_').filter(Boolean);
+    const firstPart = parts[0] || '';
 
     let genPart = '';
     let nameParts = [];
 
-    if (parts[0].toUpperCase() === 'JKT48V') {
-        const genIndex = parts.findIndex(p => p.toLowerCase().startsWith('gen'));
-        if (genIndex !== -1) {
-            genPart = parts[genIndex];
-            nameParts = parts.slice(genIndex + 1);
-        } else {
-            nameParts = parts.slice(1);
-        }
+    if (/^jkt48vgen\d+$/i.test(firstPart)) {
+        const numMatch = firstPart.match(/\d+/);
+        const genNum = numMatch ? numMatch[0] : '';
+        genPart = genNum ? `genv${genNum}` : '';
+        nameParts = parts.slice(1);
+    } else if (firstPart.toUpperCase() === 'JKT48V') {
+        // Drop the JKT48V prefix
+        const rest = parts.slice(1);
+        const genToken = rest[0]?.toLowerCase().startsWith('gen') ? rest[0] : '';
+        const numMatch = genToken.match(/\d+/);
+        const genNum = numMatch ? numMatch[0] : '';
+        genPart = genNum ? `genv${genNum}` : '';
+        nameParts = genToken ? rest.slice(1) : rest;
     } else if (parts[0].toLowerCase().startsWith('gen')) {
         genPart = parts[0];
         nameParts = parts.slice(1);
@@ -619,14 +629,19 @@ const Tierlist = () => {
             // Helper function to check if a filename matches the generation
             const matchesGeneration = (filename) => {
                 if (generation === 'all') return true;
+                if (generation === 'genvall') {
+                    const baseFilename = filename.includes('/') ? filename.split('/').pop() : filename;
+                    return /^JKT48VGen\d+_/i.test(baseFilename) || /^JKT48V_Gen\d+_/i.test(baseFilename);
+                }
 
                 const baseFilename = filename.includes('/') ? filename.split('/').pop() : filename;
 
                 // Handle JKT48V generations generically: genv1, genv2, ...
                 if (generation.toLowerCase().startsWith('genv')) {
                     const vGenNumber = generation.slice(4); // after 'genv'
-                    const vPrefix = `JKT48V_Gen${vGenNumber}_`;
-                    return baseFilename.startsWith(vPrefix);
+                    const vPrefixUnderscore = `JKT48V_Gen${vGenNumber}_`;
+                    const vPrefixCompact = `JKT48VGen${vGenNumber}_`;
+                    return baseFilename.startsWith(vPrefixUnderscore) || baseFilename.startsWith(vPrefixCompact);
                 }
 
                 // Handle regular generations: gen1, gen2, ...
@@ -902,16 +917,45 @@ const Tierlist = () => {
     
             if (containerId === 'image-pool' && searchTerm) {
                 if (!img.id || typeof img.id !== 'string') return false;
-    
+
                 const searchableName = parseNameForSearch(img.id);
                 const searchLower = searchTerm.toLowerCase();
-    
+
                 // Memecah kata dari searchTerm
-                const searchWords = searchLower.split(' ').filter(Boolean);
-    
-                // Cek kalau ada kata dari searchWords yang ada di searchableName
-                const matches = searchWords.some(word => searchableName.includes(word));
-    
+                const rawWords = searchLower.split(/\s+/).filter(Boolean);
+                const genTerms = [];
+                const nonGenWords = [];
+
+                // Gabungkan pola "gen 1" atau "genv 1" menjadi gen1/genv1
+                for (let i = 0; i < rawWords.length; i++) {
+                    const word = rawWords[i];
+                    const next = rawWords[i + 1];
+
+                    if (/^genv?\d+$/.test(word)) {
+                        genTerms.push(word);
+                        continue;
+                    }
+                    if ((word === 'gen' || word === 'genv') && next && /^\d+$/.test(next)) {
+                        genTerms.push(`${word}${next}`);
+                        i++; // skip next
+                        continue;
+                    }
+                    nonGenWords.push(word);
+                }
+
+                const searchableTokens = searchableName.split(/\s+/).filter(Boolean);
+
+                const genMatches = genTerms.length === 0
+                    ? false
+                    : genTerms.some(term => searchableTokens.includes(term));
+
+                const otherMatches = nonGenWords.length === 0
+                    ? false
+                    : nonGenWords.some(word => searchableName.includes(word));
+
+                // If only gen terms provided, rely on genMatches; otherwise allow either branch to match
+                const matches = (genTerms.length > 0 ? genMatches : false) || (nonGenWords.length > 0 ? otherMatches : false);
+
                 return matches;
             }
     
