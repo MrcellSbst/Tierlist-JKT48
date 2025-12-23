@@ -140,9 +140,12 @@ const formatMemberName = (filename) => {
 const parseNameForSearch = (filename) => {
     if (!filename || typeof filename !== 'string') return '';
 
-    const baseName = filename.split('/').pop().split('.')[0];
-    const parts = baseName.split('_').filter(Boolean);
+    // Strip common ID prefixes (member-, setlist-, ramadan-, video-) before parsing
+                const rawBase = filename.split('/').pop().split('.')[0];
+                const baseName = rawBase.replace(/^(member|setlist|ramadan|video)-/i, '');
+                const parts = baseName.split('_').filter(Boolean);
     const firstPart = parts[0] || '';
+    const brandTokens = [];
 
     let genPart = '';
     let nameParts = [];
@@ -152,6 +155,7 @@ const parseNameForSearch = (filename) => {
         const genNum = numMatch ? numMatch[0] : '';
         genPart = genNum ? `genv${genNum}` : '';
         nameParts = parts.slice(1);
+        brandTokens.push('jkt48v');
     } else if (firstPart.toUpperCase() === 'JKT48V') {
         // Drop the JKT48V prefix
         const rest = parts.slice(1);
@@ -160,6 +164,7 @@ const parseNameForSearch = (filename) => {
         const genNum = numMatch ? numMatch[0] : '';
         genPart = genNum ? `genv${genNum}` : '';
         nameParts = genToken ? rest.slice(1) : rest;
+        brandTokens.push('jkt48v');
     } else if (parts[0].toLowerCase().startsWith('gen')) {
         genPart = parts[0];
         nameParts = parts.slice(1);
@@ -167,7 +172,8 @@ const parseNameForSearch = (filename) => {
         nameParts = parts;
     }
 
-    const searchable = (genPart + ' ' + nameParts.join(' ')).toLowerCase();
+    const searchableParts = [...brandTokens, genPart, ...nameParts].filter(Boolean);
+    const searchable = searchableParts.join(' ').toLowerCase();
 
     
 
@@ -919,42 +925,33 @@ const Tierlist = () => {
                 if (!img.id || typeof img.id !== 'string') return false;
 
                 const searchableName = parseNameForSearch(img.id);
+                const searchableDisplay = `${searchableName} ${(img.name || '').toLowerCase()}`;
                 const searchLower = searchTerm.toLowerCase();
 
-                // Memecah kata dari searchTerm
+                // Normalize search terms and merge patterns like "gen 1" -> "gen1"
                 const rawWords = searchLower.split(/\s+/).filter(Boolean);
-                const genTerms = [];
-                const nonGenWords = [];
-
-                // Gabungkan pola "gen 1" atau "genv 1" menjadi gen1/genv1
+                const mergedWords = [];
                 for (let i = 0; i < rawWords.length; i++) {
                     const word = rawWords[i];
                     const next = rawWords[i + 1];
-
-                    if (/^genv?\d+$/.test(word)) {
-                        genTerms.push(word);
-                        continue;
-                    }
                     if ((word === 'gen' || word === 'genv') && next && /^\d+$/.test(next)) {
-                        genTerms.push(`${word}${next}`);
+                        mergedWords.push(`${word}${next}`);
                         i++; // skip next
                         continue;
                     }
-                    nonGenWords.push(word);
+                    mergedWords.push(word);
                 }
 
                 const searchableTokens = searchableName.split(/\s+/).filter(Boolean);
 
-                const genMatches = genTerms.length === 0
-                    ? false
-                    : genTerms.some(term => searchableTokens.includes(term));
-
-                const otherMatches = nonGenWords.length === 0
-                    ? false
-                    : nonGenWords.some(word => searchableName.includes(word));
-
-                // If only gen terms provided, rely on genMatches; otherwise allow either branch to match
-                const matches = (genTerms.length > 0 ? genMatches : false) || (nonGenWords.length > 0 ? otherMatches : false);
+                // Require every search token to match: gens must match exact token; others substring match
+                const matches = mergedWords.every(word => {
+                    if (/^genv?\d+$/i.test(word)) {
+                        const re = new RegExp(`\\b${word}\\b`, 'i');
+                        return re.test(searchableName);
+                    }
+                    return searchableDisplay.includes(word);
+                });
 
                 return matches;
             }

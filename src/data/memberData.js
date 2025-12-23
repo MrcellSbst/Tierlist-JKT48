@@ -123,6 +123,6 @@ export const exMemberFiles = [
     // Gen12 members
     'Gen12/Gen12_aisa_maharani.webp', 'Gen12/Gen12_letycia_moreen.webp', 'Gen12/Gen12_regina_wilian.jpg',
 
-    // JKT48V members
-    'JKT48VGEN1/JKT48VGen1_Kanaia_Asa.webp'
+    // JKT48_ members
+    'JKT48V_GEN1/JKT48VGen1_Kanaia_Asa.webp'
 ];
