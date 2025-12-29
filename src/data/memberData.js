@@ -1,5 +1,5 @@
 export const activeMemberFiles = [
-    'Gen3_feni_fitriyanti.jpg', 'Gen3_shania_gracia.jpg',
+    'Gen3_feni_fitriyanti.jpg',
     'Gen6_gita_sekar_andarini.jpg',
     'Gen7_angelina_christy.jpg', 'Gen7_febriola_sinambela.jpg',
     'Gen7_freya_jayawardana.jpg', 'Gen7_helisma_putri.jpg',
@@ -8,8 +8,8 @@ export const activeMemberFiles = [
     'Gen8_lulu_salsabila.jpg',
     'Gen9_indah_cahya.jpg', 'Gen9_kathrina_irene.jpg',
     'Gen9_marsha_lenathea.jpg',
-    'Gen10_amanda_sukma.jpg', 'Gen10_aurellia.jpg',
     'Gen10_gabriela_abigail.jpg',
+    'Gen10_amanda_sukma.jpg', 'Gen10_aurellia.jpg',
     'Gen10_jesslyn_elly.jpg', 'Gen10_raisha_syifa.jpg',
     'Gen11_alya_amanda.jpg', 'Gen11_anindya_ramadhani.jpg',
     'Gen11_cathleen_nixie.jpg', 'Gen11_celline_thefani.jpg',
@@ -69,7 +69,7 @@ export const exMemberFiles = [
     'Gen3/Gen3_pipit_ananda.webp', 'Gen3/Gen3_putri_farin_kartika.webp', 'Gen3/Gen3_rizka_khalila.webp',
     'Gen3/Gen3_shaffa_nabila.webp', 'Gen3/Gen3_shani_indira_natio.webp', 'Gen3/Gen3_sofia_meifaliani.webp',
     'Gen3/Gen3_stephanie_pricilla_indarto_putri.webp', 'Gen3/Gen3_syahfira_angela_nurhaliza.webp',
-    'Gen3/Gen3_triarona_kusuma.webp', 'Gen3/Gen3_yansen_indiani.webp', 'Gen3/Gen3_zebi_magnolia_fawwaz.webp',
+    'Gen3/Gen3_triarona_kusuma.webp', 'Gen3/Gen3_yansen_indiani.webp', 'Gen3/Gen3_zebi_magnolia_fawwaz.webp', 'Gen3_shania_gracia.jpg',
 
     // Gen4 members
     'Gen4/Gen4_adriani_elisabeth.webp', 'Gen4/Gen4_christi.webp', 'Gen4/Gen4_cindy_hapsari.webp',
@@ -145,3 +145,39 @@ export const tim_love = [
     'Gen12_jazzlyn_trisha.jpg',
     'Gen11_michelle_alexandra.jpg'
 ];
+
+export const tim_dream = [
+'Gen12_adeline_wijaya.jpg',
+'Gen10_amanda_sukma.jpg',
+'Gen11_chelsea_davina.jpg',
+'Gen7_febriola_sinambela.jpg',
+'Gen7_freya_jayawardana.jpg',
+'Gen10_gabriela_abigail.jpg',
+'Gen11_gendis_mayrannisa.jpg',
+'Gen6_gita_sekar_andarini.jpg',
+'Gen11_greesella_adhalia.jpg',
+'Gen7_helisma_putri.jpg',
+'Gen10_jesslyn_elly.jpg',
+'Gen9_marsha_lenathea.jpg',
+'Gen12_nina_tutachia.jpg',
+'Gen12_oline_manuel.jpg',
+'Gen12_shabilqis_naila.jpg',
+]
+
+export const tim_passion = [
+'Gen12_abigail_rachel.jpg',
+'Gen7_angelina_christy.jpg',
+'Gen12_catherina_vallencia.jpg',
+'Gen8_cornelia_vanisa.jpg',
+'Gen11_dena_natalia.jpg',
+'Gen11_desy_natalia.jpg',
+'Gen3_feni_fitriyanti.jpg',
+'Gen7_jessica_chandra.jpg',
+'Gen9_kathrina_irene.jpg',
+'Gen8_lulu_salsabila.jpg',
+'Gen12_michelle_levia.jpg',
+'Gen7_mutiara_azzahra.jpg',
+'Gen10_raisha_syifa.jpg',
+'Gen12_ribka_budiman.jpg',
+'Gen12_victoria_kimberly.jpg',
+]
