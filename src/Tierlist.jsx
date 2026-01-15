@@ -1167,11 +1167,21 @@ const Tierlist = () => {
 
             document.body.appendChild(cloneRowsContainer);
 
+            const captureWidth = cloneRowsContainer.scrollWidth;
+            const captureHeight = cloneRowsContainer.scrollHeight;
+
+            cloneRowsContainer.style.width = `${captureWidth}px`;
+            cloneRowsContainer.style.height = `${captureHeight}px`;
+
             const options = {
                 quality: 1.0,
                 bgcolor: '#1a1a2e',
+                width: captureWidth,
+                height: captureHeight,
                 style: {
-                    'background-color': '#1a1a2e'
+                    'background-color': '#1a1a2e',
+                    width: `${captureWidth}px`,
+                    height: `${captureHeight}px`
                 },
                 cacheBust: true
             };
