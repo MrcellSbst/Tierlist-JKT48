@@ -1,6 +1,7 @@
 export const mvFiles = [
     '360°_VR_＂LOVE_TRIP＂.webp',
     '360°_VR_＂Mae_Shika_Mukanee＂_(Hanya_Lihat_Ke_Depan).webp',
+    "Andai 'Ku Bukan Idola.webp",
     'Angin_Sedang_Berhembus.webp',
     'Beginner.webp',
     'Belalang_yang_Membangkang_Trainee.webp',
@@ -50,6 +51,7 @@ export const mvFiles = [
     'Value_Milikku_Saja.webp',
     'Waktunya Membuktikan - JKT48 X Musikal Keluarga Cemara.webp',
     'Yuuhi_wo_Miteiruka_(Apakah_Kau_Melihat_Mentari_Senja).webp'
+    
 ];
 
 export const spvFiles = [
