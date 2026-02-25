@@ -248,12 +248,12 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
             const isRightHalf = Math.cos(mid) >= 0;
             ctx.rotate(isRightHalf ? mid : mid + Math.PI);
 
-            const maxFontSize = n > 30 ? 8 : n > 20 ? 10 : n > 12 ? 12 : 14;
+            const maxFontSize = n > 30 ? 14 : n > 20 ? 17 : n > 12 ? 20 : 24;
             let fontSize = maxFontSize;
             const maxWidth = radius * 0.72;
             ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
 
-            while (ctx.measureText(entry.label).width > maxWidth && fontSize > 6) {
+            while (ctx.measureText(entry.label).width > maxWidth && fontSize > 8) {
                 fontSize--;
                 ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
             }
@@ -363,8 +363,8 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
     return (
         <canvas
             ref={canvasRef}
-            width={440}
-            height={440}
+            width={680}
+            height={680}
             className="roulette-wheel-canvas"
         />
     );
@@ -791,9 +791,11 @@ const RoulettePage = () => {
                                 <div className="sidebar-stat-box">
                                     <div className="sidebar-stat">
                                         <span className="sidebar-stat-label">Pool</span>
-                                        <span className="sidebar-stat-value">{remaining}</span>
+                                        <div className="sidebar-stat-row">
+                                            <span className="sidebar-stat-value">{remaining}</span>
+                                            <span className="sidebar-stat-divider">/ {total}</span>
+                                        </div>
                                     </div>
-                                    <div className="sidebar-stat-divider">/ {total}</div>
                                     <div className="sidebar-stat">
                                         <span className="sidebar-stat-label">Picked</span>
                                         <span className="sidebar-stat-value picked">{total - remaining}</span>

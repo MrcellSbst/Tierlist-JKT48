@@ -277,7 +277,8 @@
 .sidebar-stat-box {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 20px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
@@ -292,11 +293,13 @@
 }
 
 .sidebar-stat-label {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0px;
     color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+    white-space: nowrap;
 }
 
 .sidebar-stat-value {
@@ -311,9 +314,16 @@
 }
 
 .sidebar-stat-divider {
-    font-size: 14px;
+    font-size: 26px;
     color: rgba(255, 255, 255, 0.3);
-    font-weight: 600;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.sidebar-stat-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
 }
 
 .sidebar-progress-bar {
@@ -777,10 +787,10 @@
 
 .roulette-wheel-canvas {
     display: block;
-    max-width: 440px;
-    max-height: 440px;
-    width: min(80vw, 440px);
-    height: min(80vw, 440px);
+    max-width: 680px;
+    max-height: 680px;
+    width: min(80vw, 680px);
+    height: min(80vw, 680px);
     border-radius: 50%;
 }
 
