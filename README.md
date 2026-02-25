@@ -10,7 +10,7 @@ My JKT48 Tierlist is a Vite + React web application that bundles multiple fan-ma
 - **Setlist Song Tierlist**: `/tierlist_lagu` focuses on ranking songs while reusing the same drag-and-drop tooling and setlist data defined in `src/data/setlistSongs.js`.
 - **Dream Setlist Builder**: plan show layouts by assigning songs and members (including backups), color-code tiers, multi-select, search, and export the resulting board as a PNG.
 - **Wishlist Calculator**: compile events/merch wishlist items using `src/data/wishlistpriceData.js`, add custom entries, total the cost automatically, maintain multiple drafts, and export to either PNG or Excel.
-- **Points History Explorer**: visualize the data saved by the companion "JKT48 Points History Exporter" browser extension through tables, summary chips, and Recharts-based graphs, then export the dataset as CSV.
+
 
 ### Data sources
 

@@ -1,0 +1,816 @@
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { activeMemberFiles, exMemberFiles } from './data/memberData';
+import './roulette.css';
+
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+const STANDARD_GEN_COUNT = 13;
+const V_GEN_COUNT = 2;
+
+const SEGMENT_COLORS = [
+    '#E50014', '#C8003D', '#FF4D6D', '#FF006E',
+    '#8338EC', '#3A86FF', '#06D6A0', '#FFB703',
+    '#FB8500', '#E63946', '#457B9D', '#2DC653',
+    '#9B2226', '#AE2012', '#CA6702', '#BB3E03',
+];
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const formatMemberName = (filename) => {
+    if (!filename || typeof filename !== 'string') return '';
+    const baseName = filename.split('/').pop().split('.')[0];
+    const parts = baseName.split('_').filter(Boolean);
+    const firstPart = parts[0] || '';
+    if (/^jkt48vgen\d+$/i.test(firstPart)) {
+        return parts.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+    if (firstPart && firstPart.toUpperCase() === 'JKT48V') {
+        const rest = parts.slice(1);
+        const afterGen = rest[0]?.toLowerCase().startsWith('gen') ? rest.slice(1) : rest;
+        return afterGen.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+    if (parts[0] && parts[0].toLowerCase().startsWith('gen')) {
+        return parts.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+    return parts.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+};
+
+const matchesGeneration = (filename, generation) => {
+    if (generation === 'all') return true;
+    const baseFilename = filename.includes('/') ? filename.split('/').pop() : filename;
+    if (generation === 'genvall') {
+        return /^JKT48VGen\d+_/i.test(baseFilename) || /^JKT48V_Gen\d+_/i.test(baseFilename);
+    }
+    if (generation.toLowerCase().startsWith('genv')) {
+        const vGenNumber = generation.slice(4);
+        return baseFilename.startsWith(`JKT48V_Gen${vGenNumber}_`) || baseFilename.startsWith(`JKT48VGen${vGenNumber}_`);
+    }
+    if (generation.toLowerCase().startsWith('gen')) {
+        const prefix = `Gen${generation.slice(3)}_`;
+        return baseFilename.startsWith(prefix);
+    }
+    return true;
+};
+
+// Cryptographically-random integer in [0, max)
+const cryptoRandInt = (max) => {
+    if (max <= 0) return 0;
+    const arr = new Uint32Array(1);
+    let result;
+    do {
+        crypto.getRandomValues(arr);
+        result = arr[0] % max;
+    } while (arr[0] - result + (max - 1) >= 0x100000000); // rejection sampling to avoid bias
+    return result;
+};
+
+// ─── Confetti ─────────────────────────────────────────────────────────────────
+const ConfettiCanvas = ({ active }) => {
+    const canvasRef = useRef(null);
+    const animRef = useRef(null);
+    const particlesRef = useRef([]);
+
+    useEffect(() => {
+        if (!active) {
+            cancelAnimationFrame(animRef.current);
+            particlesRef.current = [];
+            const canvas = canvasRef.current;
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            return;
+        }
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        const resize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const colors = ['#E50014', '#FFB703', '#06D6A0', '#8338EC', '#3A86FF', '#FF006E', '#FB8500', '#FFFFFF'];
+        const count = 180;
+        particlesRef.current = Array.from({ length: count }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            r: Math.random() * 7 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            speed: Math.random() * 3 + 2,
+            angle: Math.random() * 360,
+            spin: (Math.random() - 0.5) * 6,
+            wobble: Math.random() * 10,
+            wobbleSpeed: Math.random() * 0.05 + 0.02,
+            wobbleOffset: Math.random() * Math.PI * 2,
+            shape: Math.random() > 0.5 ? 'rect' : 'circle',
+            opacity: 1,
+        }));
+
+        let frame = 0;
+        const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            frame++;
+            particlesRef.current = particlesRef.current.map(p => {
+                const newY = p.y + p.speed;
+                const newAngle = p.angle + p.spin;
+                const wobbleX = p.x + Math.sin(frame * p.wobbleSpeed + p.wobbleOffset) * p.wobble;
+                const opacity = newY > canvas.height * 0.7
+                    ? Math.max(0, 1 - (newY - canvas.height * 0.7) / (canvas.height * 0.3))
+                    : 1;
+
+                ctx.save();
+                ctx.globalAlpha = opacity;
+                ctx.translate(wobbleX, newY);
+                ctx.rotate((newAngle * Math.PI) / 180);
+                ctx.fillStyle = p.color;
+
+                if (p.shape === 'rect') {
+                    ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.r / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                return { ...p, y: newY > canvas.height ? -p.r : newY, angle: newAngle, opacity };
+            });
+            animRef.current = requestAnimationFrame(draw);
+        };
+        draw();
+
+        return () => {
+            cancelAnimationFrame(animRef.current);
+            window.removeEventListener('resize', resize);
+        };
+    }, [active]);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className="roulette-confetti-canvas"
+            style={{ pointerEvents: 'none', display: active ? 'block' : 'none' }}
+        />
+    );
+};
+
+// ─── Spinning Wheel ───────────────────────────────────────────────────────────
+const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDuration }) => {
+    const canvasRef = useRef(null);
+    const animRef = useRef(null);
+    const startTimeRef = useRef(null);
+    const startAngleRef = useRef(0);
+    const currentAngleRef = useRef(0);
+
+    const drawWheel = useCallback((angle) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const radius = Math.min(cx, cy) - 8;
+        const n = entries.length;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (n === 0) {
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#aaa';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('No entries', cx, cy);
+            return;
+        }
+
+        const sliceAngle = (Math.PI * 2) / n;
+
+        entries.forEach((entry, i) => {
+            const startA = angle + i * sliceAngle;
+            const endA = startA + sliceAngle;
+            const color = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
+
+            // Segment fill
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, radius, startA, endA);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Label — radial orientation, always readable
+            const mid = startA + sliceAngle / 2;
+            // Place label at 60% of radius, text runs along the radius
+            const labelR = radius * 0.60;
+            const lx = cx + labelR * Math.cos(mid);
+            const ly = cy + labelR * Math.sin(mid);
+
+            ctx.save();
+            ctx.translate(lx, ly);
+
+            // Radial rotation: right-half reads outward, left-half flips so it's never upside-down
+            const isRightHalf = Math.cos(mid) >= 0;
+            ctx.rotate(isRightHalf ? mid : mid + Math.PI);
+
+            const maxFontSize = n > 30 ? 8 : n > 20 ? 10 : n > 12 ? 12 : 14;
+            let fontSize = maxFontSize;
+            // Available width = radial distance from ~15% to ~90% of radius
+            const maxWidth = radius * 0.72;
+            ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
+
+            while (ctx.measureText(entry.label).width > maxWidth && fontSize > 6) {
+                fontSize--;
+                ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
+            }
+
+            const label = entry.label.length > 18 ? entry.label.slice(0, 16) + '…' : entry.label;
+            ctx.fillStyle = '#ffffff';
+            // Align to start so text extends from center outward on right, inward on left
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = 4;
+            ctx.fillText(label, 0, fontSize / 3);
+            ctx.restore();
+
+        });
+
+        // Center circle
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 24);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(1, '#cccccc');
+        ctx.beginPath();
+        ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#aaa';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }, [entries]);
+
+    // Easing: ease-out-cubic then end at exact stop
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    useEffect(() => {
+        if (!spinning || entries.length === 0 || targetIndex == null) return;
+
+        const sliceAngle = (Math.PI * 2) / entries.length;
+        // We want the targetIndex segment centered at top (−π/2)
+        // The pointer is at top (−π/2). Segment i starts at angle + i*sliceAngle.
+        // We need: angle + targetIndex*sliceAngle + sliceAngle/2 = -π/2 + 2π*k
+        // => final angle = -π/2 - sliceAngle/2 - targetIndex*sliceAngle + 2π*k
+        const fullSpins = 8 + cryptoRandInt(5); // at least 8 full spins
+        const normalizedTarget = (-Math.PI / 2 - sliceAngle / 2 - targetIndex * sliceAngle + Math.PI * 2 * 100) % (Math.PI * 2);
+        const endAngle = startAngleRef.current + fullSpins * Math.PI * 2 + normalizedTarget - (startAngleRef.current % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+
+        // Simpler approach: always go forard many full rotations + land on target
+        const currentNorm = ((currentAngleRef.current % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const targetNorm = ((normalizedTarget % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        let delta = targetNorm - currentNorm;
+        if (delta < 0) delta += Math.PI * 2;
+        const totalRotation = fullSpins * Math.PI * 2 + delta;
+        const finalAngle = currentAngleRef.current + totalRotation;
+
+        startTimeRef.current = null;
+        const beginAngle = currentAngleRef.current;
+
+        const animate = (timestamp) => {
+            if (!startTimeRef.current) startTimeRef.current = timestamp;
+            const elapsed = timestamp - startTimeRef.current;
+            const progress = Math.min(elapsed / spinDuration, 1);
+            const eased = easeOutCubic(progress);
+            const angle = beginAngle + totalRotation * eased;
+
+            currentAngleRef.current = angle;
+            drawWheel(angle);
+
+            if (progress < 1) {
+                animRef.current = requestAnimationFrame(animate);
+            } else {
+                currentAngleRef.current = finalAngle;
+                drawWheel(finalAngle);
+                onSpinEnd();
+            }
+        };
+        animRef.current = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(animRef.current);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [spinning, targetIndex]);
+
+    useEffect(() => {
+        drawWheel(currentAngleRef.current);
+    }, [drawWheel]);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            width={440}
+            height={440}
+            className="roulette-wheel-canvas"
+        />
+    );
+};
+
+// ─── Custom Roulette Panel ────────────────────────────────────────────────────
+const CustomRoulettePanel = ({ id, roulette, onChange, onRemove }) => {
+    const handleNameChange = (e) => onChange({ ...roulette, name: e.target.value });
+    const handleEntriesChange = (e) => onChange({ ...roulette, rawText: e.target.value });
+
+    return (
+        <div className="custom-roulette-panel">
+            <div className="custom-roulette-header">
+                <input
+                    className="custom-roulette-name-input"
+                    value={roulette.name}
+                    onChange={handleNameChange}
+                    placeholder="Roulette name…"
+                />
+                <button className="custom-roulette-remove-btn" onClick={() => onRemove(id)} title="Remove roulette">✕</button>
+            </div>
+            <textarea
+                className="custom-roulette-textarea"
+                value={roulette.rawText}
+                onChange={handleEntriesChange}
+                placeholder={"Enter one entry per line…\ne.g.\nEntry A\nEntry B\nEntry C"}
+                rows={5}
+            />
+            <div className="custom-roulette-count">
+                {roulette.rawText.split('\n').filter(l => l.trim()).length} entries
+            </div>
+        </div>
+    );
+};
+
+// ─── Generation Checkbox Dropdown ─────────────────────────────────────────────
+const GenCheckboxDropdown = ({ selectedGenerations, onChange }) => {
+    const [open, setOpen] = useState(false);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 });
+    const dropdownRef = useRef(null);
+    const btnRef = useRef(null);
+
+    const allGens = useMemo(() => {
+        const gens = [{ value: 'all', label: 'All Generations' }];
+        for (let i = 1; i <= STANDARD_GEN_COUNT; i++) gens.push({ value: `gen${i}`, label: `Generation ${i}` });
+        gens.push({ value: 'genvall', label: 'All Virtual Generations' });
+        for (let i = 1; i <= V_GEN_COUNT; i++) gens.push({ value: `genv${i}`, label: `JKT48V Gen ${i}` });
+        return gens;
+    }, []);
+
+    // Close on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    // Recompute position whenever it opens or the window scrolls/resizes
+    useEffect(() => {
+        if (!open || !btnRef.current) return;
+        const update = () => {
+            const rect = btnRef.current.getBoundingClientRect();
+            setMenuPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
+        };
+        update();
+        window.addEventListener('scroll', update, true);
+        window.addEventListener('resize', update);
+        return () => {
+            window.removeEventListener('scroll', update, true);
+            window.removeEventListener('resize', update);
+        };
+    }, [open]);
+
+    const handleToggle = (value) => {
+        if (value === 'all') { onChange(['all']); return; }
+        const without = selectedGenerations.filter(g => g !== 'all' && g !== value);
+        if (selectedGenerations.includes(value)) {
+            onChange(without.length === 0 ? ['all'] : without);
+        } else {
+            onChange([...without, value]);
+        }
+    };
+
+    const label = selectedGenerations.includes('all')
+        ? 'All Generations'
+        : selectedGenerations.length === 1
+            ? allGens.find(g => g.value === selectedGenerations[0])?.label || selectedGenerations[0]
+            : `${selectedGenerations.length} Generations`;
+
+    return (
+        <div className="gen-dropdown" ref={dropdownRef}>
+            <button ref={btnRef} className="gen-dropdown-btn" onClick={() => setOpen(o => !o)}>
+                <span>{label}</span>
+                <span className="gen-dropdown-arrow">{open ? '▲' : '▼'}</span>
+            </button>
+            {open && (
+                <div
+                    className="gen-dropdown-menu"
+                    style={{
+                        position: 'fixed',
+                        top: menuPos.top,
+                        left: menuPos.left,
+                        width: menuPos.width,
+                    }}
+                >
+                    {allGens.map(gen => (
+                        <label key={gen.value} className="gen-dropdown-item">
+                            <input
+                                type="checkbox"
+                                checked={selectedGenerations.includes(gen.value)}
+                                onChange={() => handleToggle(gen.value)}
+                            />
+                            <span>{gen.label}</span>
+                        </label>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+// ─── Result Overlay ───────────────────────────────────────────────────────────
+const ResultOverlay = ({ result, onHide, onContinue, resultRef }) => {
+    if (!result) return null;
+    return (
+        <div className="result-overlay" onClick={(e) => { if (e.target === e.currentTarget) onHide(); }}>
+            <div className="result-card" ref={resultRef}>
+                <div className="result-badge">🎉 Result!</div>
+                {result.imgSrc && (
+                    <div className="result-img-wrap">
+                        <img src={result.imgSrc} alt={result.label} className="result-img" />
+                    </div>
+                )}
+                {!result.imgSrc && (
+                    <div className="result-icon-placeholder">🎯</div>
+                )}
+                <div className="result-name">{result.label}</div>
+                <div className="result-roulette-source">from: {result.source}</div>
+                <div className="result-actions">
+                    <button className="result-btn result-btn-hide" onClick={onHide}>Hide Result</button>
+                    <button className="result-btn result-btn-ok" onClick={onContinue}>OK, Continue</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Main Roulette Page ───────────────────────────────────────────────────────
+const RoulettePage = () => {
+    const navigate = useNavigate();
+
+    // Filters
+    const [memberType, setMemberType] = useState('active');
+    const [selectedGenerations, setSelectedGenerations] = useState(['all']);
+
+    // Active roulette tab (index: 0 = member roulette, 1+ = custom)
+    const [activeTab, setActiveTab] = useState(0);
+
+    // Custom roulettes
+    const [customRoulettes, setCustomRoulettes] = useState([]);
+
+    // Spin state
+    const [spinning, setSpinning] = useState(false);
+    const [targetIndex, setTargetIndex] = useState(null);
+    const SPIN_DURATION = 5000; // ms
+
+    // Result
+    const [result, setResult] = useState(null);
+    const [resultHistory, setResultHistory] = useState([]);
+    const [showResult, setShowResult] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+
+    // Removed history (members removed after being picked, until reset)
+    const [removedMemberIndexes, setRemovedMemberIndexes] = useState(new Set());
+
+    const resultRef = useRef(null);
+
+    // ── Build member entry list ──
+    const memberEntries = useMemo(() => {
+        const list = [];
+        const generations = selectedGenerations.includes('all') ? ['all'] : selectedGenerations;
+
+        const addFile = (filename, isActive) => {
+            const matchesAnyGen = generations.some(gen => matchesGeneration(filename, gen));
+            if (!matchesAnyGen) return;
+            const name = formatMemberName(filename);
+            if (!name) return;
+            const imgSrc = isActive
+                ? `/asset/member_active/${filename}`
+                : `/asset/exmember/${filename.replace(/\\/g, '/')}`;
+            list.push({ label: name, imgSrc, source: 'Member Roulette' });
+        };
+
+        if (memberType === 'active' || memberType === 'all') {
+            activeMemberFiles.forEach(f => addFile(f, true));
+        }
+        if (memberType === 'ex' || memberType === 'all') {
+            exMemberFiles.forEach(f => addFile(f, false));
+        }
+        return list;
+    }, [memberType, selectedGenerations]);
+
+    // Remaining members not yet removed
+    const remainingMemberEntries = useMemo(() => {
+        return memberEntries.filter((_, i) => !removedMemberIndexes.has(i));
+    }, [memberEntries, removedMemberIndexes]);
+
+    // Current tab's entries
+    const currentEntries = useMemo(() => {
+        if (activeTab === 0) return remainingMemberEntries;
+        const custom = customRoulettes[activeTab - 1];
+        if (!custom) return [];
+        return custom.rawText
+            .split('\n')
+            .map(l => l.trim())
+            .filter(Boolean)
+            .map(label => ({ label, imgSrc: null, source: custom.name || 'Custom Roulette' }));
+    }, [activeTab, remainingMemberEntries, customRoulettes]);
+
+    // ── Spin handler ──
+    const handleSpin = () => {
+        if (spinning || currentEntries.length === 0) return;
+        const idx = cryptoRandInt(currentEntries.length);
+        setTargetIndex(idx);
+        setSpinning(true);
+        setShowResult(false);
+        setShowConfetti(false);
+    };
+
+    const handleSpinEnd = useCallback(() => {
+        if (targetIndex == null || currentEntries.length === 0) { setSpinning(false); return; }
+        const picked = currentEntries[targetIndex];
+        const pickedEntry = { ...picked };
+        setResult(pickedEntry);
+        setResultHistory(prev => [pickedEntry, ...prev]);
+        setSpinning(false);
+        setShowResult(true);
+
+        // Trigger confetti
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 4500);
+
+        // If it's the member roulette, mark the member as removed
+        if (activeTab === 0) {
+            const realIndex = memberEntries.findIndex((e, i) =>
+                !removedMemberIndexes.has(i) &&
+                e.label === picked.label &&
+                e.imgSrc === picked.imgSrc
+            );
+            if (realIndex !== -1) {
+                setRemovedMemberIndexes(prev => new Set([...prev, realIndex]));
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [targetIndex, currentEntries, activeTab, memberEntries, removedMemberIndexes]);
+
+    // ── Reset ──
+    const handleReset = () => {
+        setRemovedMemberIndexes(new Set());
+        setResult(null);
+        setResultHistory([]);
+        setShowResult(false);
+        setShowConfetti(false);
+        setSpinning(false);
+        setTargetIndex(null);
+    };
+
+
+    // ── Custom roulette management ──
+    const addCustomRoulette = () => {
+        const newId = Date.now();
+        const newR = { id: newId, name: `Custom Roulette ${customRoulettes.length + 1}`, rawText: '' };
+        setCustomRoulettes(prev => [...prev, newR]);
+        setActiveTab(customRoulettes.length + 1);
+    };
+
+    const updateCustomRoulette = (id, updated) => {
+        setCustomRoulettes(prev => prev.map(r => r.id === id ? updated : r));
+    };
+
+    const removeCustomRoulette = (id) => {
+        const idx = customRoulettes.findIndex(r => r.id === id);
+        setCustomRoulettes(prev => prev.filter(r => r.id !== id));
+        if (activeTab === idx + 1) setActiveTab(0);
+        else if (activeTab > idx + 1) setActiveTab(t => t - 1);
+    };
+
+    // Viewport reset on mount
+    useEffect(() => {
+        const viewport = document.querySelector('meta[name=viewport]');
+        if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1';
+        }
+    }, []);
+
+    const remaining = activeTab === 0 ? remainingMemberEntries.length : currentEntries.length;
+    const total = activeTab === 0 ? memberEntries.length : currentEntries.length;
+
+    return (
+        <div className="roulette-page">
+            {/* Confetti overlay */}
+            <ConfettiCanvas active={showConfetti} />
+
+            {/* Result overlay */}
+            {showResult && result && (
+                <ResultOverlay
+                    result={result}
+                    onHide={() => setShowResult(false)}
+                    onContinue={() => setShowResult(false)}
+                    resultRef={resultRef}
+                />
+            )}
+
+            {/* ── Header ── */}
+            <header className="roulette-header">
+                <button className="roulette-back-btn" onClick={() => navigate('/')}>
+                    ← Back
+                </button>
+                <div className="roulette-header-title">
+                    <h1>JKT48 Roulette</h1>
+                </div>
+                <div className="roulette-header-actions">
+                    <button
+                        className="roulette-action-btn"
+                        onClick={handleReset}
+                        title="Reset roulette"
+                        disabled={spinning}
+                    >
+                        🔄 Reset
+                    </button>
+                </div>
+            </header>
+
+            {/* ── Tabs ── */}
+            <div className="roulette-tabs-bar">
+                <button
+                    className={`roulette-tab ${activeTab === 0 ? 'active' : ''}`}
+                    onClick={() => setActiveTab(0)}
+                >
+                    👥 Member Roulette
+                </button>
+                {customRoulettes.map((r, i) => (
+                    <button
+                        key={r.id}
+                        className={`roulette-tab ${activeTab === i + 1 ? 'active' : ''}`}
+                        onClick={() => setActiveTab(i + 1)}
+                    >
+                        ✏️ {r.name || `Custom ${i + 1}`}
+                    </button>
+                ))}
+                <button className="roulette-tab roulette-tab-add" onClick={addCustomRoulette}>
+                    + Custom Roulette
+                </button>
+            </div>
+
+            {/* ── Main layout ── */}
+            <div className="roulette-main">
+
+                {/* ── Left panel: controls ── */}
+                <aside className="roulette-sidebar">
+                    {activeTab === 0 ? (
+                        <>
+                            <div className="sidebar-section">
+                                <label className="sidebar-label">Member Type</label>
+                                <select
+                                    className="sidebar-select"
+                                    value={memberType}
+                                    onChange={e => { setMemberType(e.target.value); setRemovedMemberIndexes(new Set()); }}
+                                >
+                                    <option value="active">Active Members</option>
+                                    <option value="ex">Ex Members</option>
+                                    <option value="all">All Members</option>
+                                </select>
+                            </div>
+
+                            <div className="sidebar-section">
+                                <label className="sidebar-label">Generation</label>
+                                <GenCheckboxDropdown
+                                    selectedGenerations={selectedGenerations}
+                                    onChange={(gens) => { setSelectedGenerations(gens); setRemovedMemberIndexes(new Set()); }}
+                                />
+                            </div>
+
+                            <div className="sidebar-section">
+                                <div className="sidebar-stat-box">
+                                    <div className="sidebar-stat">
+                                        <span className="sidebar-stat-label">Pool</span>
+                                        <span className="sidebar-stat-value">{remaining}</span>
+                                    </div>
+                                    <div className="sidebar-stat-divider">/ {total}</div>
+                                    <div className="sidebar-stat">
+                                        <span className="sidebar-stat-label">Picked</span>
+                                        <span className="sidebar-stat-value picked">{total - remaining}</span>
+                                    </div>
+                                </div>
+                                <div className="sidebar-progress-bar">
+                                    <div
+                                        className="sidebar-progress-fill"
+                                        style={{ width: total > 0 ? `${((total - remaining) / total) * 100}%` : '0%' }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Results history list */}
+                            {resultHistory.length > 0 && (
+                                <div className="sidebar-section sidebar-history-section">
+                                    <div className="sidebar-history-header">
+                                        <label className="sidebar-label">Results History</label>
+                                        <span className="sidebar-history-count">{resultHistory.length}</span>
+                                    </div>
+                                    <div className="sidebar-history-list">
+                                        {resultHistory.map((entry, idx) => (
+                                            <div
+                                                key={idx}
+                                                className={`sidebar-history-item ${idx === 0 ? 'latest' : ''}`}
+                                                onClick={() => { setResult(entry); setShowResult(true); }}
+                                                title="Click to view result"
+                                            >
+                                                <span className="history-item-num">#{resultHistory.length - idx}</span>
+                                                {entry.imgSrc
+                                                    ? <img src={entry.imgSrc} alt={entry.label} className="history-item-img" />
+                                                    : <span className="history-item-emoji">🎯</span>
+                                                }
+                                                <div className="history-item-info">
+                                                    <span className="history-item-name">{entry.label}</span>
+                                                    <span className="history-item-source">{entry.source}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        customRoulettes[activeTab - 1] && (
+                            <div className="sidebar-section">
+                                <label className="sidebar-label">Edit Roulette</label>
+                                <CustomRoulettePanel
+                                    id={customRoulettes[activeTab - 1].id}
+                                    roulette={customRoulettes[activeTab - 1]}
+                                    onChange={(updated) => updateCustomRoulette(customRoulettes[activeTab - 1].id, updated)}
+                                    onRemove={removeCustomRoulette}
+                                />
+                            </div>
+                        )
+                    )}
+                </aside>
+
+                {/* ── Center: wheel ── */}
+                <section className="roulette-center">
+                    <div className="roulette-wheel-wrapper">
+                        {/* Pointer arrow */}
+                        <div className="roulette-pointer">▼</div>
+
+                        {/* Glow ring */}
+                        <div className={`roulette-glow-ring ${spinning ? 'spinning-glow' : ''}`}>
+                            <RouletteWheelCanvas
+                                entries={currentEntries}
+                                spinning={spinning}
+                                targetIndex={targetIndex}
+                                spinDuration={SPIN_DURATION}
+                                onSpinEnd={handleSpinEnd}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Spin button */}
+                    <button
+                        className={`roulette-spin-btn ${spinning ? 'spinning' : ''}`}
+                        onClick={handleSpin}
+                        disabled={spinning || currentEntries.length === 0}
+                    >
+                        {spinning ? (
+                            <span className="spin-btn-inner">
+                                <span className="spin-dot-1">●</span>
+                                <span className="spin-dot-2">●</span>
+                                <span className="spin-dot-3">●</span>
+                            </span>
+                        ) : (
+                            currentEntries.length === 0 ? 'No Entries' : '🎰 SPIN!'
+                        )}
+                    </button>
+
+                    {currentEntries.length === 0 && (
+                        <p className="roulette-empty-hint">
+                            {activeTab === 0
+                                ? 'No members match the selected filters.'
+                                : 'Add entries in the panel on the left.'}
+                        </p>
+                    )}
+                </section>
+            </div>
+        </div>
+    );
+};
+
+export default RoulettePage;

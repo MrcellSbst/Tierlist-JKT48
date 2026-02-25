@@ -12,6 +12,7 @@ import NotFound from './components/NotFound'
 import Footer from './components/Footer'
 import ViewportManager from './components/ViewportManager'
 import DreamSetlist from './Dream_Setlist';
+import RoulettePage from './roulette';
 import './styles/App.css'
 
 const DisabledFeature = () => (
@@ -53,6 +54,7 @@ function App() {
             <Route path="/tierlist_lagu" element={<TierlistLagu />} />
             <Route path="/dream-setlist" element={<DreamSetlist />} />
             <Route path="/point-history" element={<PointHistory />} />
+            <Route path="/roulette" element={<RoulettePage />} />
             <Route path="/this-or-that/*" element={<DisabledFeature />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

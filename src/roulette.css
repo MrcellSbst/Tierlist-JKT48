@@ -1,0 +1,1074 @@
+/* ─── Google Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
+
+/* ─── Page ──────────────────────────────────────────────────────────────────── */
+.roulette-page {
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 40%, #16213e 100%);
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* ─── Confetti Canvas ────────────────────────────────────────────────────────── */
+.roulette-confetti-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────────── */
+.roulette-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+.roulette-back-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    transition: background 0.25s, transform 0.2s;
+}
+
+.roulette-back-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(-3px);
+}
+
+.roulette-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.roulette-header-icon {
+    font-size: 28px;
+    filter: drop-shadow(0 0 8px rgba(229, 0, 20, 0.7));
+}
+
+.roulette-header-title h1 {
+    font-size: 22px;
+    font-weight: 900;
+    background: linear-gradient(90deg, #E50014, #FF4D6D, #FFB703);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.roulette-header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.roulette-action-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.roulette-action-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.roulette-action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+
+/* ─── Tabs ───────────────────────────────────────────────────────────────────── */
+.roulette-tabs-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.2);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(229, 0, 20, 0.4) transparent;
+    flex-shrink: 0;
+}
+
+.roulette-tabs-bar::-webkit-scrollbar {
+    height: 4px;
+}
+
+.roulette-tabs-bar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.roulette-tabs-bar::-webkit-scrollbar-thumb {
+    background: rgba(229, 0, 20, 0.4);
+    border-radius: 4px;
+}
+
+.roulette-tab {
+    padding: 7px 18px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.65);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.roulette-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.roulette-tab.active {
+    background: linear-gradient(135deg, #E50014, #FF4D6D);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(229, 0, 20, 0.4);
+}
+
+.roulette-tab-add {
+    border-color: rgba(255, 183, 3, 0.4);
+    color: #FFB703;
+    background: rgba(255, 183, 3, 0.06);
+}
+
+.roulette-tab-add:hover {
+    background: rgba(255, 183, 3, 0.14);
+    color: #FFB703;
+}
+
+/* ─── Main Layout ────────────────────────────────────────────────────────────── */
+.roulette-main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* ─── Sidebar ────────────────────────────────────────────────────────────────── */
+.roulette-sidebar {
+    background: rgba(255, 255, 255, 0.035);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 20px 16px;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    /* Must be height-constrained so flex children (history list) can scroll */
+    min-height: 0;
+    height: 100%;
+}
+
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.sidebar-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.sidebar-select {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(255,255,255,0.5)'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 18px;
+    padding-right: 34px;
+}
+
+.sidebar-select:focus {
+    border-color: rgba(229, 0, 20, 0.6);
+}
+
+.sidebar-select option {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+/* Stat box */
+.sidebar-stat-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+}
+
+.sidebar-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.sidebar-stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.sidebar-stat-value {
+    font-size: 26px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1;
+}
+
+.sidebar-stat-value.picked {
+    color: #06D6A0;
+}
+
+.sidebar-stat-divider {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 600;
+}
+
+.sidebar-progress-bar {
+    height: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    overflow: hidden;
+}
+
+.sidebar-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #E50014, #FF4D6D);
+    border-radius: 50px;
+    transition: width 0.4s ease;
+}
+
+/* ─── Results History ──────────────────────────────────────────────────────── */
+.sidebar-history-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* Take all remaining vertical space in the sidebar flex column */
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.sidebar-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-history-count {
+    background: linear-gradient(135deg, #E50014, #FF4D6D);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 9px;
+    border-radius: 50px;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Fill the remaining height of the history section */
+    flex: 1 1 0;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(229, 0, 20, 0.3) transparent;
+    padding-right: 2px;
+}
+
+.sidebar-history-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-history-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-history-list::-webkit-scrollbar-thumb {
+    background: rgba(229, 0, 20, 0.3);
+    border-radius: 4px;
+}
+
+.sidebar-history-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+    /* crucial: prevent item from growing wider than the list */
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    flex-shrink: 0;
+}
+
+.sidebar-history-item:hover {
+    background: rgba(255, 255, 255, 0.09);
+    transform: translateX(3px);
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+.sidebar-history-item.latest {
+    border-color: rgba(229, 0, 20, 0.45);
+    background: rgba(229, 0, 20, 0.07);
+}
+
+.sidebar-history-item.latest::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #E50014, #FF4D6D);
+    border-radius: 0 3px 3px 0;
+}
+
+.history-item-num {
+    font-size: 10px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.3);
+    min-width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+}
+
+.sidebar-history-item.latest .history-item-num {
+    color: #FF4D6D;
+}
+
+.history-item-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(229, 0, 20, 0.35);
+    flex-shrink: 0;
+}
+
+.sidebar-history-item.latest .history-item-img {
+    border-color: rgba(229, 0, 20, 0.75);
+    box-shadow: 0 0 8px rgba(229, 0, 20, 0.35);
+}
+
+.history-item-emoji {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.history-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+}
+
+.history-item-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.history-item-source {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.33);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* ─── Generation Checkbox Dropdown ───────────────────────────────────────────── */
+.gen-dropdown {
+    position: relative;
+}
+
+.gen-dropdown-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.gen-dropdown-btn:hover {
+    border-color: rgba(229, 0, 20, 0.5);
+}
+
+.gen-dropdown-arrow {
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+.gen-dropdown-menu {
+    /* position & coordinates are set inline via JS (position: fixed) */
+    background: #1c1c35;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 8px;
+    z-index: 9999;
+    max-height: 260px;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(229, 0, 20, 0.3) transparent;
+}
+
+
+.gen-dropdown-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.gen-dropdown-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.gen-dropdown-menu::-webkit-scrollbar-thumb {
+    background: rgba(229, 0, 20, 0.3);
+    border-radius: 4px;
+}
+
+.gen-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s;
+}
+
+.gen-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.gen-dropdown-item input[type=checkbox] {
+    accent-color: #E50014;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* ─── Custom Roulette Panel ──────────────────────────────────────────────────── */
+.custom-roulette-panel {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.custom-roulette-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.custom-roulette-name-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.custom-roulette-name-input:focus {
+    border-color: rgba(255, 183, 3, 0.5);
+}
+
+.custom-roulette-name-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.custom-roulette-remove-btn {
+    background: rgba(229, 0, 20, 0.15);
+    border: 1px solid rgba(229, 0, 20, 0.3);
+    color: #FF4D6D;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.custom-roulette-remove-btn:hover {
+    background: rgba(229, 0, 20, 0.3);
+}
+
+.custom-roulette-textarea {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+}
+
+.custom-roulette-textarea:focus {
+    border-color: rgba(255, 183, 3, 0.4);
+}
+
+.custom-roulette-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.custom-roulette-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: #FFB703;
+    text-align: right;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* ─── Center / Wheel Area ────────────────────────────────────────────────────── */
+.roulette-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    gap: 28px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Ambient background glows */
+.roulette-center::before {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(229, 0, 20, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.roulette-center::after {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(131, 56, 236, 0.07) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(60px, 40px);
+}
+
+.roulette-wheel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.roulette-pointer {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 30px;
+    color: #fff;
+    text-shadow:
+        0 0 12px rgba(229, 0, 20, 0.9),
+        0 0 24px rgba(229, 0, 20, 0.6);
+    z-index: 10;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+    animation: pointer-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pointer-pulse {
+
+    0%,
+    100% {
+        text-shadow: 0 0 12px rgba(229, 0, 20, 0.9), 0 0 24px rgba(229, 0, 20, 0.6);
+    }
+
+    50% {
+        text-shadow: 0 0 20px rgba(229, 0, 20, 1), 0 0 40px rgba(229, 0, 20, 0.8);
+    }
+}
+
+.roulette-glow-ring {
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 4px rgba(229, 0, 20, 0.3),
+        0 0 0 8px rgba(229, 0, 20, 0.1),
+        0 0 40px rgba(229, 0, 20, 0.25),
+        0 0 80px rgba(131, 56, 236, 0.1);
+    transition: box-shadow 0.3s;
+}
+
+.roulette-glow-ring.spinning-glow {
+    box-shadow:
+        0 0 0 4px rgba(229, 0, 20, 0.6),
+        0 0 0 12px rgba(229, 0, 20, 0.2),
+        0 0 60px rgba(229, 0, 20, 0.5),
+        0 0 120px rgba(131, 56, 236, 0.2);
+    animation: ring-breathe 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes ring-breathe {
+    from {
+        box-shadow: 0 0 0 4px rgba(229, 0, 20, 0.5), 0 0 0 12px rgba(229, 0, 20, 0.15), 0 0 60px rgba(229, 0, 20, 0.4);
+    }
+
+    to {
+        box-shadow: 0 0 0 6px rgba(229, 0, 20, 0.8), 0 0 0 16px rgba(229, 0, 20, 0.25), 0 0 80px rgba(229, 0, 20, 0.6);
+    }
+}
+
+.roulette-wheel-canvas {
+    display: block;
+    max-width: 440px;
+    max-height: 440px;
+    width: min(80vw, 440px);
+    height: min(80vw, 440px);
+    border-radius: 50%;
+}
+
+/* ─── Spin Button ────────────────────────────────────────────────────────────── */
+.roulette-spin-btn {
+    position: relative;
+    background: linear-gradient(135deg, #E50014 0%, #FF4D6D 50%, #C8003D 100%);
+    color: #fff;
+    border: none;
+    padding: 16px 64px;
+    border-radius: 50px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow:
+        0 6px 24px rgba(229, 0, 20, 0.5),
+        0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    overflow: hidden;
+}
+
+.roulette-spin-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
+    border-radius: 50px;
+}
+
+.roulette-spin-btn:hover:not(:disabled):not(.spinning) {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow:
+        0 12px 32px rgba(229, 0, 20, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.roulette-spin-btn:active:not(:disabled):not(.spinning) {
+    transform: translateY(-1px) scale(1.01);
+}
+
+.roulette-spin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.roulette-spin-btn.spinning {
+    background: linear-gradient(135deg, #555 0%, #777 100%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    cursor: wait;
+}
+
+.spin-btn-inner {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.spin-btn-inner span {
+    animation: bounce-dots 1.2s ease-in-out infinite;
+}
+
+.spin-dot-1 {
+    animation-delay: 0s;
+}
+
+.spin-dot-2 {
+    animation-delay: 0.2s;
+}
+
+.spin-dot-3 {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce-dots {
+
+    0%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
+}
+
+.roulette-empty-hint {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.35);
+    text-align: center;
+    margin-top: -10px;
+}
+
+/* ─── Result Overlay ──────────────────────────────────────────────────────────── */
+.result-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    animation: overlay-in 0.3s ease;
+}
+
+@keyframes overlay-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.result-card {
+    background: linear-gradient(145deg, #1c1c35 0%, #16213e 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    padding: 36px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    min-width: 300px;
+    max-width: 420px;
+    box-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    animation: card-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.result-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(229, 0, 20, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+@keyframes card-pop {
+    from {
+        transform: scale(0.7) translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.result-badge {
+    background: linear-gradient(135deg, #E50014, #FF4D6D);
+    color: #fff;
+    padding: 6px 20px;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 16px rgba(229, 0, 20, 0.4);
+}
+
+.result-img-wrap {
+    position: relative;
+}
+
+.result-img-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #E50014, #8338EC, #3A86FF);
+    z-index: -1;
+    animation: border-spin 3s linear infinite;
+}
+
+@keyframes border-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.result-img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #1c1c35;
+    display: block;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.result-icon-placeholder {
+    font-size: 80px;
+    filter: drop-shadow(0 0 20px rgba(229, 0, 20, 0.5));
+}
+
+.result-name {
+    font-size: 28px;
+    font-weight: 900;
+    text-align: center;
+    background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0.85) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.result-roulette-source {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.35);
+    margin-top: -8px;
+}
+
+.result-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.result-btn {
+    flex: 1;
+    padding: 13px 20px;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    letter-spacing: 0.3px;
+}
+
+.result-btn:hover {
+    transform: translateY(-2px);
+}
+
+.result-btn-hide {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.result-btn-hide:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.result-btn-ok {
+    background: linear-gradient(135deg, #E50014, #FF4D6D);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(229, 0, 20, 0.4);
+}
+
+.result-btn-ok:hover {
+    box-shadow: 0 8px 24px rgba(229, 0, 20, 0.6);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .roulette-main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .roulette-sidebar {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        max-height: 300px;
+    }
+
+    .roulette-header-title h1 {
+        font-size: 18px;
+    }
+
+    .roulette-spin-btn {
+        font-size: 18px;
+        padding: 14px 40px;
+    }
+
+    .result-card {
+        padding: 28px 24px;
+        margin: 16px;
+    }
+
+    .result-img {
+        width: 120px;
+        height: 120px;
+    }
+
+    .result-name {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .roulette-header {
+        padding: 10px 14px;
+    }
+
+    .roulette-header-title h1 {
+        font-size: 16px;
+    }
+
+    .roulette-header-actions {
+        gap: 6px;
+    }
+
+    .roulette-action-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .roulette-center {
+        padding: 20px 12px;
+        gap: 20px;
+    }
+}

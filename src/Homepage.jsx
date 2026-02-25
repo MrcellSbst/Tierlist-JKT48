@@ -24,17 +24,23 @@ const Homepage = () => {
             <img src={logo} alt="JKT48 Fan Tools Logo" className="app-logo" />
             <h1 className="title">MY JKT48 TIERLIST</h1>
             <div className="nav-buttons-container">
-                <button 
+                <button
                     className="nav-button"
                     onClick={() => navigate('/homepagetierlist')}
                 >
                     Tierlist Maker
                 </button>
-                <button 
+                <button
                     className="nav-button"
                     onClick={() => navigate('/dream-setlist')}
                 >
                     Dream Setlist
+                </button>
+                <button
+                    className="nav-button"
+                    onClick={() => navigate('/roulette')}
+                >
+                    Member Roulette
                 </button>
             </div>
         </div>
