@@ -67,9 +67,9 @@ export const exMemberFiles = [
     'Gen3/Gen3_michelle_christo_kusnadi.webp', 'Gen3/Gen3_milenia_christien_glory_goenawan.webp',
     'Gen3/Gen3_nadhifa_salsabila.webp', 'Gen3/Gen3_nina_hamidah.webp', 'Gen3/Gen3_ni_made_ayu_vania_aurellia.webp',
     'Gen3/Gen3_pipit_ananda.webp', 'Gen3/Gen3_putri_farin_kartika.webp', 'Gen3/Gen3_rizka_khalila.webp',
-    'Gen3/Gen3_shaffa_nabila.webp', 'Gen3/Gen3_shani_indira_natio.webp', 'Gen3/Gen3_sofia_meifaliani.webp',
+    'Gen3/Gen3_shaffa_nabila.webp', 'Gen3/Gen3_shani_indira_natio.webp', 'Gen3/Gen3_shania_gracia.jpg', 'Gen3/Gen3_sofia_meifaliani.webp',
     'Gen3/Gen3_stephanie_pricilla_indarto_putri.webp', 'Gen3/Gen3_syahfira_angela_nurhaliza.webp',
-    'Gen3/Gen3_triarona_kusuma.webp', 'Gen3/Gen3_yansen_indiani.webp', 'Gen3/Gen3_zebi_magnolia_fawwaz.webp', 'Gen3/Gen3_shania_gracia.jpg',
+    'Gen3/Gen3_triarona_kusuma.webp', 'Gen3/Gen3_yansen_indiani.webp', 'Gen3/Gen3_zebi_magnolia_fawwaz.webp',
 
     // Gen4 members
     'Gen4/Gen4_adriani_elisabeth.webp', 'Gen4/Gen4_christi.webp', 'Gen4/Gen4_cindy_hapsari.webp',
