@@ -22,14 +22,14 @@ export const activeMemberFiles = [
     'Gen12_fritzy_rosmerian.jpg', 'Gen12_hillary_abigail.jpg',
     'Gen12_jazzlyn_trisha.jpg', 'Gen12_michelle_levia.jpg',
     'Gen12_nayla_suji.jpg', 'Gen12_nina_tutachia.jpg',
-    'Gen12_oline_manuel.jpg', 
+    'Gen12_oline_manuel.jpg',
     'Gen12_ribka_budiman.jpg', 'Gen12_shabilqis_naila.jpg',
     'Gen12_victoria_kimberly.jpg',
     'Gen13_Astrella_Virgiananda.jpg', 'Gen13_Aulia_Riza.jpg',
     'Gen13_Bong_Aprilli.jpg', 'Gen13_Hagia_Sopia.jpg',
     'Gen13_Humaira_Ramadhani.jpg', 'Gen13_Jacqueline_Immanuela.jpg',
     'Gen13_Jemima_Evodie.jpg', 'Gen13_Mikaela_Kusjanto.jpg',
-    'Gen13_Nur_Intan.jpg', 'JKT48VGen1_Pia_Meraleo.jpg', 'JKT48VGen1_Tana_Nona.jpg','JKT48VGen2_Isha_Kirana.png','JKT48VGen2_Maura_Nilambari.png','JKT48VGen2_Sami_Maono.png',
+    'Gen13_Nur_Intan.jpg', 'JKT48VGen1_Pia_Meraleo.jpg', 'JKT48VGen1_Tana_Nona.jpg', 'JKT48VGen2_Isha_Kirana.png', 'JKT48VGen2_Maura_Nilambari.png', 'JKT48VGen2_Sami_Maono.png',
 ];
 
 export const exMemberFiles = [
@@ -69,7 +69,7 @@ export const exMemberFiles = [
     'Gen3/Gen3_pipit_ananda.webp', 'Gen3/Gen3_putri_farin_kartika.webp', 'Gen3/Gen3_rizka_khalila.webp',
     'Gen3/Gen3_shaffa_nabila.webp', 'Gen3/Gen3_shani_indira_natio.webp', 'Gen3/Gen3_sofia_meifaliani.webp',
     'Gen3/Gen3_stephanie_pricilla_indarto_putri.webp', 'Gen3/Gen3_syahfira_angela_nurhaliza.webp',
-    'Gen3/Gen3_triarona_kusuma.webp', 'Gen3/Gen3_yansen_indiani.webp', 'Gen3/Gen3_zebi_magnolia_fawwaz.webp', 'Gen3_shania_gracia.jpg',
+    'Gen3/Gen3_triarona_kusuma.webp', 'Gen3/Gen3_yansen_indiani.webp', 'Gen3/Gen3_zebi_magnolia_fawwaz.webp', 'Gen3/Gen3_shania_gracia.jpg',
 
     // Gen4 members
     'Gen4/Gen4_adriani_elisabeth.webp', 'Gen4/Gen4_christi.webp', 'Gen4/Gen4_cindy_hapsari.webp',
@@ -115,7 +115,7 @@ export const exMemberFiles = [
 
     // Gen10 members
     'Gen10/Gen10_abieza_syabira.webp', 'Gen10/Gen10_alia_giselle.jpg', 'Gen10/Gen10_callista_alifia.webp',
-    'Gen10/Gen10_danessa_valerie.webp', 'Gen10/Gen10_naura_safinatunnajah.webp',  'Gen10/Gen10_indira_seruni.jpg',
+    'Gen10/Gen10_danessa_valerie.webp', 'Gen10/Gen10_naura_safinatunnajah.webp', 'Gen10/Gen10_indira_seruni.jpg',
 
     // Gen11 members
     'Gen11/Gen11_aulia_asyira.webp', 'Gen11/Gen11_jeane_victoria.webp',
