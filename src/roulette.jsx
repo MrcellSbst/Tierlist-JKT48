@@ -456,7 +456,6 @@ const ResultOverlay = ({ result, onHide, onContinue, resultRef }) => {
                 <div className="result-name">{result.label}</div>
                 <div className="result-roulette-source">from: {result.source}</div>
                 <div className="result-actions">
-                    <button className="result-btn result-btn-hide" onClick={onHide}>Hide Result</button>
                     <button className="result-btn result-btn-ok" onClick={onContinue}>OK, Continue</button>
                 </div>
             </div>
