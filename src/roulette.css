@@ -687,6 +687,40 @@
     letter-spacing: 0.8px;
 }
 
+.custom-roulette-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.custom-roulette-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+    user-select: none;
+    transition: color 0.2s;
+}
+
+.custom-roulette-toggle:hover {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.custom-roulette-toggle input[type=checkbox] {
+    accent-color: #E50014;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.custom-roulette-toggle input[type=checkbox]:checked+span {
+    color: #FF4D6D;
+}
+
 /* ─── Center / Wheel Area ────────────────────────────────────────────────────── */
 .roulette-center {
     display: flex;

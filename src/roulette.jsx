@@ -375,6 +375,7 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
 const CustomRoulettePanel = ({ id, roulette, onChange, onRemove }) => {
     const handleNameChange = (e) => onChange({ ...roulette, name: e.target.value });
     const handleEntriesChange = (e) => onChange({ ...roulette, rawText: e.target.value });
+    const handleRemoveOnPickChange = (e) => onChange({ ...roulette, removeOnPick: e.target.checked });
 
     return (
         <div className="custom-roulette-panel">
@@ -394,8 +395,18 @@ const CustomRoulettePanel = ({ id, roulette, onChange, onRemove }) => {
                 placeholder={"Enter one entry per line…\ne.g.\nEntry A\nEntry B\nEntry C"}
                 rows={5}
             />
-            <div className="custom-roulette-count">
-                {roulette.rawText.split('\n').filter(l => l.trim()).length} entries
+            <div className="custom-roulette-footer">
+                <label className="custom-roulette-toggle">
+                    <input
+                        type="checkbox"
+                        checked={!!roulette.removeOnPick}
+                        onChange={handleRemoveOnPickChange}
+                    />
+                    <span>Remove on pick</span>
+                </label>
+                <span className="custom-roulette-count">
+                    {roulette.rawText.split('\n').filter(l => l.trim()).length} entries
+                </span>
             </div>
         </div>
     );
@@ -633,8 +644,26 @@ const RoulettePage = () => {
                 setRemovedMemberIndexes(prev => new Set([...prev, realIndex]));
             }
         }
+
+        // If it's a custom roulette with removeOnPick enabled, remove the picked entry from rawText
+        if (activeTab !== 0) {
+            const custom = customRoulettes[activeTab - 1];
+            if (custom && custom.removeOnPick) {
+                let removed = false;
+                const newLines = custom.rawText.split('\n').filter(line => {
+                    if (!removed && line.trim() === picked.label) {
+                        removed = true;
+                        return false;
+                    }
+                    return true;
+                });
+                setCustomRoulettes(prev => prev.map(r =>
+                    r.id === custom.id ? { ...r, rawText: newLines.join('\n') } : r
+                ));
+            }
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [targetIndex, displayEntries, activeTab, memberEntries, removedMemberIndexes]);
+    }, [targetIndex, displayEntries, activeTab, memberEntries, removedMemberIndexes, customRoulettes]);
 
     // ── Reset ──
     const handleReset = () => {
@@ -667,7 +696,7 @@ const RoulettePage = () => {
     // ── Custom roulette management ──
     const addCustomRoulette = () => {
         const newId = Date.now();
-        const newR = { id: newId, name: `Custom Roulette ${customRoulettes.length + 1}`, rawText: '' };
+        const newR = { id: newId, name: `Custom Roulette ${customRoulettes.length + 1}`, rawText: '', removeOnPick: false };
         setCustomRoulettes(prev => [...prev, newR]);
         setActiveTab(customRoulettes.length + 1);
     };
