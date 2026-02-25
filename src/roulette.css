@@ -105,6 +105,38 @@
     cursor: not-allowed;
 }
 
+.roulette-shuffle-btn {
+    border-color: rgba(131, 56, 236, 0.45);
+    color: #c084fc;
+}
+
+.roulette-shuffle-btn:hover:not(:disabled) {
+    background: rgba(131, 56, 236, 0.14);
+}
+
+.roulette-shuffle-btn.shuffling {
+    animation: shuffle-spin 0.5s ease-in-out;
+}
+
+@keyframes shuffle-spin {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+
+    30% {
+        transform: scale(1.1) rotate(-20deg);
+    }
+
+    70% {
+        transform: scale(1.1) rotate(20deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+
 
 /* ─── Tabs ───────────────────────────────────────────────────────────────────── */
 .roulette-tabs-bar {
@@ -407,7 +439,8 @@
     color: #FF4D6D;
 }
 
-.history-item-img {
+.history-item-img,
+.history-item-avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -416,10 +449,12 @@
     flex-shrink: 0;
 }
 
-.sidebar-history-item.latest .history-item-img {
+.sidebar-history-item.latest .history-item-img,
+.sidebar-history-item.latest .history-item-avatar {
     border-color: rgba(229, 0, 20, 0.75);
     box-shadow: 0 0 8px rgba(229, 0, 20, 0.35);
 }
+
 
 .history-item-emoji {
     width: 36px;
@@ -556,16 +591,21 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 .custom-roulette-header {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
 }
 
 .custom-roulette-name-input {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: #fff;
@@ -576,6 +616,7 @@
     font-weight: 700;
     outline: none;
     transition: border-color 0.2s;
+    box-sizing: border-box;
 }
 
 .custom-roulette-name-input:focus {
@@ -596,6 +637,9 @@
     font-size: 13px;
     transition: background 0.2s;
     flex-shrink: 0;
+    flex-grow: 0;
+    width: 32px;
+    text-align: center;
 }
 
 .custom-roulette-remove-btn:hover {
@@ -1035,17 +1079,44 @@
     }
 
     .result-card {
-        padding: 28px 24px;
-        margin: 16px;
+        padding: 20px 20px;
+        margin: 12px;
+        gap: 12px;
+        border-radius: 18px;
+        min-width: unset;
+        width: calc(100% - 24px);
+        max-width: 340px;
+    }
+
+    .result-badge {
+        font-size: 13px;
+        padding: 5px 16px;
     }
 
     .result-img {
-        width: 120px;
-        height: 120px;
+        width: 90px;
+        height: 90px;
+    }
+
+    .result-icon-placeholder {
+        font-size: 56px;
     }
 
     .result-name {
-        font-size: 22px;
+        font-size: 20px;
+    }
+
+    .result-roulette-source {
+        font-size: 10px;
+    }
+
+    .result-actions {
+        gap: 8px;
+    }
+
+    .result-btn {
+        padding: 10px 22px;
+        font-size: 13px;
     }
 }
 
@@ -1070,5 +1141,90 @@
     .roulette-center {
         padding: 20px 12px;
         gap: 20px;
+    }
+
+    .result-card {
+        padding: 16px 16px;
+        gap: 10px;
+        max-width: 300px;
+    }
+
+    .result-img {
+        width: 72px;
+        height: 72px;
+    }
+
+    .result-icon-placeholder {
+        font-size: 44px;
+    }
+
+    .result-name {
+        font-size: 17px;
+    }
+}
+
+
+/* ─── Mobile History Panel (hidden on desktop) ───────────────────────────────── */
+.mobile-history-panel {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-history-panel {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .mobile-history-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .mobile-history-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .mobile-history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px 12px;
+        max-height: 280px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(229, 0, 20, 0.3) transparent;
+    }
+
+    .mobile-history-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .mobile-history-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .mobile-history-list::-webkit-scrollbar-thumb {
+        background: rgba(229, 0, 20, 0.3);
+        border-radius: 4px;
+    }
+
+    /* Hide the desktop sidebar history section on mobile to avoid duplication */
+    .sidebar-history-section {
+        display: none;
     }
 }

@@ -69,102 +69,132 @@ const ConfettiCanvas = ({ active }) => {
     const canvasRef = useRef(null);
     const animRef = useRef(null);
     const particlesRef = useRef([]);
+    const drainingRef = useRef(false);
+    const [visible, setVisible] = useState(false);
+
+    // Cancel on unmount only
+    useEffect(() => {
+        return () => cancelAnimationFrame(animRef.current);
+    }, []);
 
     useEffect(() => {
-        if (!active) {
+        if (active) {
+            // Cancel any lingering frame, reset drain flag
             cancelAnimationFrame(animRef.current);
-            particlesRef.current = [];
+            drainingRef.current = false;
+            setVisible(true);
+
             const canvas = canvasRef.current;
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
-            return;
-        }
+            if (!canvas) return;
 
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-
-        const resize = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-        };
-        resize();
-        window.addEventListener('resize', resize);
+            const ctx = canvas.getContext('2d');
 
-        const colors = ['#E50014', '#FFB703', '#06D6A0', '#8338EC', '#3A86FF', '#FF006E', '#FB8500', '#FFFFFF'];
-        const count = 180;
-        particlesRef.current = Array.from({ length: count }, () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height - canvas.height,
-            r: Math.random() * 7 + 4,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            speed: Math.random() * 3 + 2,
-            angle: Math.random() * 360,
-            spin: (Math.random() - 0.5) * 6,
-            wobble: Math.random() * 10,
-            wobbleSpeed: Math.random() * 0.05 + 0.02,
-            wobbleOffset: Math.random() * Math.PI * 2,
-            shape: Math.random() > 0.5 ? 'rect' : 'circle',
-            opacity: 1,
-        }));
+            const onResize = () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            };
+            window.addEventListener('resize', onResize);
 
-        let frame = 0;
-        const draw = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            frame++;
-            particlesRef.current = particlesRef.current.map(p => {
-                const newY = p.y + p.speed;
-                const newAngle = p.angle + p.spin;
-                const wobbleX = p.x + Math.sin(frame * p.wobbleSpeed + p.wobbleOffset) * p.wobble;
-                const opacity = newY > canvas.height * 0.7
-                    ? Math.max(0, 1 - (newY - canvas.height * 0.7) / (canvas.height * 0.3))
-                    : 1;
+            const colors = ['#E50014', '#FFB703', '#06D6A0', '#8338EC', '#3A86FF', '#FF006E', '#FB8500', '#FFFFFF'];
+            particlesRef.current = Array.from({ length: 180 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                r: Math.random() * 7 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 3 + 2,
+                angle: Math.random() * 360,
+                spin: (Math.random() - 0.5) * 6,
+                wobble: Math.random() * 10,
+                wobbleSpeed: Math.random() * 0.05 + 0.02,
+                wobbleOffset: Math.random() * Math.PI * 2,
+                shape: Math.random() > 0.5 ? 'rect' : 'circle',
+            }));
 
-                ctx.save();
-                ctx.globalAlpha = opacity;
-                ctx.translate(wobbleX, newY);
-                ctx.rotate((newAngle * Math.PI) / 180);
-                ctx.fillStyle = p.color;
+            let frame = 0;
+            const draw = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                frame++;
 
-                if (p.shape === 'rect') {
-                    ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2);
-                } else {
-                    ctx.beginPath();
-                    ctx.arc(0, 0, p.r / 2, 0, Math.PI * 2);
-                    ctx.fill();
+                particlesRef.current = particlesRef.current
+                    .map(p => {
+                        const newY = p.y + p.speed;
+                        const newAngle = p.angle + p.spin;
+                        const wobbleX = p.x + Math.sin(frame * p.wobbleSpeed + p.wobbleOffset) * p.wobble;
+
+                        // Wider fade zone when draining so pieces dissolve before exiting
+                        const fadeStart = drainingRef.current ? canvas.height * 0.35 : canvas.height * 0.72;
+                        const fadeLen = drainingRef.current ? canvas.height * 0.65 : canvas.height * 0.28;
+                        const opacity = newY > fadeStart ? Math.max(0, 1 - (newY - fadeStart) / fadeLen) : 1;
+
+                        ctx.save();
+                        ctx.globalAlpha = opacity;
+                        ctx.translate(wobbleX, newY);
+                        ctx.rotate((newAngle * Math.PI) / 180);
+                        ctx.fillStyle = p.color;
+                        if (p.shape === 'rect') {
+                            ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2);
+                        } else {
+                            ctx.beginPath();
+                            ctx.arc(0, 0, p.r / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        ctx.restore();
+
+                        if (drainingRef.current) {
+                            // Don't recycle — remove once fully off-screen
+                            return newY > canvas.height + p.r ? null : { ...p, y: newY, angle: newAngle };
+                        }
+                        // Normal mode: recycle at top
+                        return { ...p, y: newY > canvas.height ? -p.r : newY, angle: newAngle };
+                    })
+                    .filter(Boolean);
+
+                // Self-terminate when drain is complete
+                if (drainingRef.current && particlesRef.current.length === 0) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    window.removeEventListener('resize', onResize);
+                    setVisible(false);
+                    return; // stop scheduling frames
                 }
-                ctx.restore();
 
-                return { ...p, y: newY > canvas.height ? -p.r : newY, angle: newAngle, opacity };
-            });
-            animRef.current = requestAnimationFrame(draw);
-        };
-        draw();
+                animRef.current = requestAnimationFrame(draw);
+            };
+            draw();
 
-        return () => {
-            cancelAnimationFrame(animRef.current);
-            window.removeEventListener('resize', resize);
-        };
+            // NOTE: no cleanup return here — we intentionally let the loop
+            // keep running after active→false so the drain can complete.
+            // The unmount effect above handles the final cancel.
+            return () => window.removeEventListener('resize', onResize);
+        } else {
+            // Signal the running loop to drain
+            drainingRef.current = true;
+        }
     }, [active]);
 
     return (
         <canvas
             ref={canvasRef}
             className="roulette-confetti-canvas"
-            style={{ pointerEvents: 'none', display: active ? 'block' : 'none' }}
+            style={{ pointerEvents: 'none', display: visible ? 'block' : 'none' }}
         />
     );
 };
 
+
+
 // ─── Spinning Wheel ───────────────────────────────────────────────────────────
 const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDuration }) => {
     const canvasRef = useRef(null);
-    const animRef = useRef(null);
+    const animRef = useRef(null);       // spin animation frame
+    const idleAnimRef = useRef(null);   // idle animation frame
     const startTimeRef = useRef(null);
     const startAngleRef = useRef(0);
     const currentAngleRef = useRef(0);
+    const lastIdleTimeRef = useRef(null);
+
+    const IDLE_SPEED = 0.09; // radians per second (~5°/s)
 
     const drawWheel = useCallback((angle) => {
         const canvas = canvasRef.current;
@@ -209,21 +239,17 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
 
             // Label — radial orientation, always readable
             const mid = startA + sliceAngle / 2;
-            // Place label at 60% of radius, text runs along the radius
             const labelR = radius * 0.60;
             const lx = cx + labelR * Math.cos(mid);
             const ly = cy + labelR * Math.sin(mid);
 
             ctx.save();
             ctx.translate(lx, ly);
-
-            // Radial rotation: right-half reads outward, left-half flips so it's never upside-down
             const isRightHalf = Math.cos(mid) >= 0;
             ctx.rotate(isRightHalf ? mid : mid + Math.PI);
 
             const maxFontSize = n > 30 ? 8 : n > 20 ? 10 : n > 12 ? 12 : 14;
             let fontSize = maxFontSize;
-            // Available width = radial distance from ~15% to ~90% of radius
             const maxWidth = radius * 0.72;
             ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
 
@@ -234,13 +260,11 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
 
             const label = entry.label.length > 18 ? entry.label.slice(0, 16) + '…' : entry.label;
             ctx.fillStyle = '#ffffff';
-            // Align to start so text extends from center outward on right, inward on left
             ctx.textAlign = 'center';
             ctx.shadowColor = 'rgba(0,0,0,0.8)';
             ctx.shadowBlur = 4;
             ctx.fillText(label, 0, fontSize / 3);
             ctx.restore();
-
         });
 
         // Center circle
@@ -259,19 +283,45 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
     // Easing: ease-out-cubic then end at exact stop
     const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
+    // ── Idle rotation loop ──
+    useEffect(() => {
+        if (spinning) {
+            // Pause idle when a spin is in progress
+            cancelAnimationFrame(idleAnimRef.current);
+            lastIdleTimeRef.current = null;
+            return;
+        }
+
+        const idleTick = (timestamp) => {
+            if (lastIdleTimeRef.current !== null) {
+                const dt = (timestamp - lastIdleTimeRef.current) / 1000; // seconds
+                currentAngleRef.current += IDLE_SPEED * dt;
+                drawWheel(currentAngleRef.current);
+            }
+            lastIdleTimeRef.current = timestamp;
+            idleAnimRef.current = requestAnimationFrame(idleTick);
+        };
+
+        lastIdleTimeRef.current = null; // reset so no delta jump on resume
+        idleAnimRef.current = requestAnimationFrame(idleTick);
+
+        return () => {
+            cancelAnimationFrame(idleAnimRef.current);
+            lastIdleTimeRef.current = null;
+        };
+    }, [spinning, drawWheel]);
+
+    // ── Spin animation ──
     useEffect(() => {
         if (!spinning || entries.length === 0 || targetIndex == null) return;
 
-        const sliceAngle = (Math.PI * 2) / entries.length;
-        // We want the targetIndex segment centered at top (−π/2)
-        // The pointer is at top (−π/2). Segment i starts at angle + i*sliceAngle.
-        // We need: angle + targetIndex*sliceAngle + sliceAngle/2 = -π/2 + 2π*k
-        // => final angle = -π/2 - sliceAngle/2 - targetIndex*sliceAngle + 2π*k
-        const fullSpins = 8 + cryptoRandInt(5); // at least 8 full spins
-        const normalizedTarget = (-Math.PI / 2 - sliceAngle / 2 - targetIndex * sliceAngle + Math.PI * 2 * 100) % (Math.PI * 2);
-        const endAngle = startAngleRef.current + fullSpins * Math.PI * 2 + normalizedTarget - (startAngleRef.current % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        // Stop idle first
+        cancelAnimationFrame(idleAnimRef.current);
 
-        // Simpler approach: always go forard many full rotations + land on target
+        const sliceAngle = (Math.PI * 2) / entries.length;
+        const fullSpins = 8 + cryptoRandInt(5);
+        const normalizedTarget = (-Math.PI / 2 - sliceAngle / 2 - targetIndex * sliceAngle + Math.PI * 2 * 100) % (Math.PI * 2);
+
         const currentNorm = ((currentAngleRef.current % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
         const targetNorm = ((normalizedTarget % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
         let delta = targetNorm - currentNorm;
@@ -305,6 +355,7 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [spinning, targetIndex]);
 
+    // Initial draw
     useEffect(() => {
         drawWheel(currentAngleRef.current);
     }, [drawWheel]);
@@ -318,6 +369,7 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
         />
     );
 };
+
 
 // ─── Custom Roulette Panel ────────────────────────────────────────────────────
 const CustomRoulettePanel = ({ id, roulette, onChange, onRemove }) => {
@@ -491,6 +543,10 @@ const RoulettePage = () => {
     // Removed history (members removed after being picked, until reset)
     const [removedMemberIndexes, setRemovedMemberIndexes] = useState(new Set());
 
+    // Shuffle order: null = default order, otherwise a permuted index array over currentEntries
+    const [shuffleOrder, setShuffleOrder] = useState(null);
+    const [isShuffling, setIsShuffling] = useState(false);
+
     const resultRef = useRef(null);
 
     // ── Build member entry list ──
@@ -523,7 +579,7 @@ const RoulettePage = () => {
         return memberEntries.filter((_, i) => !removedMemberIndexes.has(i));
     }, [memberEntries, removedMemberIndexes]);
 
-    // Current tab's entries
+    // Current tab's entries — base order
     const currentEntries = useMemo(() => {
         if (activeTab === 0) return remainingMemberEntries;
         const custom = customRoulettes[activeTab - 1];
@@ -535,10 +591,18 @@ const RoulettePage = () => {
             .map(label => ({ label, imgSrc: null, source: custom.name || 'Custom Roulette' }));
     }, [activeTab, remainingMemberEntries, customRoulettes]);
 
+    // Apply shuffle order on top of base entries, sync when base changes
+    useEffect(() => { setShuffleOrder(null); }, [activeTab, memberType, selectedGenerations]);
+
+    const displayEntries = useMemo(() => {
+        if (!shuffleOrder || shuffleOrder.length !== currentEntries.length) return currentEntries;
+        return shuffleOrder.map(i => currentEntries[i]);
+    }, [currentEntries, shuffleOrder]);
+
     // ── Spin handler ──
     const handleSpin = () => {
-        if (spinning || currentEntries.length === 0) return;
-        const idx = cryptoRandInt(currentEntries.length);
+        if (spinning || displayEntries.length === 0) return;
+        const idx = cryptoRandInt(displayEntries.length);
         setTargetIndex(idx);
         setSpinning(true);
         setShowResult(false);
@@ -546,8 +610,8 @@ const RoulettePage = () => {
     };
 
     const handleSpinEnd = useCallback(() => {
-        if (targetIndex == null || currentEntries.length === 0) { setSpinning(false); return; }
-        const picked = currentEntries[targetIndex];
+        if (targetIndex == null || displayEntries.length === 0) { setSpinning(false); return; }
+        const picked = displayEntries[targetIndex];
         const pickedEntry = { ...picked };
         setResult(pickedEntry);
         setResultHistory(prev => [pickedEntry, ...prev]);
@@ -570,17 +634,33 @@ const RoulettePage = () => {
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [targetIndex, currentEntries, activeTab, memberEntries, removedMemberIndexes]);
+    }, [targetIndex, displayEntries, activeTab, memberEntries, removedMemberIndexes]);
 
     // ── Reset ──
     const handleReset = () => {
         setRemovedMemberIndexes(new Set());
+        setShuffleOrder(null);
         setResult(null);
         setResultHistory([]);
         setShowResult(false);
         setShowConfetti(false);
         setSpinning(false);
         setTargetIndex(null);
+    };
+
+    // ── Shuffle ──
+    // Crypto Fisher-Yates shuffle of indices
+    const handleShuffle = () => {
+        if (spinning || currentEntries.length === 0) return;
+        const indices = Array.from({ length: currentEntries.length }, (_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = cryptoRandInt(i + 1);
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        setShuffleOrder(indices);
+        // Brief animation feedback
+        setIsShuffling(true);
+        setTimeout(() => setIsShuffling(false), 500);
     };
 
 
@@ -638,6 +718,14 @@ const RoulettePage = () => {
                     <h1>JKT48 Roulette</h1>
                 </div>
                 <div className="roulette-header-actions">
+                    <button
+                        className={`roulette-action-btn roulette-shuffle-btn ${isShuffling ? 'shuffling' : ''}`}
+                        onClick={handleShuffle}
+                        title="Shuffle wheel order"
+                        disabled={spinning || currentEntries.length === 0}
+                    >
+                        🔀 Shuffle
+                    </button>
                     <button
                         className="roulette-action-btn"
                         onClick={handleReset}
@@ -762,7 +850,38 @@ const RoulettePage = () => {
                             </div>
                         )
                     )}
+
+                    {/* Results history — shown on ALL tabs */}
+                    {activeTab !== 0 && resultHistory.length > 0 && (
+                        <div className="sidebar-section sidebar-history-section">
+                            <div className="sidebar-history-header">
+                                <label className="sidebar-label">Results History</label>
+                                <span className="sidebar-history-count">{resultHistory.length}</span>
+                            </div>
+                            <div className="sidebar-history-list">
+                                {resultHistory.map((entry, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`sidebar-history-item ${idx === 0 ? 'latest' : ''}`}
+                                        onClick={() => { setResult(entry); setShowResult(true); }}
+                                        title="Click to view result"
+                                    >
+                                        <span className="history-item-num">#{resultHistory.length - idx}</span>
+                                        {entry.imgSrc
+                                            ? <img src={entry.imgSrc} alt={entry.label} className="history-item-img" />
+                                            : <span className="history-item-emoji">🎯</span>
+                                        }
+                                        <div className="history-item-info">
+                                            <span className="history-item-name">{entry.label}</span>
+                                            <span className="history-item-source">{entry.source}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </aside>
+
 
                 {/* ── Center: wheel ── */}
                 <section className="roulette-center">
@@ -773,7 +892,7 @@ const RoulettePage = () => {
                         {/* Glow ring */}
                         <div className={`roulette-glow-ring ${spinning ? 'spinning-glow' : ''}`}>
                             <RouletteWheelCanvas
-                                entries={currentEntries}
+                                entries={displayEntries}
                                 spinning={spinning}
                                 targetIndex={targetIndex}
                                 spinDuration={SPIN_DURATION}
@@ -786,7 +905,7 @@ const RoulettePage = () => {
                     <button
                         className={`roulette-spin-btn ${spinning ? 'spinning' : ''}`}
                         onClick={handleSpin}
-                        disabled={spinning || currentEntries.length === 0}
+                        disabled={spinning || displayEntries.length === 0}
                     >
                         {spinning ? (
                             <span className="spin-btn-inner">
@@ -799,12 +918,40 @@ const RoulettePage = () => {
                         )}
                     </button>
 
-                    {currentEntries.length === 0 && (
+                    {displayEntries.length === 0 && (
                         <p className="roulette-empty-hint">
                             {activeTab === 0
                                 ? 'No members match the selected filters.'
                                 : 'Add entries in the panel on the left.'}
                         </p>
+                    )}
+
+                    {/* ── Mobile-only Results History ── */}
+                    {resultHistory.length > 0 && (
+                        <div className="mobile-history-panel">
+                            <div className="mobile-history-header">
+                                <span className="mobile-history-title">Results History</span>
+                                <span className="sidebar-history-count">{resultHistory.length}</span>
+                            </div>
+                            <div className="mobile-history-list">
+                                {resultHistory.map((entry, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`sidebar-history-item ${idx === 0 ? 'latest' : ''}`}
+                                    >
+                                        <span className="history-item-num">#{resultHistory.length - idx}</span>
+                                        {entry.imgSrc
+                                            ? <img src={entry.imgSrc} alt={entry.label} className="history-item-avatar" />
+                                            : <span className="history-item-emoji">🎯</span>
+                                        }
+                                        <div className="history-item-info">
+                                            <span className="history-item-name">{entry.label}</span>
+                                            <span className="history-item-source">{entry.source}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
                 </section>
             </div>
