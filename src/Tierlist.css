@@ -152,7 +152,11 @@
 .tier-rows-container {
     background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(42, 42, 62, 0.95) 100%);
     border-radius: 12px;
-    overflow: hidden;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: fit-content;
+    min-width: 100%;
     margin-bottom: 2rem;
     box-shadow: var(--shadow-lg);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -173,6 +177,7 @@
 
 .tier-row {
     display: flex;
+    min-width: max-content;
     border-bottom: 1px solid var(--border-color);
     background-color: rgba(42, 42, 62, 0.75);
     transition: background-color var(--transition-fast);
@@ -277,6 +282,7 @@
    ============================================ */
 .droppable {
     flex: 1;
+    min-width: 650px;
     min-height: 140px;
     transition: all var(--transition-normal);
     position: relative;

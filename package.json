@@ -17,18 +17,13 @@
         "@mui/icons-material": "^5.17.1",
         "@mui/material": "^5.17.1",
         "@mui/x-data-grid": "^8.5.1",
-        "@supabase/supabase-js": "^2.50.2",
-        "@tailwindcss/forms": "^0.5.10",
         "@vercel/analytics": "^1.5.0",
         "date-fns": "^4.1.0",
         "dom-to-image-more": "^3.6.0",
-        "html2canvas": "^1.4.1",
         "react": "^18.3.1",
         "react-dom": "^18.2.0",
         "react-router-dom": "^6.21.3",
-        "react-transition-group": "^4.4.5",
         "recharts": "^2.15.3",
-        "tailwindcss": "^4.1.11",
         "xlsx": "^0.18.5"
     },
     "devDependencies": {
