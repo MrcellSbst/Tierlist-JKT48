@@ -592,6 +592,31 @@
     flex-shrink: 0;
 }
 
+.gen-dropdown-group-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px 4px;
+}
+
+.gen-dropdown-group-divider::before,
+.gen-dropdown-group-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.gen-dropdown-group-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: rgba(255, 255, 255, 0.35);
+    white-space: nowrap;
+}
+
+
 /* ─── Custom Roulette Panel ──────────────────────────────────────────────────── */
 .custom-roulette-panel {
     background: rgba(255, 255, 255, 0.04);
@@ -655,6 +680,28 @@
 .custom-roulette-remove-btn:hover {
     background: rgba(229, 0, 20, 0.3);
 }
+
+.custom-roulette-fill-btn {
+    width: 100%;
+    background: rgba(6, 214, 160, 0.08);
+    border: 1px solid rgba(6, 214, 160, 0.25);
+    color: #06D6A0;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-align: center;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.custom-roulette-fill-btn:hover {
+    background: rgba(6, 214, 160, 0.18);
+    border-color: rgba(6, 214, 160, 0.45);
+}
+
 
 .custom-roulette-textarea {
     background: rgba(255, 255, 255, 0.06);

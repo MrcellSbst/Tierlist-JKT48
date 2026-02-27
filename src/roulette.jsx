@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { activeMemberFiles, exMemberFiles } from './data/memberData';
+import { activeMemberFiles, exMemberFiles, tim_love, tim_dream, tim_passion } from './data/memberData';
 import './roulette.css';
 
 
@@ -35,9 +35,20 @@ const formatMemberName = (filename) => {
     return parts.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 };
 
+const TEAM_MAP = {
+    team_love: tim_love,
+    team_dream: tim_dream,
+    team_passion: tim_passion,
+};
+
 const matchesGeneration = (filename, generation) => {
     if (generation === 'all') return true;
     const baseFilename = filename.includes('/') ? filename.split('/').pop() : filename;
+    // Team filter
+    if (generation.startsWith('team_')) {
+        const teamList = TEAM_MAP[generation];
+        return teamList ? teamList.includes(baseFilename) : false;
+    }
     if (generation === 'genvall') {
         return /^JKT48VGen\d+_/i.test(baseFilename) || /^JKT48V_Gen\d+_/i.test(baseFilename);
     }
@@ -377,6 +388,11 @@ const CustomRoulettePanel = ({ id, roulette, onChange, onRemove }) => {
     const handleEntriesChange = (e) => onChange({ ...roulette, rawText: e.target.value });
     const handleRemoveOnPickChange = (e) => onChange({ ...roulette, removeOnPick: e.target.checked });
 
+    const handleFillActive = () => {
+        const names = activeMemberFiles.map(f => formatMemberName(f)).filter(Boolean);
+        onChange({ ...roulette, rawText: names.join('\n') });
+    };
+
     return (
         <div className="custom-roulette-panel">
             <div className="custom-roulette-header">
@@ -388,6 +404,9 @@ const CustomRoulettePanel = ({ id, roulette, onChange, onRemove }) => {
                 />
                 <button className="custom-roulette-remove-btn" onClick={() => onRemove(id)} title="Remove roulette">✕</button>
             </div>
+            <button className="custom-roulette-fill-btn" onClick={handleFillActive} title="Replace entries with all active members">
+                ＋ Fill with Active Members
+            </button>
             <textarea
                 className="custom-roulette-textarea"
                 value={roulette.rawText}
@@ -424,6 +443,10 @@ const GenCheckboxDropdown = ({ selectedGenerations, onChange }) => {
         for (let i = 1; i <= STANDARD_GEN_COUNT; i++) gens.push({ value: `gen${i}`, label: `Generation ${i}` });
         gens.push({ value: 'genvall', label: 'All Virtual Generations' });
         for (let i = 1; i <= V_GEN_COUNT; i++) gens.push({ value: `genv${i}`, label: `JKT48V Gen ${i}` });
+        // Teams
+        gens.push({ value: 'team_love', label: '💗 Tim Love', group: 'Teams' });
+        gens.push({ value: 'team_dream', label: '✨ Tim Dream', group: 'Teams' });
+        gens.push({ value: 'team_passion', label: '🔥 Tim Passion', group: 'Teams' });
         return gens;
     }, []);
 
@@ -466,7 +489,7 @@ const GenCheckboxDropdown = ({ selectedGenerations, onChange }) => {
         ? 'All Generations'
         : selectedGenerations.length === 1
             ? allGens.find(g => g.value === selectedGenerations[0])?.label || selectedGenerations[0]
-            : `${selectedGenerations.length} Generations`;
+            : `${selectedGenerations.length} selected`;
 
     return (
         <div className="gen-dropdown" ref={dropdownRef}>
@@ -484,15 +507,23 @@ const GenCheckboxDropdown = ({ selectedGenerations, onChange }) => {
                         width: menuPos.width,
                     }}
                 >
-                    {allGens.map(gen => (
-                        <label key={gen.value} className="gen-dropdown-item">
-                            <input
-                                type="checkbox"
-                                checked={selectedGenerations.includes(gen.value)}
-                                onChange={() => handleToggle(gen.value)}
-                            />
-                            <span>{gen.label}</span>
-                        </label>
+                    {allGens.map((gen, idx) => (
+                        <React.Fragment key={gen.value}>
+                            {/* Divider + group heading before first team entry */}
+                            {gen.group === 'Teams' && allGens[idx - 1]?.group !== 'Teams' && (
+                                <div className="gen-dropdown-group-divider">
+                                    <span className="gen-dropdown-group-label">Teams</span>
+                                </div>
+                            )}
+                            <label className="gen-dropdown-item">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedGenerations.includes(gen.value)}
+                                    onChange={() => handleToggle(gen.value)}
+                                />
+                                <span>{gen.label}</span>
+                            </label>
+                        </React.Fragment>
                     ))}
                 </div>
             )}
@@ -507,7 +538,7 @@ const ResultOverlay = ({ result, onHide, onContinue, resultRef }) => {
     return (
         <div className="result-overlay" onClick={(e) => { if (e.target === e.currentTarget) onHide(); }}>
             <div className="result-card" ref={resultRef}>
-                <div className="result-badge">🎉 Result!</div>
+                <div className="result-badge">Result!</div>
                 {result.imgSrc && (
                     <div className="result-img-wrap">
                         <img src={result.imgSrc} alt={result.label} className="result-img" />
@@ -603,7 +634,16 @@ const RoulettePage = () => {
     }, [activeTab, remainingMemberEntries, customRoulettes]);
 
     // Apply shuffle order on top of base entries, sync when base changes
-    useEffect(() => { setShuffleOrder(null); }, [activeTab, memberType, selectedGenerations]);
+    // Auto-shuffle whenever the entry list changes (page load, filter/tab switch)
+    useEffect(() => {
+        if (currentEntries.length === 0) { setShuffleOrder(null); return; }
+        const indices = Array.from({ length: currentEntries.length }, (_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = cryptoRandInt(i + 1);
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        setShuffleOrder(indices);
+    }, [currentEntries]);
 
     const displayEntries = useMemo(() => {
         if (!shuffleOrder || shuffleOrder.length !== currentEntries.length) return currentEntries;
@@ -668,13 +708,23 @@ const RoulettePage = () => {
     // ── Reset ──
     const handleReset = () => {
         setRemovedMemberIndexes(new Set());
-        setShuffleOrder(null);
         setResult(null);
         setResultHistory([]);
         setShowResult(false);
         setShowConfetti(false);
         setSpinning(false);
         setTargetIndex(null);
+        // Shuffle immediately after reset (currentEntries will re-compute; useEffect above handles it)
+        // But removedMemberIndexes is async, so re-shuffle manually with full memberEntries length
+        const baseLength = activeTab === 0 ? memberEntries.length : currentEntries.length;
+        if (baseLength > 0) {
+            const indices = Array.from({ length: baseLength }, (_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = cryptoRandInt(i + 1);
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            setShuffleOrder(indices);
+        }
     };
 
     // ── Shuffle ──
@@ -719,6 +769,23 @@ const RoulettePage = () => {
             viewport.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1';
         }
     }, []);
+
+    // ── Dynamic browser tab title ──
+    useEffect(() => {
+        const BASE = 'JKT48 Roulette';
+        let tabName;
+        if (activeTab === 0) {
+            tabName = 'Member Roulette';
+        } else {
+            const custom = customRoulettes[activeTab - 1];
+            tabName = custom ? (custom.name || `Custom Roulette ${activeTab}`) : BASE;
+        }
+        document.title = `${tabName} – ${BASE}`;
+
+        return () => {
+            document.title = 'JKT48 Tierlist - Buat Peringkat Member Favoritmu!';
+        };
+    }, [activeTab, customRoulettes]);
 
     const remaining = activeTab === 0 ? remainingMemberEntries.length : currentEntries.length;
     const total = activeTab === 0 ? memberEntries.length : currentEntries.length;
@@ -809,7 +876,7 @@ const RoulettePage = () => {
                             </div>
 
                             <div className="sidebar-section">
-                                <label className="sidebar-label">Generation</label>
+                                <label className="sidebar-label">Generation/Team</label>
                                 <GenCheckboxDropdown
                                     selectedGenerations={selectedGenerations}
                                     onChange={(gens) => { setSelectedGenerations(gens); setRemovedMemberIndexes(new Set()); }}
@@ -945,7 +1012,7 @@ const RoulettePage = () => {
                                 <span className="spin-dot-3">●</span>
                             </span>
                         ) : (
-                            currentEntries.length === 0 ? 'No Entries' : '🎰 SPIN!'
+                            currentEntries.length === 0 ? 'No Entries' : 'SPIN!'
                         )}
                     </button>
 
