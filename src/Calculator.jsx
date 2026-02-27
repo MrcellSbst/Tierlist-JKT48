@@ -110,11 +110,11 @@ const Calculator = () => {
     const loadDrafts = () => {
         const manualDrafts = JSON.parse(localStorage.getItem('calculatorManualDrafts') || '[]');
         const autoDrafts = JSON.parse(localStorage.getItem('calculatorAutoSaveDrafts') || '[]');
-        
+
         // Combine and sort drafts by date
         const allDrafts = [...manualDrafts, ...autoDrafts]
             .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-        
+
         setDrafts(allDrafts);
         return allDrafts;
     };
@@ -122,10 +122,10 @@ const Calculator = () => {
     // Load drafts and initialize with latest draft on component mount
     useEffect(() => {
         const allDrafts = loadDrafts();
-        
+
         // Get the specifically selected draft ID or use the most recent draft
         const draftId = localStorage.getItem('currentCalculatorDraftId');
-        const draftToLoad = draftId 
+        const draftToLoad = draftId
             ? allDrafts.find(d => d.id.toString() === draftId)
             : allDrafts[0]; // Most recent draft
 
@@ -171,10 +171,10 @@ const Calculator = () => {
 
         const autoDrafts = JSON.parse(localStorage.getItem('calculatorAutoSaveDrafts') || '[]');
         autoDrafts.unshift(draft);
-        
+
         // Keep only the latest 3 auto-save drafts
         const updatedAutoDrafts = autoDrafts.slice(0, 3);
-        
+
         localStorage.setItem('calculatorAutoSaveDrafts', JSON.stringify(updatedAutoDrafts));
         loadDrafts();
     };
@@ -200,10 +200,10 @@ const Calculator = () => {
 
         const manualDrafts = JSON.parse(localStorage.getItem('calculatorManualDrafts') || '[]');
         manualDrafts.unshift(draft);
-        
+
         // Keep only the latest 5 manual drafts
         const updatedManualDrafts = manualDrafts.slice(0, 5);
-        
+
         localStorage.setItem('calculatorManualDrafts', JSON.stringify(updatedManualDrafts));
         loadDrafts();
         alert('Wishlist saved as draft!');
@@ -212,7 +212,7 @@ const Calculator = () => {
     const handleLoadDraft = (event) => {
         const draftId = event.target.value;
         console.log('Selected draft ID:', draftId); // Debug log
-        
+
         if (!draftId) {
             setSelectedDraft('');
             return;
@@ -222,23 +222,23 @@ const Calculator = () => {
         const manualDrafts = JSON.parse(localStorage.getItem('calculatorManualDrafts') || '[]');
         const autoDrafts = JSON.parse(localStorage.getItem('calculatorAutoSaveDrafts') || '[]');
         const allDrafts = [...manualDrafts, ...autoDrafts];
-        
+
         const draft = allDrafts.find(d => d.id.toString() === draftId.toString());
         console.log('Found draft:', draft); // Debug log
-        
+
         if (draft && draft.wishlist) {
             // Update the wishlist state with the draft data
             setWishlist(prevWishlist => {
                 console.log('Setting wishlist:', draft.wishlist); // Debug log
                 return [...draft.wishlist];
             });
-            
+
             // Update the title
             setCalculatorTitle(draft.title || '');
-            
+
             // Update selected draft state
             setSelectedDraft(draftId);
-            
+
             // Clear selection after a short delay
             setTimeout(() => {
                 setSelectedDraft('');
@@ -255,22 +255,22 @@ const Calculator = () => {
                 if (!contentArea) return;
 
                 const contentWidth = contentArea.offsetWidth;
-                
+
                 // Create a hidden span to measure text width
                 const span = document.createElement('span');
                 span.className = 'calculator-title-measure';
                 span.style.font = window.getComputedStyle(titleInputRef.current).font;
                 span.textContent = calculatorTitle || titleInputRef.current.placeholder;
                 document.body.appendChild(span);
-                
+
                 // Calculate width with padding
                 const textWidth = span.offsetWidth;
                 const padding = 24; // 12px padding on each side
                 const newWidth = Math.min(Math.max(300, textWidth + padding), contentWidth - 40); // between 300px and content width
-                
+
                 document.body.removeChild(span);
                 setInputWidth(newWidth);
-                
+
                 // Update position for header title
                 const contentRect = contentArea.getBoundingClientRect();
                 const viewportWidth = document.documentElement.clientWidth;
@@ -293,7 +293,7 @@ const Calculator = () => {
     const handleCategoryChange = (event) => {
         const category = event.target.value;
         setSelectedCategory(category);
-        
+
         // Load default price for user-defined items if available
         if (isUserDefinedPrice(category)) {
             const categoryInfo = categories.find(cat => cat.name === category);
@@ -339,26 +339,26 @@ const Calculator = () => {
 
     const handleQuantityChange = (id, value) => {
         const quantity = Math.max(1, parseInt(value) || 1);
-        setWishlist(wishlist.map(item => 
+        setWishlist(wishlist.map(item =>
             item.id === id ? { ...item, quantity } : item
         ));
     };
 
     const handlePriceChange = (id, value) => {
         const price = Math.max(0, parseInt(value) || 0);
-        setWishlist(wishlist.map(item => 
+        setWishlist(wishlist.map(item =>
             item.id === id ? { ...item, price } : item
         ));
     };
 
     const handleDescriptionChange = (id, value) => {
-        setWishlist(wishlist.map(item => 
+        setWishlist(wishlist.map(item =>
             item.id === id ? { ...item, description: value } : item
         ));
     };
 
     const handlePurchasedChange = (id) => {
-        setWishlist(wishlist.map(item => 
+        setWishlist(wishlist.map(item =>
             item.id === id ? { ...item, purchased: !item.purchased } : item
         ));
     };
@@ -409,7 +409,7 @@ const Calculator = () => {
 
             // Clone the wishlist content
             const contentClone = contentArea.cloneNode(true);
-            
+
             // Remove any buttons and unnecessary interactive elements
             const elementsToRemove = contentClone.querySelectorAll('button, .MuiIconButton-root, .button-container');
             elementsToRemove.forEach(el => el.remove());
@@ -417,15 +417,27 @@ const Calculator = () => {
             // Add the content to the container
             tempContainer.appendChild(contentClone);
 
-            // Add to document temporarily for rendering
+            // Append to measure, then capture at 2× for sharp output
             document.body.appendChild(tempContainer);
+
+            const captureWidth = tempContainer.scrollWidth;
+            const captureHeight = tempContainer.scrollHeight;
+            tempContainer.style.width = `${captureWidth}px`;
+
+            const EXPORT_SCALE = Math.max(2, window.devicePixelRatio || 1);
 
             const options = {
                 quality: 1.0,
                 bgcolor: '#323342',
+                width: captureWidth,
+                height: captureHeight,
+                scale: EXPORT_SCALE,
                 style: {
-                    'background-color': '#323342'
-                }
+                    'background-color': '#323342',
+                    width: `${captureWidth}px`,
+                    height: `${captureHeight}px`,
+                    transform: 'none',
+                },
             };
 
             try {
@@ -510,7 +522,7 @@ const Calculator = () => {
                         }
                     }}
                 >
-                    <DialogTitle sx={{ 
+                    <DialogTitle sx={{
                         borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
                         color: 'white'
                     }}>
@@ -526,10 +538,10 @@ const Calculator = () => {
                         <Typography paragraph>
                             3. Kalian bisa save Wishlist ini dengan tombol Save As Image atau Save ke Excel File dengan tombol Export to Excel
                         </Typography>
-                        <Typography 
-                            sx={{ 
-                                mt: 2, 
-                                p: 2, 
+                        <Typography
+                            sx={{
+                                mt: 2,
+                                p: 2,
                                 bgcolor: 'rgba(255, 255, 255, 0.05)',
                                 borderRadius: 1
                             }}
@@ -538,7 +550,7 @@ const Calculator = () => {
                         </Typography>
                     </DialogContent>
                     <DialogActions sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.12)' }}>
-                        <Button 
+                        <Button
                             onClick={() => setShowWelcomeDialog(false)}
                             variant="contained"
                             sx={{
@@ -557,29 +569,29 @@ const Calculator = () => {
                 {/* Fixed Header */}
                 <AppBar position="fixed" sx={{ bgcolor: '#323342', borderBottom: '1px solid rgba(255, 255, 255, 0.12)' }}>
                     <Box sx={{ position: 'relative' }}>
-                    <Toolbar sx={{ display: 'flex', alignItems: 'center' }}>
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            onClick={() => navigate('/')}
-                            sx={{ mr: 2 }}
-                        >
-                            <ArrowBackIcon />
-                        </IconButton>
-                        <img 
-                            src={calculatorLogo} 
-                            alt="Calculator Logo" 
-                            style={{ 
-                                height: '40px',
-                                marginRight: '12px'
-                            }} 
-                        />
+                        <Toolbar sx={{ display: 'flex', alignItems: 'center' }}>
+                            <IconButton
+                                edge="start"
+                                color="inherit"
+                                onClick={() => navigate('/')}
+                                sx={{ mr: 2 }}
+                            >
+                                <ArrowBackIcon />
+                            </IconButton>
+                            <img
+                                src={calculatorLogo}
+                                alt="Calculator Logo"
+                                style={{
+                                    height: '40px',
+                                    marginRight: '12px'
+                                }}
+                            />
                             <Typography variant="h6" component="div">
-                            JKT48 Wishlist Calculator
-                        </Typography>
+                                JKT48 Wishlist Calculator
+                            </Typography>
                             {calculatorTitle && (
-                                <Box 
-                                    sx={{ 
+                                <Box
+                                    sx={{
                                         position: 'absolute',
                                         left: '50%',
                                         transform: 'translateX(-50%)',
@@ -588,9 +600,9 @@ const Calculator = () => {
                                         pointerEvents: 'none'
                                     }}
                                 >
-                                    <Typography 
-                                        variant="h6" 
-                                        sx={{ 
+                                    <Typography
+                                        variant="h6"
+                                        sx={{
                                             color: 'white',
                                             whiteSpace: 'nowrap',
                                             fontSize: '2.5rem',
@@ -601,7 +613,7 @@ const Calculator = () => {
                                     </Typography>
                                 </Box>
                             )}
-                    </Toolbar>
+                        </Toolbar>
                     </Box>
                 </AppBar>
 
@@ -610,9 +622,9 @@ const Calculator = () => {
                     <Container maxWidth="md" sx={{ py: 4 }}>
                         <Card sx={{ bgcolor: '#323342', boxShadow: 'none' }} ref={wishlistRef}>
                             <CardContent>
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'center', 
+                                <Box sx={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
                                     mb: 3,
                                     mt: 2
                                 }}>
@@ -624,7 +636,7 @@ const Calculator = () => {
                                         onChange={(e) => setCalculatorTitle(e.target.value)}
                                         placeholder="My JKT48 Wishlist"
                                         spellCheck="false"
-                                        style={{ 
+                                        style={{
                                             width: `${inputWidth}px`,
                                             fontSize: '32px',
                                             padding: '8px 12px',
@@ -678,7 +690,7 @@ const Calculator = () => {
                                     </Button>
                                 </Box>
 
-                                <Paper 
+                                <Paper
                                     ref={wishlistRef}
                                     sx={{ bgcolor: '#323342', border: '1px solid rgba(255, 255, 255, 0.12)' }}
                                 >
@@ -826,9 +838,9 @@ const Calculator = () => {
                                         </Button>
                                     </Box>
                                     <Box sx={{ textAlign: 'right' }}>
-                                    <Typography variant="h6" className="total-amount" sx={{ color: 'white' }}>
-                                        Total: {formatPrice(calculateTotal())}
-                                    </Typography>
+                                        <Typography variant="h6" className="total-amount" sx={{ color: 'white' }}>
+                                            Total: {formatPrice(calculateTotal())}
+                                        </Typography>
                                         <Typography variant="subtitle1" sx={{ color: '#4CAF50', mt: 1 }}>
                                             Total Terbeli: {formatPrice(calculateTotal(true))}
                                         </Typography>
@@ -857,8 +869,8 @@ const Calculator = () => {
                                                 <em>Select a draft to load</em>
                                             </MenuItem>
                                             {drafts.map(draft => (
-                                                <MenuItem 
-                                                    key={draft.id} 
+                                                <MenuItem
+                                                    key={draft.id}
                                                     value={draft.id.toString()}
                                                     sx={{
                                                         display: 'flex',
@@ -867,7 +879,7 @@ const Calculator = () => {
                                                     }}
                                                 >
                                                     <span>{draft.title || 'Untitled Wishlist'}</span>
-                                                    <span style={{ 
+                                                    <span style={{
                                                         opacity: 0.7,
                                                         fontSize: '0.9em',
                                                         display: 'flex',

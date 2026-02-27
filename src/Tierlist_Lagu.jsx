@@ -563,13 +563,14 @@ const Tierlist = () => {
             // Create an offscreen clone of only the tier rows for capture
             const cloneRowsContainer = rowsContainer.cloneNode(true);
             cloneRowsContainer.style.backgroundColor = '#1a1a2e';
-            cloneRowsContainer.style.width = `${rowsContainer.offsetWidth}px`;
+            cloneRowsContainer.style.width = `${rowsContainer.scrollWidth}px`;
             cloneRowsContainer.style.margin = '0';
             cloneRowsContainer.style.padding = '10px 20px';
             cloneRowsContainer.style.boxSizing = 'border-box';
             cloneRowsContainer.style.position = 'absolute';
             cloneRowsContainer.style.left = '-9999px';
             cloneRowsContainer.style.top = '0';
+            cloneRowsContainer.style.transform = 'none';
             cloneRowsContainer.style.opacity = '1';
 
             // Hide title row if title is empty; otherwise strip borders/outline
@@ -620,15 +621,19 @@ const Tierlist = () => {
             cloneRowsContainer.style.width = `${captureWidth}px`;
             cloneRowsContainer.style.height = `${captureHeight}px`;
 
+            const EXPORT_SCALE = Math.max(2, window.devicePixelRatio || 1);
+
             const options = {
                 quality: 1.0,
                 bgcolor: '#1a1a2e',
                 width: captureWidth,
                 height: captureHeight,
+                scale: EXPORT_SCALE,
                 style: {
                     'background-color': '#1a1a2e',
                     width: `${captureWidth}px`,
-                    height: `${captureHeight}px`
+                    height: `${captureHeight}px`,
+                    transform: 'none',
                 },
                 cacheBust: true
             };

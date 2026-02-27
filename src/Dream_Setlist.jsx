@@ -690,23 +690,41 @@ const DreamSetlist = () => {
         }
     };
 
-    // Add save to image functionality
     const handleSave = async () => {
         try {
             const node = tierlistRef.current;
             if (!node) return;
 
-            const dataUrl = await domtoimage.toJpeg(node, {
-                quality: 0.95,
-                bgcolor: '#1a1a2e'
-            });
+            const EXPORT_SCALE = Math.max(2, window.devicePixelRatio || 1);
+            const options = {
+                quality: 1.0,
+                bgcolor: '#1a1a2e',
+                scale: EXPORT_SCALE,
+                style: {
+                    transform: 'none',
+                },
+                cacheBust: true,
+            };
 
-            const link = document.createElement('a');
-            link.download = `${title || 'Dream_Setlist'}.jpg`;
-            link.href = dataUrl;
-            link.click();
+            try {
+                const dataUrl = await domtoimage.toPng(node, options);
+                const link = document.createElement('a');
+                link.download = `${title || 'Dream_Setlist'}.png`;
+                link.href = dataUrl;
+                link.click();
+            } catch (pngError) {
+                console.warn('PNG failed, trying blob...', pngError);
+                const blob = await domtoimage.toBlob(node, options);
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `${title || 'Dream_Setlist'}.png`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            }
         } catch (error) {
             console.error('Error saving image:', error);
+            alert('Failed to save image. Please try again or use a screenshot instead.');
         }
     };
 
