@@ -19,13 +19,13 @@ import {
 } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { 
-    IconButton, 
-    Dialog, 
-    DialogTitle, 
-    DialogContent, 
-    TextField, 
-    Button, 
+import {
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    TextField,
+    Button,
     DialogActions,
     Menu,
     MenuItem,
@@ -40,14 +40,14 @@ import {
     InputAdornment,
     Paper
 } from '@mui/material';
-import { 
-    Settings, 
-    ArrowUpward, 
-    ArrowDownward, 
-    Edit, 
-    Delete, 
-    Add, 
-    Refresh, 
+import {
+    Settings,
+    ArrowUpward,
+    ArrowDownward,
+    Edit,
+    Delete,
+    Add,
+    Refresh,
     Save,
     Check,
     ArrowBack,
@@ -85,13 +85,13 @@ const TIER_COLORS = [
 // Helper function to calculate contrasting text color
 const getContrastColor = (hexcolor) => {
     // Convert hex to RGB
-    const r = parseInt(hexcolor.substr(1,2), 16);
-    const g = parseInt(hexcolor.substr(3,2), 16);
-    const b = parseInt(hexcolor.substr(5,2), 16);
-    
+    const r = parseInt(hexcolor.substr(1, 2), 16);
+    const g = parseInt(hexcolor.substr(3, 2), 16);
+    const b = parseInt(hexcolor.substr(5, 2), 16);
+
     // Calculate luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    
+
     return luminance > 0.5 ? '#000000' : '#FFFFFF';
 };
 
@@ -138,9 +138,9 @@ const parseNameForSearch = (filename) => {
     if (!filename || typeof filename !== 'string') return '';
 
     // Strip common ID prefixes (member-, setlist-, ramadan-, video-) before parsing
-                const rawBase = filename.split('/').pop().split('.')[0];
-                const baseName = rawBase.replace(/^(member|setlist|ramadan|video)-/i, '');
-                const parts = baseName.split('_').filter(Boolean);
+    const rawBase = filename.split('/').pop().split('.')[0];
+    const baseName = rawBase.replace(/^(member|setlist|ramadan|video)-/i, '');
+    const parts = baseName.split('_').filter(Boolean);
     const firstPart = parts[0] || '';
     const brandTokens = [];
 
@@ -172,7 +172,7 @@ const parseNameForSearch = (filename) => {
     const searchableParts = [...brandTokens, genPart, ...nameParts].filter(Boolean);
     const searchable = searchableParts.join(' ').toLowerCase();
 
-    
+
 
     return searchable;
 };
@@ -197,18 +197,18 @@ const formatSetlistName = (filename) => {
 const formatVideoName = (filename) => {
     // Remove file extension
     let name = filename.split('.')[0];
-    
+
     // Remove special prefixes
     name = name.replace(/^_New_Era_Special_Performance_Video[_–]?/, '');
     name = name.replace(/^360°_VR_＂/, '');
     name = name.replace(/＂$/, '');
-    
+
     // Replace underscores with spaces
     name = name.replace(/_/g, ' ');
-    
+
     // Remove anything in parentheses at the end if it's a translation
     name = name.replace(/\s*\([^)]*\)$/, '');
-    
+
     return name;
 };
 
@@ -222,14 +222,14 @@ const dropAnimation = {
     }),
 };
 
-const Droppable = ({id, children}) => {
-    const {setNodeRef, isOver} = useDroppable({
+const Droppable = ({ id, children }) => {
+    const { setNodeRef, isOver } = useDroppable({
         id: id,
     });
 
     return (
-        <div 
-            ref={setNodeRef} 
+        <div
+            ref={setNodeRef}
             className={`droppable ${isOver ? 'is-over' : ''}`}
             style={{ height: '100%' }}
         >
@@ -283,7 +283,7 @@ const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelec
         setNodeRef,
         transform,
         transition,
-    } = useSortable({ 
+    } = useSortable({
         id: image.id,
         data: {
             type: 'image',
@@ -310,9 +310,9 @@ const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelec
             {...dragProps}
             onClick={() => !isDragMode && onImageClick && onImageClick(image)}
         >
-            <DraggableImage 
-                image={image} 
-                isDragging={isDragging} 
+            <DraggableImage
+                image={image}
+                isDragging={isDragging}
                 onImageClick={isDragMode ? onImageClick : null}
                 onContextMenu={onContextMenu}
                 isSelected={isSelected}
@@ -325,183 +325,76 @@ const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelec
 const TierRow = ({ row, onMove, onEdit, onClear, onDelete, isFirstRow }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
-    const headerRef = useRef(null);
-    const nameRef = useRef(null);
-    const buttonRef = useRef(null);
-    const baseFontPxRef = useRef(null);
-    const [nameFontPx, setNameFontPx] = useState(null);
-    
-    const handleClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-    
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+
+    const handleClick = (event) => setAnchorEl(event.currentTarget);
+    const handleClose = () => setAnchorEl(null);
 
     const handleAction = (action) => {
         handleClose();
-        switch(action) {
-            case 'up':
-                onMove(row.id, 'up');
-                break;
-            case 'down':
-                onMove(row.id, 'down');
-                break;
-            case 'edit':
-                onEdit(row);
-                break;
-            case 'clear':
-                onClear(row.id);
-                break;
-            case 'delete':
-                onDelete(row.id);
-                break;
-            default:
-                break;
+        switch (action) {
+            case 'up': onMove(row.id, 'up'); break;
+            case 'down': onMove(row.id, 'down'); break;
+            case 'edit': onEdit(row); break;
+            case 'clear': onClear(row.id); break;
+            case 'delete': onDelete(row.id); break;
+            default: break;
         }
     };
 
     const textColor = getContrastColor(row.color);
 
-    // Dynamically fit the tier name text within the header without moving the button
-    const adjustNameFont = () => {
-        const headerEl = headerRef.current;
-        const nameEl = nameRef.current;
-        const buttonEl = buttonRef.current;
-        if (!headerEl || !nameEl || !buttonEl) return;
-
-        const cs = window.getComputedStyle(headerEl);
-        const padLeft = parseFloat(cs.paddingLeft || '0');
-        const padRight = parseFloat(cs.paddingRight || '0');
-        const contentWidth = headerEl.clientWidth - padLeft - padRight;
-        const buttonWidth = buttonEl.offsetWidth || 0;
-        const gap = 8; // margin-left on button
-        const available = Math.max(0, contentWidth - buttonWidth - gap);
-
-        // Determine base font size from computed style once
-        if (!baseFontPxRef.current) {
-            const nameCs = window.getComputedStyle(nameEl);
-            baseFontPxRef.current = parseFloat(nameCs.fontSize || '18'); // default ~1.1rem
-        }
-
-        // Start from base
-        let target = baseFontPxRef.current;
-        nameEl.style.fontSize = `${target}px`;
-
-        // Measure the longest word against available width so we avoid mid-word breaks
-        const measure = () => {
-            const nameCs = window.getComputedStyle(nameEl);
-            const fontFamily = nameCs.fontFamily || 'sans-serif';
-            const fontWeight = nameCs.fontWeight || '400';
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                ctx.font = `${fontWeight} ${baseFontPxRef.current}px ${fontFamily}`;
-                const words = String(row.name || '').split(/\s+/).filter(Boolean);
-                const maxWordWidth = words.reduce((max, w) => Math.max(max, ctx.measureText(w).width), 0);
-                if (maxWordWidth > 0 && available > 0 && maxWordWidth > available) {
-                    const ratio = available / maxWordWidth;
-                    target = Math.max(10, Math.floor(baseFontPxRef.current * ratio));
-                } else {
-                    target = baseFontPxRef.current;
-                }
-            }
-            setNameFontPx(target);
-        };
-
-        // Use rAF to ensure DOM styles applied before measuring
-        requestAnimationFrame(measure);
-    };
-
-    useLayoutEffect(() => {
-        adjustNameFont();
-        const onResize = () => adjustNameFont();
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
-        adjustNameFont();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [row.name]);
-
     return (
-        <div 
-            className="row-header" 
-            style={{ 
+        <div
+            className="row-header"
+            style={{
                 backgroundColor: row.color,
                 borderTopLeftRadius: isFirstRow ? '8px' : '0',
                 borderTopRightRadius: '0',
-                overflow: 'hidden' // ensure contents don't spill out
             }}
-            ref={headerRef}
         >
-            <span 
-                style={{ 
-                    color: textColor,
-                    flex: 1,
-                    minWidth: 0,
-                    // Allow wrapping instead of truncating
-                    whiteSpace: 'normal',
-                    overflowWrap: 'anywhere',
-                    wordBreak: 'break-word',
-                    fontSize: nameFontPx ? `${nameFontPx}px` : undefined
-                }}
-                ref={nameRef}
+            {/* Inline styles guarantee ellipsis regardless of CSS cascade / specificity */}
+            <span
+                className="row-name-label"
                 title={row.name}
+                style={{ color: textColor }}
             >
                 {row.name}
             </span>
-            <IconButton 
+            <IconButton
                 onClick={handleClick}
                 size="small"
                 style={{ color: textColor, flex: '0 0 auto', marginLeft: 8 }}
-                ref={buttonRef}
             >
                 <Settings />
             </IconButton>
-            <Menu
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
-            >
+            <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
                 <MenuItem onClick={() => handleAction('up')}>
-                    <ListItemIcon>
-                        <ArrowUpward fontSize="small" />
-                    </ListItemIcon>
+                    <ListItemIcon><ArrowUpward fontSize="small" /></ListItemIcon>
                     <ListItemText>Move Up</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleAction('down')}>
-                    <ListItemIcon>
-                        <ArrowDownward fontSize="small" />
-                    </ListItemIcon>
+                    <ListItemIcon><ArrowDownward fontSize="small" /></ListItemIcon>
                     <ListItemText>Move Down</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleAction('edit')}>
-                    <ListItemIcon>
-                        <Edit fontSize="small" />
-                    </ListItemIcon>
+                    <ListItemIcon><Edit fontSize="small" /></ListItemIcon>
                     <ListItemText>Edit Name</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleAction('clear')}>
-                    <ListItemIcon>
-                        <Delete fontSize="small" />
-                    </ListItemIcon>
+                    <ListItemIcon><Delete fontSize="small" /></ListItemIcon>
                     <ListItemText>Clear Row</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleAction('delete')} sx={{ color: 'error.main' }}>
-                    <ListItemIcon>
-                        <Delete fontSize="small" sx={{ color: 'error.main' }} />
-                    </ListItemIcon>
+                    <ListItemIcon><Delete fontSize="small" sx={{ color: 'error.main' }} /></ListItemIcon>
                     <ListItemText>Delete Row</ListItemText>
                 </MenuItem>
             </Menu>
         </div>
     );
 };
+
+
+
 
 const Tierlist = () => {
     const navigate = useNavigate();
@@ -530,7 +423,7 @@ const Tierlist = () => {
     // Track changes in available items count
     useEffect(() => {
         const currentAvailable = images.filter(img => img.containerId === 'image-pool').length;
-        
+
         // Only count as a change if the number actually changed
         if (currentAvailable !== availableCount) {
             setAvailableCount(currentAvailable);
@@ -539,6 +432,44 @@ const Tierlist = () => {
             console.log('Available count changed:', currentAvailable, 'Change counter:', changeCounter + 1);
         }
     }, [images]);
+
+    // ── Sync row-header widths so all rows share the same column width ──
+    useLayoutEffect(() => {
+        const container = tierlistRef.current;
+        if (!container) return;
+        const headers = Array.from(container.querySelectorAll('.row-header'));
+        if (headers.length === 0) return;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const firstLabel = headers[0].querySelector('.row-name-label');
+        if (firstLabel) {
+            const cs = window.getComputedStyle(firstLabel);
+            ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        } else {
+            ctx.font = 'bold 1.1rem sans-serif';
+        }
+
+        let maxTextPx = 0;
+        headers.forEach(h => {
+            const label = h.querySelector('.row-name-label');
+            const text = (label ? label.textContent : '') || '';
+            text.split(/\s+/).forEach(word => {
+                if (word) maxTextPx = Math.max(maxTextPx, ctx.measureText(word).width);
+            });
+        });
+
+        const cs = window.getComputedStyle(headers[0]);
+        const padH = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+        const btn = headers[0].querySelector('button');
+        const buttonW = btn ? btn.offsetWidth + 8 : 44;
+
+        const totalW = Math.ceil(maxTextPx + padH + buttonW);
+        headers.forEach(h => { h.style.width = `${totalW}px`; });
+    }, [rows]);
+
 
     // Auto-save effect
     useEffect(() => {
@@ -574,11 +505,11 @@ const Tierlist = () => {
         console.log('Managing drafts, isAutoSave:', isAutoSave);
         const storageKey = isAutoSave ? 'tierlistAutoSaveDrafts' : 'tierlistManualDrafts';
         const maxDrafts = isAutoSave ? 3 : 5;
-        
+
         let drafts = JSON.parse(localStorage.getItem(storageKey) || '[]');
         console.log('Current drafts:', drafts);
         drafts = drafts.filter(d => d.type === tierlistType); // Only keep drafts of the same type
-        
+
         // Add new draft
         drafts.unshift({
             ...newDraft,
@@ -587,11 +518,11 @@ const Tierlist = () => {
             isAutoSave,
             id: Date.now()  // Unique ID for the draft
         });
-        
+
         // Keep only the most recent drafts
         drafts = drafts.slice(0, maxDrafts);
         console.log('Updated drafts:', drafts);
-        
+
         localStorage.setItem(storageKey, JSON.stringify(drafts));
     };
 
@@ -601,7 +532,7 @@ const Tierlist = () => {
         const generation = localStorage.getItem('generation') || 'all';
         const videoType = localStorage.getItem('videoType') || 'all';
         const draftId = localStorage.getItem('currentDraftId');
-        
+
         setTierlistType(tierlistType);
         console.log('Initial load with:', { tierlistType, memberType, generation, videoType, draftId });
 
@@ -633,7 +564,7 @@ const Tierlist = () => {
             } else if (videoType === 'spv') {
                 videoFiles = spvFiles;
             }
-            
+
             imageList = videoFiles.map((filename, index) => ({
                 id: `video-${filename}`,
                 src: `/asset/SPV_MV/${filename}`,
@@ -669,9 +600,9 @@ const Tierlist = () => {
                 // Fallback: if pattern unknown, include
                 return true;
             };
-            
+
             let currentIndex = 0;
-            
+
             // Load active members if needed
             if (memberType === 'active' || memberType === 'all') {
                 const activeMemberImages = activeMemberFiles
@@ -709,7 +640,7 @@ const Tierlist = () => {
             const manualDrafts = JSON.parse(localStorage.getItem('tierlistManualDrafts') || '[]');
             const autoDrafts = JSON.parse(localStorage.getItem('tierlistAutoSaveDrafts') || '[]');
             const allDrafts = [...manualDrafts, ...autoDrafts];
-            
+
             const draftToLoad = allDrafts.find(d => d.id.toString() === draftId.toString());
             console.log('Found draft:', draftToLoad);
 
@@ -763,14 +694,14 @@ const Tierlist = () => {
         if (!isDragMode) return;
         const { active, over } = event;
         if (!over) return;
-        
+
         const overId = over.id;
-        
+
         // If we're over another image
         if (images.find(img => img.id === overId)) {
             const activeImage = images.find(img => img.id === active.id);
             const overImage = images.find(img => img.id === overId);
-            
+
             // If they're in the same container
             if (activeImage.containerId === overImage.containerId) {
                 setImages(prev => {
@@ -785,28 +716,28 @@ const Tierlist = () => {
             setImages(prev => {
                 const activeImage = prev.find(img => img.id === active.id);
                 if (activeImage.containerId === overId) return prev; // No change if same container
-                
+
                 // Remove the dragged image from its current position
                 const newImages = prev.filter(img => img.id !== active.id);
-                
+
                 // Find all images in the target container
                 const containerImages = newImages.filter(img => img.containerId === overId);
-                
+
                 // Find the index after the last image in the target container
-                const lastContainerImageIndex = newImages.findIndex(img => 
-                    img.containerId === overId && 
+                const lastContainerImageIndex = newImages.findIndex(img =>
+                    img.containerId === overId &&
                     containerImages.indexOf(img) === containerImages.length - 1
                 );
-                
+
                 // Create the updated image with new container
                 const updatedImage = { ...activeImage, containerId: overId };
-                
+
                 // If there are no images in the container or we couldn't find the last image
                 if (containerImages.length === 0 || lastContainerImageIndex === -1) {
                     // Just append to the end of the array
                     return [...newImages, updatedImage];
                 }
-                
+
                 // Insert after the last image in the container
                 newImages.splice(lastContainerImageIndex + 1, 0, updatedImage);
                 return newImages;
@@ -823,12 +754,12 @@ const Tierlist = () => {
         }
 
         const overId = over.id;
-        
+
         // If we're over another image
         if (images.find(img => img.id === overId)) {
             const activeImage = images.find(img => img.id === active.id);
             const overImage = images.find(img => img.id === overId);
-            
+
             // If they're in the same container
             if (activeImage.containerId === overImage.containerId) {
                 setImages(prev => {
@@ -842,29 +773,29 @@ const Tierlist = () => {
         else if (rows.find(row => row.id === overId) || overId === 'image-pool') {
             const activeImage = images.find(img => img.id === active.id);
             const overContainer = overId;
-            
+
             setImages(prev => {
                 // Remove the dragged image from its current position
                 const newImages = prev.filter(img => img.id !== active.id);
-                
+
                 // Find all images in the target container
                 const containerImages = newImages.filter(img => img.containerId === overContainer);
-                
+
                 // Find the index after the last image in the target container
-                const lastContainerImageIndex = newImages.findIndex(img => 
-                    img.containerId === overContainer && 
+                const lastContainerImageIndex = newImages.findIndex(img =>
+                    img.containerId === overContainer &&
                     containerImages.indexOf(img) === containerImages.length - 1
                 );
-                
+
                 // Create the updated image with new container
                 const updatedImage = { ...activeImage, containerId: overContainer };
-                
+
                 // If there are no images in the container or we couldn't find the last image
                 if (containerImages.length === 0 || lastContainerImageIndex === -1) {
                     // Just append to the end of the array
                     return [...newImages, updatedImage];
                 }
-                
+
                 // Insert after the last image in the container
                 newImages.splice(lastContainerImageIndex + 1, 0, updatedImage);
                 return newImages;
@@ -880,7 +811,7 @@ const Tierlist = () => {
     };
 
     const handleRowSave = () => {
-        setRows(rows.map(row => 
+        setRows(rows.map(row =>
             row.id === editingRow.id ? { ...row, ...editingRow } : row
         ));
         setDialogOpen(false);
@@ -888,7 +819,7 @@ const Tierlist = () => {
 
     const handleRowMove = (rowId, direction) => {
         const index = rows.findIndex(row => row.id === rowId);
-        if ((direction === 'up' && index === 0) || 
+        if ((direction === 'up' && index === 0) ||
             (direction === 'down' && index === rows.length - 1)) return;
 
         const newRows = [...rows];
@@ -898,9 +829,9 @@ const Tierlist = () => {
     };
 
     const handleRowClear = (rowId) => {
-        setImages(prevImages => 
-            prevImages.map(img => 
-                img.containerId === rowId 
+        setImages(prevImages =>
+            prevImages.map(img =>
+                img.containerId === rowId
                     ? { ...img, containerId: 'image-pool' }
                     : img
             )
@@ -909,9 +840,9 @@ const Tierlist = () => {
 
     const handleRowDelete = (rowId) => {
         // Move all images from the row to the image pool
-        setImages(prevImages => 
-            prevImages.map(img => 
-                img.containerId === rowId 
+        setImages(prevImages =>
+            prevImages.map(img =>
+                img.containerId === rowId
                     ? { ...img, containerId: 'image-pool' }
                     : img
             )
@@ -932,7 +863,7 @@ const Tierlist = () => {
     const getImagesForContainer = (containerId) => {
         const filteredImages = images.filter(img => {
             if (img.containerId !== containerId) return false;
-    
+
             if (containerId === 'image-pool' && searchTerm) {
                 if (!img.id || typeof img.id !== 'string') return false;
 
@@ -967,21 +898,21 @@ const Tierlist = () => {
 
                 return matches;
             }
-    
+
             return true;
         });
-    
+
         if (containerId === 'image-pool') {
             // Sort the image pool by immutable originalIndex so items
             // return to their initial positions when sent back to pool
             return filteredImages.sort((a, b) => a.originalIndex - b.originalIndex);
         }
-    
+
         return filteredImages;
     };
-    
-    
-    
+
+
+
 
     const activeImage = activeId ? images.find(img => img.id === activeId) : null;
 
@@ -1022,7 +953,7 @@ const Tierlist = () => {
             } else if (videoType === 'spv') {
                 videoFiles = spvFiles;
             }
-            
+
             imageList = videoFiles.map((filename, index) => ({
                 id: `video-${filename}`,
                 src: `/asset/SPV_MV/${filename}`,
@@ -1053,9 +984,9 @@ const Tierlist = () => {
                 // Fallback: if pattern unknown, include
                 return true;
             };
-            
+
             let currentIndex = 0;
-            
+
             // Load active members if needed
             if (memberType === 'active' || memberType === 'all') {
                 const activeMemberImages = activeMemberFiles
@@ -1099,7 +1030,7 @@ const Tierlist = () => {
 
             // Ensure fonts and images are ready
             if (document.fonts && document.fonts.ready) {
-                await document.fonts.ready.catch(() => {});
+                await document.fonts.ready.catch(() => { });
             }
             const waitForImages = (root) => Promise.all(
                 Array.from(root.querySelectorAll('img')).map(img => {
@@ -1220,22 +1151,22 @@ const Tierlist = () => {
                 if (!firstRow) return;
 
                 const rowWidth = firstRow.offsetWidth;
-                
+
                 // Create a hidden span to measure text width
                 const span = document.createElement('span');
                 span.className = 'tierlist-title-measure';
                 span.style.font = window.getComputedStyle(titleInputRef.current).font;
                 span.textContent = tierlistTitle || titleInputRef.current.placeholder;
                 document.body.appendChild(span);
-                
+
                 // Calculate width with padding
                 const textWidth = span.offsetWidth;
                 const padding = 24; // 12px padding on each side
                 const newWidth = Math.min(Math.max(300, textWidth + padding), rowWidth); // between 300px and row width
-                
+
                 document.body.removeChild(span);
                 setInputWidth(newWidth);
-                
+
                 // Update position for header title
                 const rowRect = firstRow.getBoundingClientRect();
                 const viewportWidth = document.documentElement.clientWidth;
@@ -1278,16 +1209,16 @@ const Tierlist = () => {
         e.preventDefault(); // Prevent the default context menu
         if (isDragMode) {
             if (image.containerId !== 'image-pool') {
-                setImages(prev => prev.map(img => 
-                    img.id === image.id 
+                setImages(prev => prev.map(img =>
+                    img.id === image.id
                         ? { ...img, containerId: 'image-pool' }
                         : img
                 ));
             }
         } else {
             if (image.containerId !== 'image-pool') {
-                setImages(prev => prev.map(img => 
-                    img.id === image.id 
+                setImages(prev => prev.map(img =>
+                    img.id === image.id
                         ? { ...img, containerId: 'image-pool' }
                         : img
                 ));
@@ -1311,7 +1242,7 @@ const Tierlist = () => {
                 const containerImages = newImages.filter(img => img.containerId === tierId);
 
                 // Find the index after the last image in the target container (within array order)
-                const lastContainerImageIndex = newImages.findIndex(img => 
+                const lastContainerImageIndex = newImages.findIndex(img =>
                     img.containerId === tierId &&
                     containerImages.indexOf(img) === containerImages.length - 1
                 );
@@ -1333,7 +1264,7 @@ const Tierlist = () => {
     };
 
     const getTierlistTypeDisplay = () => {
-        switch(tierlistType) {
+        switch (tierlistType) {
             case 'setlist':
                 return 'Setlist';
             case 'ramadan':
@@ -1375,8 +1306,8 @@ const Tierlist = () => {
     return (
         <div className="tierlist-page">
             <header className="header">
-                <IconButton 
-                    onClick={() => navigate(-1)} 
+                <IconButton
+                    onClick={() => navigate(-1)}
                     sx={{ color: 'white', marginRight: 1 }}
                 >
                     <ArrowBack />
@@ -1389,7 +1320,7 @@ const Tierlist = () => {
                         </div>
                     </div>
                     {tierlistTitle && (
-                        <div 
+                        <div
                             className="header-subtitle-container"
                             style={{
                                 left: titlePosition.left,
@@ -1404,8 +1335,8 @@ const Tierlist = () => {
             </header>
 
             {/* Welcome Dialog */}
-            <Dialog 
-                open={showWelcomeDialog} 
+            <Dialog
+                open={showWelcomeDialog}
                 onClose={() => setShowWelcomeDialog(false)}
                 maxWidth="sm"
                 fullWidth
@@ -1445,7 +1376,7 @@ const Tierlist = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button 
+                    <Button
                         onClick={() => setShowWelcomeDialog(false)}
                         variant="contained"
                         color="primary"
@@ -1465,7 +1396,7 @@ const Tierlist = () => {
             >
                 <div className="tierlist-container" ref={tierlistRef}>
                     <div className="tier-rows-container" ref={measureRef}>
-                        <div className="tierlist-title-container" style={{ 
+                        <div className="tierlist-title-container" style={{
                             marginTop: '0',
                             marginBottom: '5px',
                             display: 'flex',
@@ -1480,7 +1411,7 @@ const Tierlist = () => {
                                 onChange={(e) => setTierlistTitle(e.target.value)}
                                 placeholder={"Click Here to Add Title"}
                                 spellCheck="false"
-                                style={{ 
+                                style={{
                                     width: `${inputWidth}px`,
                                     fontSize: '32px',
                                     padding: '8px 12px'
@@ -1489,11 +1420,11 @@ const Tierlist = () => {
                             />
                         </div>
                         {rows.map((row, index) => (
-                            <div 
-                                key={row.id} 
+                            <div
+                                key={row.id}
                                 className={`tier-row ${index === 0 ? 'first-tier-row' : ''}`}
                                 onClick={() => handleTierClick(row.id)}
-                                style={{ 
+                                style={{
                                     cursor: (!isDragMode && selectedImage) ? 'pointer' : 'default',
                                     opacity: (!isDragMode && selectedImage) ? 0.8 : 1
                                 }}
@@ -1508,13 +1439,13 @@ const Tierlist = () => {
                                 />
                                 <Droppable id={row.id}>
                                     <div className="tier-content">
-                                        <SortableContext 
+                                        <SortableContext
                                             items={getImagesForContainer(row.id).map(img => img.id)}
                                             strategy={rectSortingStrategy}
                                         >
                                             {getImagesForContainer(row.id).map((image) => (
-                                                <SortableImage 
-                                                    key={image.id} 
+                                                <SortableImage
+                                                    key={image.id}
                                                     image={image}
                                                     isDragging={image.id === activeId}
                                                     onImageClick={handleImageClick}
@@ -1553,27 +1484,27 @@ const Tierlist = () => {
                                 </div>
                             }
                         />
-                        <Button 
-                            variant="contained" 
-                            color="primary" 
+                        <Button
+                            variant="contained"
+                            color="primary"
                             startIcon={<Add />}
                             onClick={handleAddRow}
                             className="action-button"
                         >
                             Add New Tier
                         </Button>
-                        <Button 
-                            variant="contained" 
-                            color="secondary" 
+                        <Button
+                            variant="contained"
+                            color="secondary"
                             startIcon={<Refresh />}
                             onClick={handleReset}
                             className="action-button"
                         >
                             Reset
                         </Button>
-                        <Button 
-                            variant="contained" 
-                            color="success" 
+                        <Button
+                            variant="contained"
+                            color="success"
                             startIcon={<Save />}
                             onClick={handleSave}
                             className="action-button"
@@ -1610,9 +1541,9 @@ const Tierlist = () => {
                                     </span>
                                 )}
                             </h2>
-                            <Paper 
-                                component="form" 
-                                sx={{ 
+                            <Paper
+                                component="form"
+                                sx={{
                                     p: '2px 4px',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1658,13 +1589,13 @@ const Tierlist = () => {
                         </div>
                         <Droppable id="image-pool">
                             <div className="image-pool">
-                                <SortableContext 
+                                <SortableContext
                                     items={getImagesForContainer('image-pool').map(img => img.id)}
                                     strategy={rectSortingStrategy}
                                 >
                                     {getImagesForContainer('image-pool').map((image) => (
-                                        <SortableImage 
-                                            key={image.id} 
+                                        <SortableImage
+                                            key={image.id}
                                             image={image}
                                             isDragging={image.id === activeId}
                                             onImageClick={handleImageClick}
@@ -1680,7 +1611,7 @@ const Tierlist = () => {
 
                     <DragOverlay>
                         {activeId && isDragMode ? (
-                            <DraggableImage 
+                            <DraggableImage
                                 image={images.find(img => img.id === activeId)}
                                 dragOverlay
                                 isDragMode={isDragMode}
@@ -1700,7 +1631,7 @@ const Tierlist = () => {
                         fullWidth
                         value={editingRow.name}
                         onChange={(e) => setEditingRow({ ...editingRow, name: e.target.value })}
-                        sx={{ 
+                        sx={{
                             mb: 2,
                             '& .MuiInputBase-input': {
                                 color: 'white',
@@ -1745,7 +1676,7 @@ const Tierlist = () => {
                                         }}
                                     >
                                         {editingRow.color === color.value && (
-                                            <Check sx={{ 
+                                            <Check sx={{
                                                 color: getContrastColor(color.value)
                                             }} />
                                         )}
@@ -1756,13 +1687,13 @@ const Tierlist = () => {
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button 
+                    <Button
                         onClick={() => setDialogOpen(false)}
                         sx={{ color: 'white' }}
                     >
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         onClick={handleRowSave}
                         sx={{ color: 'white' }}
                     >

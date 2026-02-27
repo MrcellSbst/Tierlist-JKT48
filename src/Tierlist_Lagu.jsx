@@ -19,13 +19,13 @@ import {
 } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { 
-    IconButton, 
-    Dialog, 
-    DialogTitle, 
-    DialogContent, 
-    TextField, 
-    Button, 
+import {
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    TextField,
+    Button,
     DialogActions,
     Menu,
     MenuItem,
@@ -40,14 +40,14 @@ import {
     InputAdornment,
     Paper
 } from '@mui/material';
-import { 
-    Settings, 
-    ArrowUpward, 
-    ArrowDownward, 
-    Edit, 
-    Delete, 
-    Add, 
-    Refresh, 
+import {
+    Settings,
+    ArrowUpward,
+    ArrowDownward,
+    Edit,
+    Delete,
+    Add,
+    Refresh,
     Save,
     Check,
     ArrowBack,
@@ -79,13 +79,13 @@ const TIER_COLORS = [
 // Helper function to calculate contrasting text color
 const getContrastColor = (hexcolor) => {
     // Convert hex to RGB
-    const r = parseInt(hexcolor.substr(1,2), 16);
-    const g = parseInt(hexcolor.substr(3,2), 16);
-    const b = parseInt(hexcolor.substr(5,2), 16);
-    
+    const r = parseInt(hexcolor.substr(1, 2), 16);
+    const g = parseInt(hexcolor.substr(3, 2), 16);
+    const b = parseInt(hexcolor.substr(5, 2), 16);
+
     // Calculate luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    
+
     return luminance > 0.5 ? '#000000' : '#FFFFFF';
 };
 
@@ -100,12 +100,12 @@ const initialRows = [
 // Format member names from filenames (handles JKT48V prefixes)
 const formatMemberName = (filename) => {
     const parts = filename.split('.')[0].split('_');
-    
+
     // Special handling for JKT48V members
     if (parts[0] === 'JKT48V') {
         return parts.slice(3).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
     }
-    
+
     // Regular handling for other members
     return parts.slice(1).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };
@@ -122,18 +122,18 @@ const formatSetlistName = (filename) => {
 const formatVideoName = (filename) => {
     // Remove file extension
     let name = filename.split('.')[0];
-    
+
     // Remove special prefixes
     name = name.replace(/^_New_Era_Special_Performance_Video[_–]?/, '');
     name = name.replace(/^360°_VR_＂/, '');
     name = name.replace(/＂$/, '');
-    
+
     // Replace underscores with spaces
     name = name.replace(/_/g, ' ');
-    
+
     // Remove anything in parentheses at the end if it's a translation
     name = name.replace(/\s*\([^)]*\)$/, '');
-    
+
     return name;
 };
 
@@ -147,14 +147,14 @@ const dropAnimation = {
     }),
 };
 
-const Droppable = ({id, children}) => {
-    const {setNodeRef, isOver} = useDroppable({
+const Droppable = ({ id, children }) => {
+    const { setNodeRef, isOver } = useDroppable({
         id: id,
     });
 
     return (
-        <div 
-            ref={setNodeRef} 
+        <div
+            ref={setNodeRef}
             className={`droppable ${isOver ? 'is-over' : ''}`}
             style={{ height: '100%' }}
         >
@@ -175,7 +175,7 @@ const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContext
 
     // Get the selected setlist from localStorage
     const selectedSetlist = localStorage.getItem('selectedSetlist') || "Aturan Anti Cinta";
-    
+
     // Map of special cases where the filename differs from the standard format
     const specialCases = {
         "BELIEVE": "BELIEVE",
@@ -184,7 +184,7 @@ const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContext
     };
 
     // Get the filename, either from special cases or by standard formatting
-    const imageFilename = specialCases[selectedSetlist] || 
+    const imageFilename = specialCases[selectedSetlist] ||
         selectedSetlist
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -200,9 +200,9 @@ const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContext
             onClick={() => !isDragMode && onImageClick && onImageClick(song)}
             onContextMenu={(e) => onContextMenu && onContextMenu(e, song)}
         >
-            <img 
-                src={`/asset/Setlist/${imageFilename}.${extension}`} 
-                alt={song.name} 
+            <img
+                src={`/asset/Setlist/${imageFilename}.${extension}`}
+                alt={song.name}
                 className="song-background"
             />
             <div className="song-name">{song.name}</div>
@@ -217,7 +217,7 @@ const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelec
         setNodeRef,
         transform,
         transition,
-    } = useSortable({ 
+    } = useSortable({
         id: image.id,
         data: {
             type: 'image',
@@ -244,9 +244,9 @@ const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelec
             {...dragProps}
             onClick={() => !isDragMode && onImageClick && onImageClick(image)}
         >
-            <DraggableImage 
-                song={image} 
-                isDragging={isDragging} 
+            <DraggableImage
+                song={image}
+                isDragging={isDragging}
                 onImageClick={isDragMode ? onImageClick : null}
                 onContextMenu={onContextMenu}
                 isSelected={isSelected}
@@ -259,176 +259,66 @@ const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelec
 const TierRow = ({ row, onMove, onEdit, onClear, onDelete, isFirstRow, children }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
-    const headerRef = useRef(null);
-    const nameRef = useRef(null);
-    const buttonRef = useRef(null);
-    const baseFontPxRef = useRef(null);
-    const [nameFontPx, setNameFontPx] = useState(null);
-    
-    const handleClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-    
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+
+    const handleClick = (event) => setAnchorEl(event.currentTarget);
+    const handleClose = () => setAnchorEl(null);
 
     const handleAction = (action) => {
         handleClose();
-        switch(action) {
-            case 'up':
-                onMove(row.id, 'up');
-                break;
-            case 'down':
-                onMove(row.id, 'down');
-                break;
-            case 'edit':
-                onEdit(row);
-                break;
-            case 'clear':
-                onClear(row.id);
-                break;
-            case 'delete':
-                onDelete(row.id);
-                break;
-            default:
-                break;
+        switch (action) {
+            case 'up': onMove(row.id, 'up'); break;
+            case 'down': onMove(row.id, 'down'); break;
+            case 'edit': onEdit(row); break;
+            case 'clear': onClear(row.id); break;
+            case 'delete': onDelete(row.id); break;
+            default: break;
         }
     };
 
     const textColor = getContrastColor(row.color);
 
-    // Dynamically fit the tier name text within the header without moving the button
-    const adjustNameFont = () => {
-        const headerEl = headerRef.current;
-        const nameEl = nameRef.current;
-        const buttonEl = buttonRef.current;
-        if (!headerEl || !nameEl || !buttonEl) return;
-
-        const cs = window.getComputedStyle(headerEl);
-        const padLeft = parseFloat(cs.paddingLeft || '0');
-        const padRight = parseFloat(cs.paddingRight || '0');
-        const contentWidth = headerEl.clientWidth - padLeft - padRight;
-        const buttonWidth = buttonEl.offsetWidth || 0;
-        const gap = 8; // margin-left on button
-        const available = Math.max(0, contentWidth - buttonWidth - gap);
-
-        // Determine base font size from computed style once
-        if (!baseFontPxRef.current) {
-            const nameCs = window.getComputedStyle(nameEl);
-            baseFontPxRef.current = parseFloat(nameCs.fontSize || '18'); // default ~1.1rem
-        }
-
-        // Start from base
-        let target = baseFontPxRef.current;
-        nameEl.style.fontSize = `${target}px`;
-
-        // Measure the longest word against available width so we avoid mid-word breaks
-        const measure = () => {
-            const nameCs = window.getComputedStyle(nameEl);
-            const fontFamily = nameCs.fontFamily || 'sans-serif';
-            const fontWeight = nameCs.fontWeight || '400';
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                ctx.font = `${fontWeight} ${baseFontPxRef.current}px ${fontFamily}`;
-                const words = String(row.name || '').split(/\s+/).filter(Boolean);
-                const maxWordWidth = words.reduce((max, w) => Math.max(max, ctx.measureText(w).width), 0);
-                if (maxWordWidth > 0 && available > 0 && maxWordWidth > available) {
-                    const ratio = available / maxWordWidth;
-                    target = Math.max(10, Math.floor(baseFontPxRef.current * ratio));
-                } else {
-                    target = baseFontPxRef.current;
-                }
-            }
-            setNameFontPx(target);
-        };
-
-        requestAnimationFrame(measure);
-    };
-
-    useLayoutEffect(() => {
-        adjustNameFont();
-        const onResize = () => adjustNameFont();
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
-        adjustNameFont();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [row.name]);
-
     return (
-        <div 
-            className="row-header" 
-            style={{ 
+        <div
+            className="row-header"
+            style={{
                 backgroundColor: row.color,
                 borderTopLeftRadius: isFirstRow ? '8px' : '0',
                 borderTopRightRadius: '0',
-                overflow: 'hidden' // ensure contents don't spill out
             }}
-            ref={headerRef}
         >
-            <span 
-                style={{ 
-                    color: textColor,
-                    flex: 1,
-                    minWidth: 0,
-                    // Allow wrapping instead of truncating
-                    whiteSpace: 'normal',
-                    overflowWrap: 'anywhere',
-                    wordBreak: 'break-word',
-                    fontSize: nameFontPx ? `${nameFontPx}px` : undefined
-                }}
-                ref={nameRef}
+            <span
+                className="row-name-label"
                 title={row.name}
+                style={{ color: textColor }}
             >
                 {row.name}
             </span>
-            <IconButton 
+            <IconButton
                 onClick={handleClick}
                 size="small"
                 style={{ color: textColor, flex: '0 0 auto', marginLeft: 8 }}
-                ref={buttonRef}
             >
                 <Settings />
             </IconButton>
-            <Menu
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
-            >
+            <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
                 <MenuItem onClick={() => handleAction('up')}>
-                    <ListItemIcon>
-                        <ArrowUpward fontSize="small" />
-                    </ListItemIcon>
+                    <ListItemIcon><ArrowUpward fontSize="small" /></ListItemIcon>
                     <ListItemText>Move Up</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleAction('down')}>
-                    <ListItemIcon>
-                        <ArrowDownward fontSize="small" />
-                    </ListItemIcon>
+                    <ListItemIcon><ArrowDownward fontSize="small" /></ListItemIcon>
                     <ListItemText>Move Down</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleAction('edit')}>
-                    <ListItemIcon>
-                        <Edit fontSize="small" />
-                    </ListItemIcon>
+                    <ListItemIcon><Edit fontSize="small" /></ListItemIcon>
                     <ListItemText>Edit Name</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleAction('clear')}>
-                    <ListItemIcon>
-                        <Delete fontSize="small" />
-                    </ListItemIcon>
+                    <ListItemIcon><Delete fontSize="small" /></ListItemIcon>
                     <ListItemText>Clear Row</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleAction('delete')} sx={{ color: 'error.main' }}>
-                    <ListItemIcon>
-                        <Delete fontSize="small" sx={{ color: 'error.main' }} />
-                    </ListItemIcon>
+                    <ListItemIcon><Delete fontSize="small" sx={{ color: 'error.main' }} /></ListItemIcon>
                     <ListItemText>Delete Row</ListItemText>
                 </MenuItem>
             </Menu>
@@ -436,6 +326,9 @@ const TierRow = ({ row, onMove, onEdit, onClear, onDelete, isFirstRow, children 
         </div>
     );
 };
+
+
+
 
 const Tierlist = () => {
     const navigate = useNavigate();
@@ -483,10 +376,10 @@ const Tierlist = () => {
         // Load songs for the selected setlist
         const songList = setlistSongs[setlistName].map((songName, index) => ({
             id: `song-${songName}`,
-                name: songName,
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
+            name: songName,
+            containerId: 'image-pool',
+            originalIndex: index
+        }));
         console.log('Initial song list:', songList);
 
         // First set the initial song list
@@ -499,7 +392,7 @@ const Tierlist = () => {
         if (draftId) {
             const manualDrafts = JSON.parse(localStorage.getItem('tierlistManualDrafts') || '[]');
             const autoDrafts = JSON.parse(localStorage.getItem('tierlistAutoSaveDrafts') || '[]');
-            
+
             // Combine all drafts
             const allDrafts = [...manualDrafts, ...autoDrafts];
             console.log('Available drafts:', allDrafts);
@@ -515,21 +408,21 @@ const Tierlist = () => {
                 // Set the rows first
                 setRows(draftToLoad.rows || initialRows);
                 setTierlistTitle(draftToLoad.title || '');
-                
+
                 // Update song positions from draft
                 const updatedSongs = songList.map(song => {
                     // Find the saved song by matching both ID and name for extra safety
-                    const savedSong = draftToLoad.songs.find(s => 
-                        s.id === song.id || 
+                    const savedSong = draftToLoad.songs.find(s =>
+                        s.id === song.id ||
                         (s.id === `song-${song.name}` || s.id === `song-${song.id}`)
                     );
-                    console.log(`Mapping song ${song.id}:`, { 
-                        found: !!savedSong, 
-                        newContainer: savedSong?.containerId || 'image-pool' 
+                    console.log(`Mapping song ${song.id}:`, {
+                        found: !!savedSong,
+                        newContainer: savedSong?.containerId || 'image-pool'
                     });
                     return savedSong ? { ...song, containerId: savedSong.containerId } : song;
                 });
-                
+
                 console.log('Final updated songs:', updatedSongs);
                 setSongs(updatedSongs);
             } else {
@@ -546,7 +439,7 @@ const Tierlist = () => {
     // Track changes in available items count
     useEffect(() => {
         const currentAvailable = songs.filter(song => song.containerId === 'image-pool').length;
-        
+
         // Only count as a change if the number actually changed
         if (currentAvailable !== availableCount) {
             setAvailableCount(currentAvailable);
@@ -555,6 +448,45 @@ const Tierlist = () => {
             console.log('Available count changed:', currentAvailable, 'Change counter:', changeCounter + 1);
         }
     }, [songs]);
+
+    // ── Sync row-header widths so all rows share the same column width ──
+    useLayoutEffect(() => {
+        const container = tierlistRef.current;
+        if (!container) return;
+        const headers = Array.from(container.querySelectorAll('.row-header'));
+        if (headers.length === 0) return;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const firstLabel = headers[0].querySelector('.row-name-label');
+        if (firstLabel) {
+            const cs = window.getComputedStyle(firstLabel);
+            ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        } else {
+            ctx.font = 'bold 1.1rem sans-serif';
+        }
+
+        let maxTextPx = 0;
+        headers.forEach(h => {
+            const label = h.querySelector('.row-name-label');
+            const text = (label ? label.textContent : '') || '';
+            text.split(/\s+/).forEach(word => {
+                if (word) maxTextPx = Math.max(maxTextPx, ctx.measureText(word).width);
+            });
+        });
+
+        const cs = window.getComputedStyle(headers[0]);
+        const padH = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+        const btn = headers[0].querySelector('button');
+        const buttonW = btn ? btn.offsetWidth + 8 : 44;
+
+        const totalW = Math.ceil(maxTextPx + padH + buttonW);
+        headers.forEach(h => { h.style.width = `${totalW}px`; });
+    }, [rows]);
+
+
 
     const handleDragStart = (event) => {
         if (!isDragMode) return;  // Add this line to prevent drag in click mode
@@ -566,36 +498,36 @@ const Tierlist = () => {
         if (!isDragMode) return;  // Add this line to prevent drag in click mode
         const { active, over } = event;
         if (!over) return;
-        
+
         const overId = over.id;
-        
+
         // If we're over a droppable container
         if (rows.find(row => row.id === overId) || overId === 'image-pool') {
             setSongs(prev => {
                 const activeImage = prev.find(img => img.id === active.id);
                 if (activeImage.containerId === overId) return prev; // No change if same container
-                
+
                 // Remove the dragged image from its current position
                 const newImages = prev.filter(img => img.id !== active.id);
-                
+
                 // Find all images in the target container
                 const containerImages = newImages.filter(img => img.containerId === overId);
-                
+
                 // Find the index after the last image in the target container
-                const lastContainerImageIndex = newImages.findIndex(img => 
-                    img.containerId === overId && 
+                const lastContainerImageIndex = newImages.findIndex(img =>
+                    img.containerId === overId &&
                     containerImages.indexOf(img) === containerImages.length - 1
                 );
-                
+
                 // Create the updated image with new container
                 const updatedImage = { ...activeImage, containerId: overId };
-                
+
                 // If there are no images in the container or we couldn't find the last image
                 if (containerImages.length === 0 || lastContainerImageIndex === -1) {
                     // Just append to the end of the array
                     return [...newImages, updatedImage];
                 }
-                
+
                 // Insert after the last image in the container
                 newImages.splice(lastContainerImageIndex + 1, 0, updatedImage);
                 return newImages;
@@ -614,31 +546,31 @@ const Tierlist = () => {
         const overId = over.id;
         const activeImage = songs.find(img => img.id === active.id);
         const overContainer = overId;
-        
+
         // Check if moving to a different container
         if (rows.find(row => row.id === overId) || overId === 'image-pool') {
             setSongs(prev => {
                 // Remove the dragged image from its current position
                 const newImages = prev.filter(img => img.id !== active.id);
-                
+
                 // Find all images in the target container
                 const containerImages = newImages.filter(img => img.containerId === overContainer);
-                
+
                 // Find the index after the last image in the target container
-                const lastContainerImageIndex = newImages.findIndex(img => 
-                    img.containerId === overContainer && 
+                const lastContainerImageIndex = newImages.findIndex(img =>
+                    img.containerId === overContainer &&
                     containerImages.indexOf(img) === containerImages.length - 1
                 );
-                
+
                 // Create the updated image with new container
                 const updatedImage = { ...activeImage, containerId: overContainer };
-                
+
                 // If there are no images in the container or we couldn't find the last image
                 if (containerImages.length === 0 || lastContainerImageIndex === -1) {
                     // Just append to the end of the array
                     return [...newImages, updatedImage];
                 }
-                
+
                 // Insert after the last image in the container
                 newImages.splice(lastContainerImageIndex + 1, 0, updatedImage);
                 return newImages;
@@ -647,12 +579,12 @@ const Tierlist = () => {
             // If dropping onto another image, swap positions
             const activeIndex = songs.findIndex(img => img.id === active.id);
             const overIndex = songs.findIndex(img => img.id === over.id);
-            
+
             if (activeIndex !== -1 && overIndex !== -1) {
                 setSongs(prev => {
                     const activeImage = prev[activeIndex];
                     const overImage = prev[overIndex];
-                    
+
                     // Only swap if they're in the same container
                     if (activeImage.containerId === overImage.containerId) {
                         return arrayMove(prev, activeIndex, overIndex);
@@ -671,7 +603,7 @@ const Tierlist = () => {
     };
 
     const handleRowSave = () => {
-        setRows(rows.map(row => 
+        setRows(rows.map(row =>
             row.id === editingRow.id ? { ...row, ...editingRow } : row
         ));
         setDialogOpen(false);
@@ -679,7 +611,7 @@ const Tierlist = () => {
 
     const handleRowMove = (rowId, direction) => {
         const index = rows.findIndex(row => row.id === rowId);
-        if ((direction === 'up' && index === 0) || 
+        if ((direction === 'up' && index === 0) ||
             (direction === 'down' && index === rows.length - 1)) return;
 
         const newRows = [...rows];
@@ -689,9 +621,9 @@ const Tierlist = () => {
     };
 
     const handleRowClear = (rowId) => {
-        setSongs(prevSongs => 
-            prevSongs.map(song => 
-                song.containerId === rowId 
+        setSongs(prevSongs =>
+            prevSongs.map(song =>
+                song.containerId === rowId
                     ? { ...song, containerId: 'image-pool' }
                     : song
             )
@@ -700,9 +632,9 @@ const Tierlist = () => {
 
     const handleRowDelete = (rowId) => {
         // Move all images from the row to the image pool
-        setSongs(prevImages => 
-            prevImages.map(img => 
-                img.containerId === rowId 
+        setSongs(prevImages =>
+            prevImages.map(img =>
+                img.containerId === rowId
                     ? { ...img, containerId: 'image-pool' }
                     : img
             )
@@ -723,7 +655,7 @@ const Tierlist = () => {
     const getImagesForContainer = (containerId) => {
         const filteredImages = songs.filter(img => {
             const matchesContainer = img.containerId === containerId;
-            const matchesSearch = containerId === 'image-pool' 
+            const matchesSearch = containerId === 'image-pool'
                 ? img.name.toLowerCase().includes(searchTerm.toLowerCase())
                 : true;
             return matchesContainer && matchesSearch;
@@ -745,7 +677,7 @@ const Tierlist = () => {
         const setlistName = localStorage.getItem('selectedSetlist') || "Aturan Anti Cinta";
         setSelectedSetlist(setlistName);
         const songList = setlistSongs[setlistName];
-        
+
         if (songList) {
             const songs = songList.map((songName, index) => ({
                 id: `song-${songName}`,
@@ -766,7 +698,7 @@ const Tierlist = () => {
 
             // Ensure fonts and images are ready
             if (document.fonts && document.fonts.ready) {
-                await document.fonts.ready.catch(() => {});
+                await document.fonts.ready.catch(() => { });
             }
             const waitForImages = (root) => Promise.all(
                 Array.from(root.querySelectorAll('img')).map(img => {
@@ -887,22 +819,22 @@ const Tierlist = () => {
                 if (!firstRow) return;
 
                 const rowWidth = firstRow.offsetWidth;
-                
+
                 // Create a hidden span to measure text width
                 const span = document.createElement('span');
                 span.className = 'tierlist-title-measure';
                 span.style.font = window.getComputedStyle(titleInputRef.current).font;
                 span.textContent = tierlistTitle || titleInputRef.current.placeholder;
                 document.body.appendChild(span);
-                
+
                 // Calculate width with padding
                 const textWidth = span.offsetWidth;
                 const padding = 24; // 12px padding on each side
                 const newWidth = Math.min(Math.max(300, textWidth + padding), rowWidth); // between 300px and row width
-                
+
                 document.body.removeChild(span);
                 setInputWidth(newWidth);
-                
+
                 // Update position for header title
                 const rowRect = firstRow.getBoundingClientRect();
                 const viewportWidth = document.documentElement.clientWidth;
@@ -987,8 +919,8 @@ const Tierlist = () => {
         e.preventDefault(); // Prevent the default context menu
         if (!isDragMode) {
             if (image.containerId !== 'image-pool') {
-                setSongs(prev => prev.map(img => 
-                    img.id === image.id 
+                setSongs(prev => prev.map(img =>
+                    img.id === image.id
                         ? { ...img, containerId: 'image-pool' }
                         : img
                 ));
@@ -1001,8 +933,8 @@ const Tierlist = () => {
     const handleTierClick = (tierId) => {
         if (!isDragMode && selectedImage) {
             setSongs(prev => {
-                const newImages = prev.map(img => 
-                    img.id === selectedImage.id 
+                const newImages = prev.map(img =>
+                    img.id === selectedImage.id
                         ? { ...img, containerId: tierId }
                         : img
                 );
@@ -1014,7 +946,7 @@ const Tierlist = () => {
     };
 
     const getTierlistTypeDisplay = () => {
-        switch(tierlistType) {
+        switch (tierlistType) {
             case 'setlist':
                 return 'Setlist';
             case 'ramadan':
@@ -1055,7 +987,7 @@ const Tierlist = () => {
             };
             manageDrafts(draft, true);
             setChangeCounter(0);
-            
+
             // Show auto-save indicator
             setShowAutoSave(true);
             setTimeout(() => setShowAutoSave(false), 2000);
@@ -1068,11 +1000,11 @@ const Tierlist = () => {
         console.log('Managing drafts, isAutoSave:', isAutoSave);
         const storageKey = isAutoSave ? 'tierlistAutoSaveDrafts' : 'tierlistManualDrafts';
         const maxDrafts = isAutoSave ? 3 : 5;
-        
+
         let drafts = JSON.parse(localStorage.getItem(storageKey) || '[]');
         console.log('Current drafts:', drafts);
         drafts = drafts.filter(d => d.type === 'song' && d.setlist === selectedSetlist); // Only keep drafts of the same type and setlist
-        
+
         // Add new draft
         drafts.unshift({
             ...newDraft,
@@ -1082,19 +1014,19 @@ const Tierlist = () => {
             isAutoSave,
             id: Date.now()  // Unique ID for the draft
         });
-        
+
         // Keep only the most recent drafts
         drafts = drafts.slice(0, maxDrafts);
         console.log('Updated drafts:', drafts);
-        
+
         localStorage.setItem(storageKey, JSON.stringify(drafts));
     };
 
     return (
         <div className="tierlist-page">
             <header className="header">
-                <IconButton 
-                    onClick={() => navigate(-1)} 
+                <IconButton
+                    onClick={() => navigate(-1)}
                     sx={{ color: 'white', marginRight: 1 }}
                 >
                     <ArrowBack />
@@ -1107,7 +1039,7 @@ const Tierlist = () => {
                         </div>
                     </div>
                     {tierlistTitle && (
-                        <div 
+                        <div
                             className="header-subtitle-container"
                             style={{
                                 left: titlePosition.left,
@@ -1122,8 +1054,8 @@ const Tierlist = () => {
             </header>
 
             {/* Welcome Dialog */}
-            <Dialog 
-                open={showWelcomeDialog} 
+            <Dialog
+                open={showWelcomeDialog}
                 onClose={() => setShowWelcomeDialog(false)}
                 maxWidth="sm"
                 fullWidth
@@ -1157,7 +1089,7 @@ const Tierlist = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button 
+                    <Button
                         onClick={() => setShowWelcomeDialog(false)}
                         variant="contained"
                         color="primary"
@@ -1177,7 +1109,7 @@ const Tierlist = () => {
             >
                 <div className="tierlist-container" ref={tierlistRef}>
                     <div className="tier-rows-container" ref={measureRef}>
-                        <div className="tierlist-title-container" style={{ 
+                        <div className="tierlist-title-container" style={{
                             marginTop: '0',
                             marginBottom: '5px',
                             display: 'flex',
@@ -1192,7 +1124,7 @@ const Tierlist = () => {
                                 onChange={(e) => setTierlistTitle(e.target.value)}
                                 placeholder={`My ${selectedSetlist} Tierlist`}
                                 spellCheck="false"
-                                style={{ 
+                                style={{
                                     width: `${inputWidth}px`,
                                     fontSize: '32px',
                                     padding: '8px 12px'
@@ -1201,11 +1133,11 @@ const Tierlist = () => {
                             />
                         </div>
                         {rows.map((row, index) => (
-                            <div 
-                                key={row.id} 
+                            <div
+                                key={row.id}
                                 className={`tier-row ${index === 0 ? 'first-tier-row' : ''}`}
                                 onClick={() => handleTierClick(row.id)}
-                                style={{ 
+                                style={{
                                     cursor: (!isDragMode && selectedImage) ? 'pointer' : 'default',
                                     opacity: (!isDragMode && selectedImage) ? 0.8 : 1
                                 }}
@@ -1220,13 +1152,13 @@ const Tierlist = () => {
                                 />
                                 <Droppable id={row.id}>
                                     <div className="tier-content">
-                                        <SortableContext 
+                                        <SortableContext
                                             items={getImagesForContainer(row.id).map(img => img.id)}
                                             strategy={rectSortingStrategy}
                                         >
                                             {getImagesForContainer(row.id).map((image) => (
-                                                <SortableImage 
-                                                    key={image.id} 
+                                                <SortableImage
+                                                    key={image.id}
                                                     image={image}
                                                     isDragging={image.id === activeId}
                                                     onImageClick={handleImageClick}
@@ -1265,27 +1197,27 @@ const Tierlist = () => {
                                 </div>
                             }
                         />
-                        <Button 
-                            variant="contained" 
-                            color="primary" 
+                        <Button
+                            variant="contained"
+                            color="primary"
                             startIcon={<Add />}
                             onClick={handleAddRow}
                             className="action-button"
                         >
                             Add New Tier
                         </Button>
-                        <Button 
-                            variant="contained" 
-                            color="secondary" 
+                        <Button
+                            variant="contained"
+                            color="secondary"
                             startIcon={<Refresh />}
                             onClick={handleReset}
                             className="action-button"
                         >
                             Reset
                         </Button>
-                        <Button 
-                            variant="contained" 
-                            color="success" 
+                        <Button
+                            variant="contained"
+                            color="success"
                             startIcon={<Save />}
                             onClick={handleSave}
                             className="action-button"
@@ -1304,9 +1236,9 @@ const Tierlist = () => {
                                     </span>
                                 )}
                             </h2>
-                            <Paper 
-                                component="form" 
-                                sx={{ 
+                            <Paper
+                                component="form"
+                                sx={{
                                     p: '2px 4px',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1352,13 +1284,13 @@ const Tierlist = () => {
                         </div>
                         <Droppable id="image-pool">
                             <div className="image-pool">
-                                <SortableContext 
+                                <SortableContext
                                     items={getImagesForContainer('image-pool').map(img => img.id)}
                                     strategy={rectSortingStrategy}
                                 >
                                     {getImagesForContainer('image-pool').map((image) => (
-                                        <SortableImage 
-                                            key={image.id} 
+                                        <SortableImage
+                                            key={image.id}
                                             image={image}
                                             isDragging={image.id === activeId}
                                             onImageClick={handleImageClick}
@@ -1374,7 +1306,7 @@ const Tierlist = () => {
 
                     <DragOverlay>
                         {activeId && isDragMode ? (
-                            <DraggableImage 
+                            <DraggableImage
                                 song={songs.find(img => img.id === activeId)}
                                 dragOverlay
                                 isDragMode={isDragMode}
@@ -1420,7 +1352,7 @@ const Tierlist = () => {
                                         }}
                                     >
                                         {editingRow.color === color.value && (
-                                            <Check sx={{ 
+                                            <Check sx={{
                                                 color: getContrastColor(color.value)
                                             }} />
                                         )}

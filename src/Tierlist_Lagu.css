@@ -86,7 +86,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    width: 150px;
+    min-width: 80px;
     font-weight: bold;
     flex-shrink: 0;
 }

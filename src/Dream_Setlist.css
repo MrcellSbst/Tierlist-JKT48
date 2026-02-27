@@ -75,7 +75,7 @@
 }
 
 .row-header {
-    width: 120px;
+    min-width: 80px;
     padding: 16px;
     display: flex;
     align-items: center;
@@ -302,7 +302,7 @@
     }
 
     .row-header {
-        width: 80px;
+        width: 200px;
         font-size: 14px;
         padding: 12px;
     }
