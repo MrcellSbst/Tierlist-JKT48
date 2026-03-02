@@ -616,6 +616,34 @@
     white-space: nowrap;
 }
 
+/* Bulk-action row (All / None) inside MemberCheckboxDropdown */
+.gen-dropdown-bulk-actions {
+    display: flex;
+    gap: 6px;
+    padding: 4px 6px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 4px;
+}
+
+.gen-dropdown-bulk-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px 0;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'Outfit', sans-serif;
+}
+
+.gen-dropdown-bulk-btn:hover {
+    background: rgba(229, 0, 20, 0.25);
+    border-color: rgba(229, 0, 20, 0.4);
+}
+
 
 /* ─── Custom Roulette Panel ──────────────────────────────────────────────────── */
 .custom-roulette-panel {
@@ -681,26 +709,6 @@
     background: rgba(229, 0, 20, 0.3);
 }
 
-.custom-roulette-fill-btn {
-    width: 100%;
-    background: rgba(6, 214, 160, 0.08);
-    border: 1px solid rgba(6, 214, 160, 0.25);
-    color: #06D6A0;
-    padding: 7px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'Outfit', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    text-align: center;
-    transition: background 0.2s, border-color 0.2s;
-}
-
-.custom-roulette-fill-btn:hover {
-    background: rgba(6, 214, 160, 0.18);
-    border-color: rgba(6, 214, 160, 0.45);
-}
 
 
 .custom-roulette-textarea {

@@ -388,11 +388,6 @@ const CustomRoulettePanel = ({ id, roulette, onChange, onRemove }) => {
     const handleEntriesChange = (e) => onChange({ ...roulette, rawText: e.target.value });
     const handleRemoveOnPickChange = (e) => onChange({ ...roulette, removeOnPick: e.target.checked });
 
-    const handleFillActive = () => {
-        const names = activeMemberFiles.map(f => formatMemberName(f)).filter(Boolean);
-        onChange({ ...roulette, rawText: names.join('\n') });
-    };
-
     return (
         <div className="custom-roulette-panel">
             <div className="custom-roulette-header">
@@ -404,9 +399,6 @@ const CustomRoulettePanel = ({ id, roulette, onChange, onRemove }) => {
                 />
                 <button className="custom-roulette-remove-btn" onClick={() => onRemove(id)} title="Remove roulette">✕</button>
             </div>
-            <button className="custom-roulette-fill-btn" onClick={handleFillActive} title="Replace entries with all active members">
-                ＋ Fill with Active Members
-            </button>
             <textarea
                 className="custom-roulette-textarea"
                 value={roulette.rawText}
@@ -532,6 +524,89 @@ const GenCheckboxDropdown = ({ selectedGenerations, onChange }) => {
 };
 
 
+// ─── Member Checkbox Dropdown ─────────────────────────────────────────────────
+const MemberCheckboxDropdown = ({ selectedMembers, onChange }) => {
+    const [open, setOpen] = useState(false);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 });
+    const dropdownRef = useRef(null);
+    const btnRef = useRef(null);
+
+    const allMembers = useMemo(() =>
+        activeMemberFiles
+            .map(f => ({ filename: f, name: formatMemberName(f) }))
+            .filter(m => m.name),
+        []
+    );
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    useEffect(() => {
+        if (!open || !btnRef.current) return;
+        const update = () => {
+            const rect = btnRef.current.getBoundingClientRect();
+            setMenuPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
+        };
+        update();
+        window.addEventListener('scroll', update, true);
+        window.addEventListener('resize', update);
+        return () => {
+            window.removeEventListener('scroll', update, true);
+            window.removeEventListener('resize', update);
+        };
+    }, [open]);
+
+    const handleToggle = (filename) => {
+        if (selectedMembers.includes(filename)) {
+            onChange(selectedMembers.filter(f => f !== filename));
+        } else {
+            onChange([...selectedMembers, filename]);
+        }
+    };
+
+    const label = selectedMembers.length === 0
+        ? 'No members selected'
+        : selectedMembers.length === allMembers.length
+            ? 'All Active Members'
+            : `${selectedMembers.length} member${selectedMembers.length !== 1 ? 's' : ''} selected`;
+
+    return (
+        <div className="gen-dropdown" ref={dropdownRef}>
+            <button ref={btnRef} className="gen-dropdown-btn" onClick={() => setOpen(o => !o)}>
+                <span>{label}</span>
+                <span className="gen-dropdown-arrow">{open ? '▲' : '▼'}</span>
+            </button>
+            {open && (
+                <div
+                    className="gen-dropdown-menu"
+                    style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, width: menuPos.width }}
+                >
+                    <div className="gen-dropdown-bulk-actions">
+                        <button className="gen-dropdown-bulk-btn" onClick={() => onChange(allMembers.map(m => m.filename))}>All</button>
+                        <button className="gen-dropdown-bulk-btn" onClick={() => onChange([])}>None</button>
+                    </div>
+                    {allMembers.map(({ filename, name }) => (
+                        <label key={filename} className="gen-dropdown-item">
+                            <input
+                                type="checkbox"
+                                checked={selectedMembers.includes(filename)}
+                                onChange={() => handleToggle(filename)}
+                            />
+                            <span>{name}</span>
+                        </label>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
 // ─── Result Overlay ───────────────────────────────────────────────────────────
 const ResultOverlay = ({ result, onHide, onContinue, resultRef }) => {
     if (!result) return null;
@@ -564,6 +639,7 @@ const RoulettePage = () => {
     // Filters
     const [memberType, setMemberType] = useState('active');
     const [selectedGenerations, setSelectedGenerations] = useState(['all']);
+    const [customSelectedMembers, setCustomSelectedMembers] = useState([]);
 
     // Active roulette tab (index: 0 = member roulette, 1+ = custom)
     const [activeTab, setActiveTab] = useState(0);
@@ -596,6 +672,16 @@ const RoulettePage = () => {
         const list = [];
         const generations = selectedGenerations.includes('all') ? ['all'] : selectedGenerations;
 
+        // Custom: only hand-picked members
+        if (memberType === 'custom') {
+            customSelectedMembers.forEach(filename => {
+                const name = formatMemberName(filename);
+                if (!name) return;
+                list.push({ label: name, imgSrc: `/asset/member_active/${filename}`, source: 'Member Roulette' });
+            });
+            return list;
+        }
+
         const addFile = (filename, isActive) => {
             const matchesAnyGen = generations.some(gen => matchesGeneration(filename, gen));
             if (!matchesAnyGen) return;
@@ -614,7 +700,7 @@ const RoulettePage = () => {
             exMemberFiles.forEach(f => addFile(f, false));
         }
         return list;
-    }, [memberType, selectedGenerations]);
+    }, [memberType, selectedGenerations, customSelectedMembers]);
 
     // Remaining members not yet removed
     const remainingMemberEntries = useMemo(() => {
@@ -867,20 +953,34 @@ const RoulettePage = () => {
                                 <select
                                     className="sidebar-select"
                                     value={memberType}
-                                    onChange={e => { setMemberType(e.target.value); setRemovedMemberIndexes(new Set()); }}
+                                    onChange={e => {
+                                        setMemberType(e.target.value);
+                                        setRemovedMemberIndexes(new Set());
+                                        setCustomSelectedMembers([]);
+                                    }}
                                 >
                                     <option value="active">Active Members</option>
                                     <option value="ex">Ex Members</option>
                                     <option value="all">All Members</option>
+                                    <option value="custom">Custom Members</option>
                                 </select>
                             </div>
 
                             <div className="sidebar-section">
-                                <label className="sidebar-label">Generation/Team</label>
-                                <GenCheckboxDropdown
-                                    selectedGenerations={selectedGenerations}
-                                    onChange={(gens) => { setSelectedGenerations(gens); setRemovedMemberIndexes(new Set()); }}
-                                />
+                                <label className="sidebar-label">
+                                    {memberType === 'custom' ? 'Select Members' : 'Generation/Team'}
+                                </label>
+                                {memberType === 'custom' ? (
+                                    <MemberCheckboxDropdown
+                                        selectedMembers={customSelectedMembers}
+                                        onChange={(members) => { setCustomSelectedMembers(members); setRemovedMemberIndexes(new Set()); }}
+                                    />
+                                ) : (
+                                    <GenCheckboxDropdown
+                                        selectedGenerations={selectedGenerations}
+                                        onChange={(gens) => { setSelectedGenerations(gens); setRemovedMemberIndexes(new Set()); }}
+                                    />
+                                )}
                             </div>
 
                             <div className="sidebar-section">
