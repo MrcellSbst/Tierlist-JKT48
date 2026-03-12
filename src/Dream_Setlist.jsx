@@ -317,7 +317,7 @@ const DreamSetlist = () => {
     const [rows, setRows] = useState(TIER_ROWS);
     const [images, setImages] = useState([]);
     const [activeId, setActiveId] = useState(null);
-    const [selectedImage, setSelectedImage] = useState(null);
+    const [selectedImages, setSelectedImages] = useState(new Set());
     const [songTable, setSongTable] = useState(SONG_TABLE_ROWS.map(row => ({ ...row, song: '', members: [], backupMembers: [] })));
     const [title, setTitle] = useState('');
     const tierlistRef = useRef(null);
@@ -511,13 +511,15 @@ const DreamSetlist = () => {
     // Click-to-assign for member selection
     const handleImageClick = (image) => {
         if (!isDragMode) {
-            if (selectedImage?.id === image.id) {
-                // If clicking the same image that's selected, just deselect it
-                setSelectedImage(null);
-            } else {
-                // If clicking a different image, select it
-                setSelectedImage(image);
-            }
+            setSelectedImages(prev => {
+                const next = new Set(prev);
+                if (next.has(image.id)) {
+                    next.delete(image.id);
+                } else {
+                    next.add(image.id);
+                }
+                return next;
+            });
         }
     };
 
@@ -551,38 +553,47 @@ const DreamSetlist = () => {
                     ];
                 }
             });
-
-            // Clear selection if in click-to-place mode
-            if (!isDragMode) {
-                setSelectedImage(null);
-            }
         }
+        // Deselect the right-clicked image
+        setSelectedImages(prev => {
+            const next = new Set(prev);
+            next.delete(image.id);
+            return next;
+        });
     };
 
     const handleTierClick = (tierId) => {
-        if (!isDragMode && selectedImage) {
+        if (!isDragMode && selectedImages.size > 0) {
             setImages(prev => {
-                // Get all images in the target tier
-                const tierImages = prev.filter(img => img.containerId === tierId);
+                let newImages = [...prev];
 
-                // Create new array with all images except the selected one
-                const otherImages = prev.filter(img => img.id !== selectedImage.id);
+                for (const selId of selectedImages) {
+                    const selImage = newImages.find(img => img.id === selId);
+                    if (!selImage || selImage.containerId === tierId) continue;
 
-                // Create updated version of selected image
-                const updatedImage = {
-                    ...selectedImage,
-                    containerId: tierId,
-                    originalIndex: tierImages.length > 0
-                        ? Math.max(...tierImages.map(img => img.originalIndex)) + 1
-                        : 0
-                };
+                    // Get all images in the target tier (for index calculation)
+                    const tierImages = newImages.filter(img => img.containerId === tierId);
 
-                // Return new array with selected image at the end
-                return [...otherImages, updatedImage];
+                    // Remove from current position
+                    newImages = newImages.filter(img => img.id !== selId);
+
+                    // Create updated version
+                    const updatedImage = {
+                        ...selImage,
+                        containerId: tierId,
+                        originalIndex: tierImages.length > 0
+                            ? Math.max(...tierImages.map(img => img.originalIndex)) + 1
+                            : 0
+                    };
+
+                    newImages = [...newImages, updatedImage];
+                }
+
+                return newImages;
             });
 
             // Clear selection after placing
-            setTimeout(() => setSelectedImage(null), 50);
+            setTimeout(() => setSelectedImages(new Set()), 50);
         }
     };
 
@@ -628,9 +639,12 @@ const DreamSetlist = () => {
     // Click-to-assign for song table
     // Update handleSongCellClick to handle both member types
     const handleSongCellClick = (idx, isBackup = false) => {
-        if (!isDragMode && selectedImage) {
-            handleAssignMemberToSong(idx, selectedImage, isBackup);
-            setSelectedImage(null);
+        if (!isDragMode && selectedImages.size > 0) {
+            for (const selId of selectedImages) {
+                const selImage = images.find(img => img.id === selId);
+                if (selImage) handleAssignMemberToSong(idx, selImage, isBackup);
+            }
+            setSelectedImages(new Set());
         }
     };
 
@@ -1044,8 +1058,8 @@ const DreamSetlist = () => {
                                                     className={`tier-row ${idx === 0 ? 'first-tier-row' : ''}`}
                                                     onClick={() => handleTierClick(row.id)}
                                                     style={{
-                                                        cursor: (!isDragMode && selectedImage) ? 'pointer' : 'default',
-                                                        opacity: (!isDragMode && selectedImage) ? 0.8 : 1
+                                                        cursor: (!isDragMode && selectedImages.size > 0) ? 'pointer' : 'default',
+                                                        opacity: (!isDragMode && selectedImages.size > 0) ? 0.8 : 1
                                                     }}
                                                 >
                                                     <TierRow
@@ -1096,7 +1110,7 @@ const DreamSetlist = () => {
                                                                         isDragging={image.id === activeId}
                                                                         onImageClick={handleImageClick}
                                                                         onContextMenu={handleImageRightClick}
-                                                                        isSelected={selectedImage?.id === image.id}
+                                                                        isSelected={selectedImages.has(image.id)}
                                                                         isDragMode={isDragMode}
                                                                     />
                                                                 ))}
@@ -1121,6 +1135,15 @@ const DreamSetlist = () => {
                                             fontWeight: 'bold'
                                         }}>
                                             Pool Member
+                                            {selectedImages.size > 0 && (
+                                                <span style={{ fontSize: '0.75em', marginLeft: '10px', color: '#4CAF50' }}>
+                                                    {selectedImages.size} selected
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setSelectedImages(new Set()); }}
+                                                        style={{ marginLeft: '8px', fontSize: '0.85em', cursor: 'pointer', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '4px', color: '#fff', padding: '1px 7px' }}
+                                                    >✕ Clear</button>
+                                                </span>
+                                            )}
                                         </Typography>
                                         <Box sx={{ px: 2, mb: 2 }}>
                                             <TextField
@@ -1434,8 +1457,8 @@ const DreamSetlist = () => {
                                                     image={image}
                                                     isDragging={false}
                                                     onImageClick={handleImageClick}
-                                                    isSelected={selectedImage?.id === image.id}
-                                                    isDragMode={false}
+                                                     isSelected={selectedImages.has(image.id)}
+                                                     isDragMode={false}
                                                     isInTable={false}
                                                 />
                                             ))}

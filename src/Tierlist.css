@@ -177,7 +177,6 @@
 
 .tier-row {
     display: flex;
-    min-width: max-content;
     border-bottom: 1px solid var(--border-color);
     background-color: rgba(42, 42, 62, 0.75);
     transition: background-color var(--transition-fast);

@@ -176,7 +176,7 @@ const Tierlist = () => {
     const [activeId, setActiveId] = useState(null);
     const [tierlistType, setTierlistType] = useState('member');
     const [isDragMode, setIsDragMode] = useState(true);
-    const [selectedImage, setSelectedImage] = useState(null);
+    const [selectedImages, setSelectedImages] = useState(new Set());
     const [showWelcomeDialog, setShowWelcomeDialog] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [tierlistTitle, setTierlistTitle] = useState('');
@@ -318,12 +318,17 @@ const Tierlist = () => {
 
         const newTotalW = Math.ceil(maxTextPx + padH + buttonW);
 
+        const containerWidth = container.closest('.tier-rows-container')
+            ? container.closest('.tier-rows-container').getBoundingClientRect().width
+            : (document.querySelector('.tier-rows-container')?.getBoundingClientRect().width || 1200);
+
         // Measure each row's current droppable width BEFORE we change anything.
         const rowGuarantees = headers.map(h => {
             const row = h.closest('.tier-row');
             const droppable = row?.querySelector('.droppable');
             const currentDrpW = droppable ? droppable.getBoundingClientRect().width : 650;
-            return Math.max(currentDrpW, 650);
+            const maxAllowed = Math.max(containerWidth - newTotalW, 650);
+            return Math.min(Math.max(currentDrpW, 650), maxAllowed);
         });
 
         headers.forEach((h, i) => {
@@ -332,6 +337,7 @@ const Tierlist = () => {
             if (row) row.style.minWidth = `${newTotalW + rowGuarantees[i]}px`;
         });
     }, [rows]);
+
 
 
 
@@ -751,20 +757,15 @@ const Tierlist = () => {
 
     const handleImageClick = (image) => {
         if (!isDragMode) {
-            // If clicking the same image that's selected, unselect it
-            if (selectedImage?.id === image.id) {
-                setSelectedImage(null);
-            } else {
-                // If clicking a different image, select it
-                setSelectedImage(image);
-            }
-            // Add a small delay to prevent accidental double-clicks
-            const currentTarget = image;
-            setTimeout(() => {
-                if (selectedImage?.id === currentTarget.id) {
-                    setSelectedImage(null);
+            setSelectedImages(prev => {
+                const next = new Set(prev);
+                if (next.has(image.id)) {
+                    next.delete(image.id);
+                } else {
+                    next.add(image.id);
                 }
-            }, 300);
+                return next;
+            });
         }
     };
 
@@ -778,23 +779,45 @@ const Tierlist = () => {
                         : img
                 ));
             }
-            // Always clear selection when right-clicking
-            setSelectedImage(null);
+            // Deselect the right-clicked image
+            setSelectedImages(prev => {
+                const next = new Set(prev);
+                next.delete(image.id);
+                return next;
+            });
         }
     };
 
     const handleTierClick = (tierId) => {
-        if (!isDragMode && selectedImage) {
+        if (!isDragMode && selectedImages.size > 0) {
             setSongs(prev => {
-                const newImages = prev.map(img =>
-                    img.id === selectedImage.id
-                        ? { ...img, containerId: tierId }
-                        : img
-                );
-                // Clear selection after placing
-                setTimeout(() => setSelectedImage(null), 50);
+                let newImages = [...prev];
+
+                for (const selId of selectedImages) {
+                    const activeImage = newImages.find(img => img.id === selId);
+                    if (!activeImage || activeImage.containerId === tierId) continue;
+
+                    newImages = newImages.filter(img => img.id !== selId);
+
+                    const containerImages = newImages.filter(img => img.containerId === tierId);
+                    const lastContainerImageIndex = newImages.findIndex(img =>
+                        img.containerId === tierId &&
+                        containerImages.indexOf(img) === containerImages.length - 1
+                    );
+
+                    const updatedImage = { ...activeImage, containerId: tierId };
+
+                    if (containerImages.length === 0 || lastContainerImageIndex === -1) {
+                        newImages = [...newImages, updatedImage];
+                    } else {
+                        newImages.splice(lastContainerImageIndex + 1, 0, updatedImage);
+                    }
+                }
+
                 return newImages;
             });
+            // Clear selection after placing
+            setTimeout(() => setSelectedImages(new Set()), 50);
         }
     };
 
@@ -991,8 +1014,8 @@ const Tierlist = () => {
                                 className={`tier-row ${index === 0 ? 'first-tier-row' : ''}`}
                                 onClick={() => handleTierClick(row.id)}
                                 style={{
-                                    cursor: (!isDragMode && selectedImage) ? 'pointer' : 'default',
-                                    opacity: (!isDragMode && selectedImage) ? 0.8 : 1
+                                    cursor: (!isDragMode && selectedImages.size > 0) ? 'pointer' : 'default',
+                                    opacity: (!isDragMode && selectedImages.size > 0) ? 0.8 : 1
                                 }}
                             >
                                 <TierRow
@@ -1016,7 +1039,7 @@ const Tierlist = () => {
                                                     isDragging={image.id === activeId}
                                                     onImageClick={handleImageClick}
                                                     onContextMenu={handleImageRightClick}
-                                                    isSelected={selectedImage?.id === image.id}
+                                                    isSelected={selectedImages.has(image.id)}
                                                     isDragMode={isDragMode}
                                                 />
                                             ))}
@@ -1034,7 +1057,7 @@ const Tierlist = () => {
                                     checked={isDragMode}
                                     onChange={(e) => {
                                         setIsDragMode(e.target.checked);
-                                        setSelectedImage(null);
+                                        setSelectedImages(new Set());
                                     }}
                                     color="primary"
                                 />
@@ -1083,9 +1106,13 @@ const Tierlist = () => {
                         <div className="image-pool-header">
                             <h2>
                                 {selectedSetlist} Songs ({getImagesForContainer('image-pool').length})
-                                {!isDragMode && selectedImage && (
+                                {!isDragMode && selectedImages.size > 0 && (
                                     <span style={{ fontSize: '0.8em', marginLeft: '10px', color: '#4CAF50' }}>
-                                        Selected: {selectedImage.name}
+                                        {selectedImages.size} selected
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setSelectedImages(new Set()); }}
+                                            style={{ marginLeft: '8px', fontSize: '0.85em', cursor: 'pointer', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '4px', color: '#fff', padding: '1px 7px' }}
+                                        >✕ Clear</button>
                                     </span>
                                 )}
                             </h2>
@@ -1148,7 +1175,7 @@ const Tierlist = () => {
                                             isDragging={image.id === activeId}
                                             onImageClick={handleImageClick}
                                             onContextMenu={handleImageRightClick}
-                                            isSelected={selectedImage?.id === image.id}
+                                            isSelected={selectedImages.has(image.id)}
                                             isDragMode={isDragMode}
                                         />
                                     ))}
