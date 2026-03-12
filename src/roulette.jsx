@@ -5,7 +5,7 @@ import './roulette.css';
 
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const STANDARD_GEN_COUNT = 13;
+const STANDARD_GEN_COUNT = 14;
 const V_GEN_COUNT = 2;
 
 const SEGMENT_COLORS = [

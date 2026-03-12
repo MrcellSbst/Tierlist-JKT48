@@ -60,7 +60,7 @@ const HomepageTierlist = () => {
         tierlistType === 'member' ? 110 :
             tierlistType === 'video' || tierlistType === 'setlist_song' ? 60 : 0;
 
-    const STANDARD_GEN_COUNT = 13;
+    const STANDARD_GEN_COUNT = 14;
     const V_GEN_COUNT = 2;
 
     useEffect(() => {
