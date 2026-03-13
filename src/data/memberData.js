@@ -29,11 +29,12 @@ export const activeMemberFiles = [
     'Gen13_Bong_Aprilli.jpg', 'Gen13_Hagia_Sopia.jpg',
     'Gen13_Humaira_Ramadhani.jpg', 'Gen13_Jacqueline_Immanuela.jpg',
     'Gen13_Jemima_Evodie.jpg', 'Gen13_Mikaela_Kusjanto.jpg',
-    'Gen13_Nur_Intan.jpg', 'Gen14_carissa_dini.jpg',
-    'Gen14_fahira_putri.jpg', 'Gen14_fatimah_azzahra.jpg',
-    'Gen14_heidi_suyangga.jpg', 'Gen14_putry_jazyta.jpg',
-    'Gen14_ralyne_van_irwan.jpg', 'Gen14_sona_kalyana.jpg', 'Gen14_christabella_bonita.jpg', 'Gen14_maxine_faye_lee.jpg',
-    'Gen14_afera_thalia.jpg', 'JKT48VGen1_Pia_Meraleo.jpg', 'JKT48VGen1_Tana_Nona.jpg', 'JKT48VGen2_Isha_Kirana.png', 'JKT48VGen2_Maura_Nilambari.png', 'JKT48VGen2_Sami_Maono.png',
+    'Gen13_Nur_Intan.jpg', 'Gen14_afera_thalia.jpg', 'Gen14_carissa_dini.jpg',
+    'Gen14_christabella_bonita.jpg', 'Gen14_fahira_putri.jpg', 'Gen14_fatimah_azzahra.jpg',
+    'Gen14_heidi_suyangga.jpg', 'Gen14_maxine_faye_lee.jpg', 'Gen14_putry_jazyta.jpg',
+    'Gen14_ralyne_van_irwan.jpg', 'Gen14_sona_kalyana.jpg', 'JKT48VGen1_Pia_Meraleo.jpg',
+    'JKT48VGen1_Tana_Nona.jpg', 'JKT48VGen2_Isha_Kirana.png', 'JKT48VGen2_Maura_Nilambari.png',
+    'JKT48VGen2_Sami_Maono.png',
 ];
 
 export const exMemberFiles = [
