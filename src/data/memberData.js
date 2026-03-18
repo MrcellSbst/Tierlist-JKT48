@@ -8,8 +8,7 @@ export const activeMemberFiles = [
     'Gen8_lulu_salsabila.jpg',
     'Gen9_indah_cahya.jpg', 'Gen9_kathrina_irene.jpg',
     'Gen9_marsha_lenathea.jpg',
-    'Gen10_gabriela_abigail.jpg',
-    'Gen10_amanda_sukma.jpg', 'Gen10_aurellia.jpg',
+    'Gen10_amanda_sukma.jpg', 'Gen10_aurellia.jpg', 'Gen10_gabriela_abigail.jpg',
     'Gen10_jesslyn_elly.jpg', 'Gen10_raisha_syifa.jpg',
     'Gen11_alya_amanda.jpg', 'Gen11_anindya_ramadhani.jpg',
     'Gen11_cathleen_nixie.jpg', 'Gen11_celline_thefani.jpg',
@@ -33,8 +32,7 @@ export const activeMemberFiles = [
     'Gen14_christabella_bonita.jpg', 'Gen14_fahira_putri.jpg', 'Gen14_fatimah_azzahra.jpg',
     'Gen14_heidi_suyangga.jpg', 'Gen14_maxine_faye_lee.jpg', 'Gen14_putry_jazyta.jpg',
     'Gen14_ralyne_van_irwan.jpg', 'Gen14_sona_kalyana.jpg', 'JKT48VGen1_Pia_Meraleo.jpg',
-    'JKT48VGen1_Tana_Nona.jpg', 'JKT48VGen2_Isha_Kirana.png', 'JKT48VGen2_Maura_Nilambari.png',
-    'JKT48VGen2_Sami_Maono.png',
+    'JKT48VGen1_Tana_Nona.jpg', 'JKT48VGen2_Isha_Kirana.png', 'JKT48VGen2_Maura_Nilambari.png', 'JKT48VGen2_Sami_Maono.png',
 ];
 
 export const exMemberFiles = [
