@@ -7,7 +7,7 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['asset/icon/TierlistIcon.png', 'asset/icon/HomepageLogo.png'],
+            includeAssets: ['asset/icon/TierlistIcon_compressed.png', 'asset/icon/HomepageLogo_compressed.png'],
             manifest: {
                 name: 'JKT48 Tierlist',
                 short_name: 'JKT48 Tierlist',
@@ -21,13 +21,13 @@ export default defineConfig({
                 lang: 'id',
                 icons: [
                     {
-                        src: '/asset/icon/TierlistIcon.png',
+                        src: '/asset/icon/TierlistIcon_compressed.png',
                         sizes: '192x192',
                         type: 'image/png',
                         purpose: 'any maskable'
                     },
                     {
-                        src: '/asset/icon/TierlistIcon.png',
+                        src: '/asset/icon/TierlistIcon_compressed.png',
                         sizes: '512x512',
                         type: 'image/png',
                         purpose: 'any maskable'
@@ -35,7 +35,7 @@ export default defineConfig({
                 ],
                 screenshots: [
                     {
-                        src: '/asset/icon/HomepageLogo.png',
+                        src: '/asset/icon/HomepageLogo_compressed.png',
                         sizes: '512x512',
                         type: 'image/png',
                         form_factor: 'wide'
@@ -48,11 +48,13 @@ export default defineConfig({
                         short_name: 'Member',
                         description: 'Buat tierlist member JKT48',
                         url: '/',
-                        icons: [{ src: '/asset/icon/TierlistIcon.png', sizes: '192x192' }]
+                        icons: [{ src: '/asset/icon/TierlistIcon_compressed.png', sizes: '192x192' }]
                     }
                 ]
             },
             workbox: {
+                // Raise limit slightly above default 2 MiB to handle edge cases
+                maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB
                 // Cache the app shell and routes
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
                 // Don't cache large asset directories (member images) — they'd blow up the cache
