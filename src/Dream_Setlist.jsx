@@ -1197,7 +1197,7 @@ const DreamSetlist = () => {
                                                                 isDragging={image.id === activeId}
                                                                 onImageClick={handleImageClick}
                                                                 onContextMenu={handleImageRightClick}
-                                                                isSelected={selectedImage?.id === image.id}
+                                                                isSelected={selectedImages.has(image.id)}
                                                                 isDragMode={isDragMode}
                                                             />
                                                         ))}
