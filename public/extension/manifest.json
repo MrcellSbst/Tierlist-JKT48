@@ -3,7 +3,7 @@
   "name": "JKT48 Points History Exporter",
   "version": "1.0",
   "description": "Export JKT48 Points History to CSV",
-  "permissions": ["activeTab", "scripting", "tabs", "storage"],
+  "permissions": ["activeTab", "scripting", "tabs", "storage", "webRequest"],
   "host_permissions": [
     "https://jkt48.com/*",
     "http://localhost:*/*",
@@ -11,6 +11,9 @@
     "https://tierlistjkt48.my.id/*",
     "https://www.tierlistjkt48.my.id/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

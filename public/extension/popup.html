@@ -21,19 +21,37 @@
     button:hover {
       background-color: #ff1493;
     }
+    .btn-api {
+      background-color: #2196F3;
+    }
+    .btn-api:hover {
+      background-color: #0b7dda;
+    }
     #status {
       color: #666;
       margin-top: 10px;
       font-size: 14px;
+      word-wrap: break-word;
     }
     .error {
       color: #ff0000;
+    }
+    .code-preview {
+      background: #f4f4f4;
+      padding: 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 10px;
+      white-space: pre-wrap;
+      max-height: 100px;
+      overflow-y: auto;
     }
   </style>
 </head>
 <body>
   <h2>JKT48 Points History Exporter</h2>
-  <button id="exportBtn">Export Points History</button>
+  <button id="exportBtn">Export Points History (V1 - HTML)</button>
+  <button id="exportApiBtn" class="btn-api">Export via API (V2 - Fast)</button>
   <div id="status"></div>
   <script src="popup.js"></script>
 </body>

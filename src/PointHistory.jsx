@@ -21,6 +21,16 @@ import { useNavigate } from 'react-router-dom';
 import { format, parse, startOfMonth } from 'date-fns';
 import { POINT_HISTORY_COLORS, POINT_HISTORY_CATEGORIES } from './data/PointHistoryData';
 
+const TYPE_LABELS = {
+    'EXCLUSIVE': 'VC/MnG',
+    'OFC_REGISTER': 'Membership Official',
+};
+
+const mapCategoryLabel = (raw) => {
+    if (!raw || raw === '-') return 'Others';
+    return TYPE_LABELS[raw.toUpperCase().trim()] || raw;
+};
+
 const PointHistory = () => {
     const [pointsData, setPointsData] = useState([]);
     const [lastUpdate, setLastUpdate] = useState(null);
@@ -116,15 +126,22 @@ const PointHistory = () => {
 
     const calculateCurrentPoints = () => {
         return pointsData.reduce((total, row) => {
-            const points = parseInt(row.buyPoints?.replace(/[P,]/g, '').trim()) || 0;
-            return total + points;
+            const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+            const method = String(row.paymentMethod || '').toUpperCase();
+            const purpose = (row.purpose || '').trim().toUpperCase();
+
+            // Current Points should only increase on Topups, and decrease ONLY if they paid using JKT48 Points!
+            if (purpose === 'JKT48 POINTS' || method.includes('POINT') || method.includes('POIN') || !row.paymentMethod) {
+                return total + points;
+            }
+            return total;
         }, 0);
     };
 
     const calculateTotalSpend = () => {
         return pointsData.reduce((total, row) => {
-            if (row.purpose.trim() === 'Masa Berlaku Habis') return total;
-            const points = parseInt(row.buyPoints?.replace(/[P,]/g, '').trim()) || 0;
+            if ((row.purpose || '').trim() === 'Masa Berlaku Habis') return total;
+            const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
             return total + (points < 0 ? Math.abs(points) : 0);
         }, 0);
     };
@@ -135,7 +152,7 @@ const PointHistory = () => {
         
         return pointsData.reduce((total, row) => {
             const purpose = (row.purpose || '').trim().toUpperCase();
-            const points = parseInt(row.buyPoints?.replace(/[P,]/g, '').trim()) || 0;
+            const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
             console.log('Processing row:', { 
                 originalPurpose: row.purpose,
                 normalizedPurpose: purpose,
@@ -154,7 +171,7 @@ const PointHistory = () => {
     const calculateTotalExpired = () => {
         return pointsData.reduce((total, row) => {
             const purpose = (row.purpose || '').trim().toUpperCase();
-            const points = parseInt(row.buyPoints?.replace(/[P,]/g, '').trim()) || 0;
+            const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
             
             if (purpose === 'MASA BERLAKU HABIS') {
                 return total + Math.abs(points);
@@ -163,11 +180,19 @@ const PointHistory = () => {
         }, 0);
     };
 
+    const calculateTotalServiceCharged = () => {
+        return pointsData.reduce((total, row) => {
+            const sc = parseFloat(row.serviceCharge) || 0;
+            return total + sc;
+        }, 0);
+    };
+
     const chartData = useMemo(() => {
         const categoryData = {};
         const monthlyData = {};
         const yearlyData = {};
         const availableYears = new Set();
+        const uniqueCategories = new Set();
 
         // Define all months
         const allMonths = [
@@ -177,37 +202,33 @@ const PointHistory = () => {
 
         // Initialize monthly data with zero values for all months
         allMonths.forEach(month => {
-            monthlyData[`${month} ${selectedYear}`] = 0;
+            monthlyData[`${month} ${selectedYear}`] = { month: month };
         });
 
         console.log('Processing points data for charts:', pointsData);
 
         pointsData.forEach(row => {
-            if (row.purpose.trim() === 'JKT48 POINTS' || row.purpose.trim() === 'Masa Berlaku Habis') {
-                console.log('Skipping topup or expired points:', row);
+            const purp = (row.purpose || '').trim();
+            if (purp === 'JKT48 POINTS' || purp === 'Masa Berlaku Habis') {
                 return;
             }
 
-            const points = parseInt(row.buyPoints?.replace(/[P,]/g, '').trim()) || 0;
+            const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
             
             if (points >= 0) {
                 console.log('Skipping non-spending transaction:', row);
                 return;
             }
 
-            let category = 'Others';
-            const purpose = row.purpose.toLowerCase().trim();
-            console.log('Processing purpose:', purpose);
+            let categoryRaw = (row.category || '').trim();
+            if (categoryRaw === '-' || categoryRaw === '') categoryRaw = 'Others';
 
-            // Find matching category based on keywords
-            for (const [categoryKey, categoryData] of Object.entries(POINT_HISTORY_CATEGORIES)) {
-                if (categoryData.keywords.some(keyword => purpose.includes(keyword.toLowerCase()))) {
-                    category = categoryKey;
-                    break;
-                }
-            }
+            // Normalize type labels using shared mapping
+            const category = mapCategoryLabel(categoryRaw);
 
-            console.log('Detected category:', category, 'for purpose:', purpose);
+            uniqueCategories.add(category);
+
+            console.log('Detected category:', category, 'from type:', row.category);
 
             const spendingAmount = Math.abs(points);
             if (!categoryData[category]) {
@@ -216,37 +237,43 @@ const PointHistory = () => {
             categoryData[category] += spendingAmount;
 
             try {
-                const [day, month, year] = row.date.split(' ');
-                const monthMap = {
-                    'Januari': 'January',
-                    'Februari': 'February',
-                    'Maret': 'March',
-                    'April': 'April',
-                    'Mei': 'May',
-                    'Juni': 'June',
-                    'Juli': 'July',
-                    'Agustus': 'August',
-                    'September': 'September',
-                    'Oktober': 'October',
-                    'November': 'November',
-                    'Desember': 'December'
-                };
-                
-                const englishMonth = monthMap[month] || month;
-                const date = new Date(`${year}-${englishMonth}-${day}`);
+                let date;
+                // Check if date is already an ISO string
+                if (row.date && String(row.date).match(/^\d{4}-\d{2}-\d{2}/)) {
+                    date = new Date(row.date);
+                } else {
+                    const parts = String(row.date || '').split(' ');
+                    const day = parts[0] || '1';
+                    const month = parts[1] || 'Januari';
+                    const year = parts[2] || '2020';
+                    const monthMap = {
+                        'Januari': 'January', 'Februari': 'February', 'Maret': 'March',
+                        'April': 'April', 'Mei': 'May', 'Juni': 'June',
+                        'Juli': 'July', 'Agustus': 'August', 'September': 'September',
+                        'Oktober': 'October', 'November': 'November', 'Desember': 'December'
+                    };
+                    const englishMonth = monthMap[month] || month;
+                    date = new Date(`${year}-${englishMonth}-${day}`);
+                }
+
+                if (isNaN(date.getTime())) {
+                    date = new Date();
+                }
+
                 const monthKey = format(startOfMonth(date), 'MMM yyyy');
-                const yearKey = year;
+                const yearKey = format(date, 'yyyy');
                 
                 availableYears.add(yearKey);
 
                 if (yearKey === selectedYear) {
-                    monthlyData[monthKey] = (monthlyData[monthKey] || 0) + spendingAmount;
+                    if (!monthlyData[monthKey]) monthlyData[monthKey] = { month: monthKey.split(' ')[0] };
+                    monthlyData[monthKey][category] = (monthlyData[monthKey][category] || 0) + spendingAmount;
                 }
 
                 if (!yearlyData[yearKey]) {
-                    yearlyData[yearKey] = 0;
+                    yearlyData[yearKey] = { year: yearKey };
                 }
-                yearlyData[yearKey] += spendingAmount;
+                yearlyData[yearKey][category] = (yearlyData[yearKey][category] || 0) + spendingAmount;
             } catch (error) {
                 console.error('Error parsing date:', error, 'for row:', row);
             }
@@ -257,35 +284,25 @@ const PointHistory = () => {
         console.log('Final yearly data:', yearlyData);
 
         // Convert monthly data to array format with all months
-        const sortedMonthly = allMonths.map(month => ({
-            month,
-            amount: monthlyData[`${month} ${selectedYear}`] || 0
-        }));
+        const sortedMonthly = allMonths.map(month => {
+            const mKey = `${month} ${selectedYear}`;
+            return monthlyData[mKey] || { month };
+        });
 
-        const sortedYearly = Object.entries(yearlyData)
-            .sort((a, b) => a[0].localeCompare(b[0]))
-            .map(([year, amount]) => ({
-                year,
-                amount
-            }));
+        const sortedYearly = Object.values(yearlyData)
+            .sort((a, b) => a.year.localeCompare(b.year));
 
         const categories = Object.entries(categoryData)
             .filter(([_, value]) => value > 0)
-            .map(([name, value]) => ({
-                name,
-                value
-            }))
+            .map(([name, value]) => ({ name, value }))
             .sort((a, b) => b.value - a.value);
-
-        console.log('Processed categories:', categories);
-        console.log('Processed monthly data:', sortedMonthly);
-        console.log('Processed yearly data:', sortedYearly);
 
         return {
             categories,
             monthly: sortedMonthly,
             yearly: sortedYearly,
-            availableYears: Array.from(availableYears).sort()
+            availableYears: Array.from(availableYears).sort().reverse(),
+            uniqueCategoryNames: Array.from(uniqueCategories)
         };
     }, [pointsData, selectedYear]);
 
@@ -319,7 +336,8 @@ const PointHistory = () => {
     const columns = [
         { field: 'id', headerName: 'No. Transaction', flex: 1.2 },
         { field: 'date', headerName: 'Date', flex: 1 },
-        { field: 'purpose', headerName: 'Category', flex: 1.5 },
+        { field: 'category', headerName: 'Category', flex: 1 },
+        { field: 'title', headerName: 'Title', flex: 1.5 },
         { field: 'quantity', headerName: 'Quantity', flex: 0.7 },
         { field: 'bonusPoints', headerName: 'Bonus Points', flex: 1 },
         { field: 'buyPoints', headerName: 'Points Changed', flex: 1 },
@@ -327,14 +345,16 @@ const PointHistory = () => {
         
     ];
 
-    const rows = pointsData.map(row => ({
-        date: row.date,
-        purpose: row.purpose,
-        quantity: row.quantity,
-        bonusPoints: row.bonusPoints,
-        buyPoints: row.buyPoints,
-        status: row.status,
-        id: row.id
+    const rows = pointsData.map((row, index) => ({
+        date: String(row.date || '-'),
+        category: mapCategoryLabel(String(row.category || '-')),
+        title: String(row.title || row.purpose || '-'),
+        quantity: String(row.quantity || '0'),
+        bonusPoints: String(row.bonusPoints || '0 P'),
+        buyPoints: String(row.buyPoints || '0 P'),
+        status: String(row.status || '-'),
+        paymentMethod: String(row.paymentMethod || '-'),
+        id: row.id || `api-fallback-${index}-${Math.random().toString(36).substr(2, 5)}`
     }));
 
     return (
@@ -515,6 +535,25 @@ const PointHistory = () => {
                                             }}
                                         />
                                     </Box>
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center',
+                                        gridColumn: '1 / -1'
+                                    }}>
+                                        <Typography variant="h6" sx={{ mr: 2, width: 160, flexShrink: 0 }}>
+                                            Total Service Charged:
+                                        </Typography>
+                                        <Chip 
+                                            label={`Rp ${calculateTotalServiceCharged().toLocaleString()}`}
+                                            color="primary"
+                                            sx={{ 
+                                                fontSize: '1.2rem',
+                                                padding: '20px 10px',
+                                                backgroundColor: '#9C27B0',
+                                                '& .MuiChip-label': { px: 2 }
+                                            }}
+                                        />
+                                    </Box>
                                 </Box>
                             </Paper>
                         </Box>
@@ -622,16 +661,17 @@ const PointHistory = () => {
                                                 <CartesianGrid strokeDasharray="3 3" />
                                                 <XAxis dataKey="year" />
                                                 <YAxis tickFormatter={(value) => `${(value / 1000)}k`} />
-                                                <Tooltip formatter={(value) => `${value.toLocaleString()} P`} />
-                                                <Bar 
-                                                    dataKey="amount" 
-                                                    name="Points Spent" 
-                                                    fill="#82ca9d"
-                                                    label={{ 
-                                                        position: 'top',
-                                                        formatter: (value) => `${(value / 1000)}k`
-                                                    }}
+                                                <Tooltip 
+                                                    formatter={(value, name) => [`${value.toLocaleString()} P`, name]} 
                                                 />
+                                                {chartData.uniqueCategoryNames.map((catName, index) => (
+                                                    <Bar 
+                                                        key={catName}
+                                                        dataKey={catName} 
+                                                        stackId="a" 
+                                                        fill={POINT_HISTORY_COLORS[index % POINT_HISTORY_COLORS.length]}
+                                                    />
+                                                ))}
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </Box>
@@ -670,16 +710,17 @@ const PointHistory = () => {
                                                 <CartesianGrid strokeDasharray="3 3" />
                                                 <XAxis dataKey="month" />
                                                 <YAxis tickFormatter={(value) => `${(value / 1000)}k`} />
-                                                <Tooltip formatter={(value) => `${value.toLocaleString()} P`} />
-                                                <Bar 
-                                                    dataKey="amount" 
-                                                    name="Points Spent" 
-                                                    fill="#8884d8"
-                                                    label={{ 
-                                                        position: 'top',
-                                                        formatter: (value) => `${(value / 1000)}k`
-                                                    }}
+                                                <Tooltip 
+                                                    formatter={(value, name) => [`${value.toLocaleString()} P`, name]} 
                                                 />
+                                                {chartData.uniqueCategoryNames.map((catName, index) => (
+                                                    <Bar 
+                                                        key={catName}
+                                                        dataKey={catName} 
+                                                        stackId="a" 
+                                                        fill={POINT_HISTORY_COLORS[index % POINT_HISTORY_COLORS.length]}
+                                                    />
+                                                ))}
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </Box>
@@ -702,17 +743,20 @@ const PointHistory = () => {
                                 }}
                                 pagination
                                 autoHeight
+                                getRowHeight={() => 'auto'}
+                                getEstimatedRowHeight={() => 80}
                                 disableSelectionOnClick
                                 sx={{
                                     '& .MuiDataGrid-cell': {
                                         whiteSpace: 'normal',
-                                        lineHeight: 'normal',
+                                        lineHeight: '1.4',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        paddingY: 1
+                                        paddingY: 1.5,
+                                        paddingX: 1
                                     },
                                     '& .MuiDataGrid-row': {
-                                        alignItems: 'center'
+                                        alignItems: 'stretch'
                                     },
                                     '& .MuiTablePagination-root': {
                                         color: 'black'
