@@ -357,7 +357,7 @@ document.getElementById('exportApiBtn').addEventListener('click', async () => {
       console.warn("Could not dispatch message to tabs:", err);
     }
 
-    statusDiv.innerHTML = `Successfully collected ${mappedData.length} records via API!<br><br>Sample Data:<br><div class="code-preview">${JSON.stringify(res.sample, null, 2)}</div>`;
+    statusDiv.textContent = `Successfully collected ${mappedData.length} records via API!`;
     
   } catch (error) {
     statusDiv.textContent = 'Extension Error: ' + error.message;
