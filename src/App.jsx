@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Box } from '@mui/material'
 import Homepage, { HomepageTierlist } from './Homepage'
 import Tierlist from './Tierlist'
@@ -61,6 +62,7 @@ function App() {
         <Footer />
       </Box>
       <Analytics />
+      <SpeedInsights />
     </Router>
   )
 }
