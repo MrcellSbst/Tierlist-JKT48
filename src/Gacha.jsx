@@ -6,6 +6,7 @@ import './styles/Gacha.css'
 // ─── Constants ─────────────────────────────────────────────────────────────
 const UR_PITY_LIMIT = 5
 const LS_KEY_PITY   = 'gacha_ur_pity'
+const LS_KEY_OWNED  = 'gacha_owned_urs'
 
 // ─── Gacha Engine ──────────────────────────────────────────────────────────
 function pickRandom(pool) {
@@ -20,19 +21,31 @@ function rollNonGuaranteed() {
   return 'common'
 }
 
-function buildPack(packsWithoutUR) {
+function buildPack(packsWithoutUR, ownedURs = new Set()) {
   const usedIds  = new Set()
   const slots    = []
   const urForced = (packsWithoutUR + 1) >= UR_PITY_LIMIT
 
+  const pickUR = () => {
+    // 1. Try to get un-owned UR
+    let pool = CARDS.ultraRare.filter(c => !usedIds.has(c.id) && !ownedURs.has(c.id))
+    // 2. If user owns all URs, fallback to picking any available UR to prevent crash
+    if (pool.length === 0) {
+      pool = CARDS.ultraRare.filter(c => !usedIds.has(c.id))
+    }
+    return pickRandom(pool)
+  }
+
   // Slot 0: Rare guarantee (upgraded to UR on pity or lucky roll)
   if (urForced) {
-    const card = pickRandom(CARDS.ultraRare.filter(c => !usedIds.has(c.id)))
+    const card = pickUR()
     usedIds.add(card.id)
     slots.push(card)
   } else {
     const rarity = Math.random() < 0.02 ? 'ultraRare' : 'rare'
-    const card   = pickRandom(CARDS[rarity].filter(c => !usedIds.has(c.id)))
+    const card = rarity === 'ultraRare' 
+      ? pickUR() 
+      : pickRandom(CARDS[rarity].filter(c => !usedIds.has(c.id)))
     usedIds.add(card.id)
     slots.push(card)
   }
@@ -40,9 +53,17 @@ function buildPack(packsWithoutUR) {
   // Remaining 4 slots: standard weighted pull
   while (slots.length < 5) {
     let rarity = rollNonGuaranteed()
-    let pool   = CARDS[rarity].filter(c => !usedIds.has(c.id))
-    if (pool.length === 0) pool = ALL_CARDS.filter(c => !usedIds.has(c.id))
-    const card = pickRandom(pool)
+    let card = null
+
+    if (rarity === 'ultraRare') {
+      card = pickUR()
+    } else {
+      let pool = CARDS[rarity].filter(c => !usedIds.has(c.id))
+      // Absolute fallback just in case we run out of a specific rarity pool
+      if (pool.length === 0) pool = ALL_CARDS.filter(c => !usedIds.has(c.id))
+      card = pickRandom(pool)
+    }
+    
     usedIds.add(card.id)
     slots.push(card)
   }
@@ -151,6 +172,11 @@ export default function Gacha() {
     try { return parseInt(localStorage.getItem(LS_KEY_PITY) || '0', 10) }
     catch { return 0 }
   })
+  
+  const [ownedURs, setOwnedURs] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(LS_KEY_OWNED) || '[]')) }
+    catch { return new Set() }
+  })
 
   const [phase,        setPhase]        = useState('idle') // idle | cutting | opening
   const [pack,         setPack]         = useState([])
@@ -165,11 +191,16 @@ export default function Gacha() {
     catch {}
   }, [packsWithoutUR])
 
+  useEffect(() => {
+    try { localStorage.setItem(LS_KEY_OWNED, JSON.stringify([...ownedURs])) }
+    catch {}
+  }, [ownedURs])
+
   // Click the pack to open it -> trigger cutting phase
   const handlePackClick = useCallback(() => {
     if (phase !== 'idle') return
 
-    const newPack = buildPack(packsWithoutUR)
+    const newPack = buildPack(packsWithoutUR, ownedURs)
     const hasUR   = newPack.some(c => c.rarity === 'ultraRare')
 
     setPack(newPack)
@@ -177,6 +208,12 @@ export default function Gacha() {
     setRevealedSet(new Set())
     setGotUR(hasUR)
     setPacksWithoutUR(hasUR ? 0 : packsWithoutUR + 1)
+    
+    if (hasUR) {
+      // Record any newly pulled URs so they don't roll again
+      const pulledURs = newPack.filter(c => c.rarity === 'ultraRare').map(c => c.id)
+      setOwnedURs(prev => new Set([...prev, ...pulledURs]))
+    }
     
     // Play cutting animation, then transition to opening
     setPackRotY(0)
