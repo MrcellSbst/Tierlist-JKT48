@@ -1,0 +1,1038 @@
+/* ──────────────────────────────────────────────────────────
+   Gacha Page — JKT48 TCG
+   ────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+
+/* ── Base ── */
+.gacha-page {
+  min-height: 100vh;
+  background: #D9D9D9;
+  color: #1f2937;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.gacha-header {
+  position: relative;
+  padding: 4rem 1.5rem 3rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.gacha-header-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(223, 10, 129, 0.08) 0%, transparent 70%),
+    linear-gradient(180deg, #f0fdfa 0%, #D9D9D9 100%);
+  z-index: 0;
+}
+
+.gacha-header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.back-btn-container {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 10;
+}
+
+.btn-back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.4rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #216D94;
+  background: rgba(33, 109, 148, 0.05);
+  border: 1px solid rgba(33, 109, 148, 0.25);
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-back-home:hover {
+  background: rgba(33, 109, 148, 0.12);
+  border-color: rgba(33, 109, 148, 0.6);
+  transform: translateY(-2px);
+}
+
+.gacha-eyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #00A4A5;
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.gacha-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  background: linear-gradient(135deg, #DF0A81 0%, #00A4A5 50%, #F79321 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.15;
+}
+
+.gacha-subtitle {
+  color: #4b5563;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ── Main Wrapper ── */
+.gacha-main {
+  flex: 1;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ─────────────────────────────────────────
+   IDLE PHASE
+───────────────────────────────────────── */
+.gacha-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* ── 3D Pack Container ── */
+.pack-container {
+  position: relative;
+  width: 220px;
+  height: 310px;
+  perspective: 1000px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  margin-top: 1rem;
+}
+
+.pack-3d-model {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  /* controlled by React variable --pack-ry */
+  transform: rotateY(var(--pack-ry, 0deg));
+  transition: transform 0.2s ease-out;
+}
+
+.pack-half {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+/* We clip the halves using clip-path to slice it exactly at 20% down */
+.pack-top {
+  clip-path: polygon(0 0, 100% 0, 100% 20%, 0 20%);
+  z-index: 2;
+}
+
+.pack-bottom {
+  clip-path: polygon(0 20%, 100% 20%, 100% 100%, 0 100%);
+  z-index: 1;
+}
+
+.pack-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* or cover if it fits perfectly */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Move the back face slightly along Z to create volume */
+.pack-back {
+  transform: rotateY(180deg) translateZ(8px);
+}
+
+.pack-front {
+  transform: translateZ(8px);
+}
+
+/* The slashing effect line */
+.pack-slash {
+  position: absolute;
+  top: 19.5%;
+  /* Right at the cut */
+  left: -20%;
+  width: 140%;
+  height: 6px;
+  background: #d9d9d9;
+  box-shadow: 0 0 15px rgba(217, 217, 217, 0.8), 0 0 30px rgba(217, 217, 217, 0.6);
+  transform: translateZ(50px) rotate(-5deg) scaleX(0);
+  opacity: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.pack-click-hint {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #6b7280;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: hint-pulse 2s ease-in-out infinite;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── Cutting Phase Animations ── */
+.pack-container.is-cutting {
+  cursor: default;
+}
+
+.pack-container.is-cutting .pack-3d-model {
+  /* forcefully reset rotation during opening animation */
+  transform: rotateY(0deg);
+  transition: transform 0.4s ease;
+}
+
+.pack-container.is-cutting .pack-slash {
+  animation: slash-strike 0.3s ease-in forwards;
+}
+
+.pack-container.is-cutting .pack-top {
+  animation: fly-off 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s forwards;
+}
+
+.pack-container.is-cutting .pack-bottom {
+  animation: drop-down 0.5s ease-in 0.5s forwards;
+}
+
+@keyframes slash-strike {
+  0% {
+    opacity: 0;
+    transform: translateZ(50px) rotate(-5deg) scaleX(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateZ(50px) rotate(-5deg) scaleX(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateZ(50px) rotate(-5deg) scaleX(1) translateY(-10px);
+  }
+}
+
+@keyframes fly-off {
+  0% {
+    transform: translateY(0) rotateZ(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-60px) rotateZ(-15deg) scale(1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes drop-down {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+    filter: brightness(1);
+  }
+
+  100% {
+    transform: translateY(40px) scale(0.9);
+    opacity: 0;
+    filter: brightness(2);
+  }
+}
+
+/* ── Pity Counter ── */
+.pity-counter {
+  width: 100%;
+  max-width: 380px;
+  background: rgba(247, 147, 33, 0.04);
+  border: 1px solid rgba(247, 147, 33, 0.2);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+}
+
+.pity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.pity-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6b7280;
+}
+
+.pity-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.pity-bar-bg {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.pity-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pity-sub {
+  margin: 0.45rem 0 0;
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: right;
+}
+
+/* ── Odds Panel ── */
+.odds-panel {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  border-radius: 14px;
+  padding: 1.25rem 1.75rem;
+  width: 100%;
+  max-width: 380px;
+}
+
+.odds-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  color: #F79321;
+  margin: 0 0 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.odds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.odds-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.odds-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.odds-label {
+  flex: 1;
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.odds-pct {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.odds-guarantees {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.odds-guarantee-item {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.guarantee-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.rare-icon {
+  background: rgba(96, 165, 250, 0.2);
+  color: #60a5fa;
+  border: 1px solid #60a5fa55;
+}
+
+.ur-icon {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid #f59e0b55;
+}
+
+.odds-note {
+  margin: 0.9rem 0 0;
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* ── Open Pack Button ── */
+.btn-open-pack {
+  position: relative;
+  overflow: hidden;
+  padding: 1rem 3.5rem;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: linear-gradient(135deg, #DF0A81 0%, #00A4A5 50%, #F79321 100%);
+  box-shadow:
+    0 0 20px rgba(0, 164, 165, 0.5),
+    0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-open-pack:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow:
+    0 0 35px rgba(0, 164, 165, 0.7),
+    0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.btn-open-pack:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-shine {
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.25) 50%, transparent 60%);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -60%;
+  }
+
+  40% {
+    left: 120%;
+  }
+
+  100% {
+    left: 120%;
+  }
+}
+
+/* ── History ── */
+.history-section {
+  width: 100%;
+  max-width: 500px;
+}
+
+.history-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.82rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.7rem;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+}
+
+.history-num {
+  font-size: 0.76rem;
+  color: #6b7280;
+  min-width: 55px;
+  font-weight: 500;
+}
+
+.history-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.history-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* ── Secondary Button ── */
+.btn-secondary {
+  padding: 0.75rem 2rem;
+  border-radius: 50px;
+  border: 1px solid rgba(0, 164, 165, 0.5);
+  background: rgba(0, 164, 165, 0.1);
+  color: #00A4A5;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(0, 164, 165, 0.2);
+  border-color: rgba(0, 164, 165, 0.8);
+  color: #fff;
+}
+
+/* ─────────────────────────────────────────
+   OPENING PHASE
+───────────────────────────────────────── */
+.gacha-opening {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 60vh;
+  justify-content: flex-start;
+  padding-top: 1rem;
+}
+
+.ur-banner {
+  font-family: 'Cinzel', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #F79321;
+  text-shadow: 0 0 20px rgba(247, 147, 33, 0.8);
+  letter-spacing: 0.08em;
+  animation: ur-banner-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes ur-banner-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Progress Dots ── */
+.card-progress {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  transition: background 0.4s ease, transform 0.3s ease, box-shadow 0.4s ease;
+}
+
+.progress-dot.dot-current {
+  transform: scale(1.35);
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.progress-dot.dot-revealed {
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* ── Single Card Reveal Stage ── */
+.reveal-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  animation: card-enter 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Nav row: arrow buttons flanking the card ── */
+.reveal-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.nav-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 164, 165, 0.45);
+  background: rgba(0, 164, 165, 0.12);
+  color: #00A4A5;
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: rgba(0, 164, 165, 0.28);
+  border-color: rgba(0, 164, 165, 0.9);
+  transform: scale(1.1);
+}
+
+.nav-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.nav-btn:disabled {
+  opacity: 0.22;
+  cursor: default;
+}
+
+/* Card counter "2 / 5" */
+.card-counter {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  letter-spacing: 0.1em;
+}
+
+/* Progress dots are also clickable */
+.progress-dot {
+  cursor: pointer;
+}
+
+.progress-dot:hover:not(.dot-current) {
+  transform: scale(1.5);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* ─────────────────────────────────────────
+   CARD — Wrapper (holds outside label + card)
+───────────────────────────────────────── */
+.gacha-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+/* Rarity label — hidden by default, revealed via .label-visible */
+.card-rarity-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.15rem 0.55rem 0.15rem 0.35rem;
+  background: #111827;
+  color: #fff;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease 0.7s, transform 0.25s ease 0.7s;
+}
+
+.card-rarity-label.label-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card-rarity-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Card ── */
+.gacha-card {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  width: 100%;
+  perspective: 900px;
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.gacha-card.revealed {
+  cursor: default;
+}
+
+/* Single-card reveal mode: fixed width centered */
+.gacha-card.single-card {
+  width: 340px;
+}
+
+@media (max-width: 480px) {
+  .gacha-card.single-card {
+    width: 250px;
+  }
+}
+
+.gacha-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 12px;
+}
+
+.gacha-card.revealed .gacha-card-inner {
+  transform: rotateY(180deg);
+}
+
+.gacha-card-back,
+.gacha-card-front {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+
+/* Card Back */
+.gacha-card-back {
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 15px rgba(0, 164, 165, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.gacha-card:not(.revealed):hover .gacha-card-back {
+  box-shadow:
+    0 0 28px rgba(0, 164, 165, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.card-back-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-tap-hint {
+  position: absolute;
+  bottom: 14px;
+  font-size: 0.6rem;
+  color: rgba(251, 191, 36, 0.8);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  animation: hint-pulse 1.5s ease-in-out infinite;
+}
+
+/* Card Front */
+.gacha-card-front {
+  transform: rotateY(180deg);
+  background: #ffffff;
+  border: 2px solid var(--card-color, #a0a0b0);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--glow-color, #a0a0b0) 50%, transparent);
+  /* ImageFit fix: card fills height without clipping bottom */
+  overflow: hidden;
+}
+
+/* Fix card image clipping — image takes remaining space and covers */
+.card-img {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  /* allow flex shrink */
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.card-name {
+  flex-shrink: 0;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.58rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--card-color, #a0a0b0);
+  letter-spacing: 0.04em;
+  background: rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Rarity-specific glow ── */
+.gacha-card.ultraRare .gacha-card-front {
+  border-color: #f59e0b;
+  animation: ultra-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes ultra-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(249, 115, 22, 0.6);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(249, 115, 22, 1), 0 0 65px rgba(245, 158, 11, 0.5);
+  }
+}
+
+.gacha-card.rare .gacha-card-front {
+  box-shadow:
+    0 0 18px rgba(59, 130, 246, 0.7),
+    inset 0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+/* ── Reveal entrance animation ── */
+.gacha-card.revealed .gacha-card-front {
+  animation: card-appear 0.3s ease 0.35s both;
+}
+
+@keyframes card-appear {
+  from {
+    opacity: 0.5;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ─────────────────────────────────────────
+   HOLOGRAPHIC OVERLAY — Ultra Rare only
+───────────────────────────────────────── */
+.holo-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  z-index: 10;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  /* Rainbow gradient that pans diagonally */
+  background:
+    linear-gradient(125deg,
+      rgba(255, 0, 128, 0) 0%,
+      rgba(255, 0, 128, 0.18) 15%,
+      rgba(255, 200, 0, 0.22) 30%,
+      rgba(0, 255, 120, 0.2) 45%,
+      rgba(0, 180, 255, 0.22) 60%,
+      rgba(160, 0, 255, 0.18) 75%,
+      rgba(255, 0, 128, 0) 100%);
+  background-size: 300% 300%;
+  animation: holo-pan 3.5s linear infinite;
+  /* Sheen layer on top via pseudo-filter */
+  filter: saturate(1.6) brightness(1.1);
+}
+
+/* Second shimmer using a mask-position animation */
+.holo-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(105deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.18) 50%,
+      transparent 70%);
+  background-size: 200% 200%;
+  animation: holo-sheen 2s linear infinite;
+}
+
+@keyframes holo-pan {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 100% 100%;
+  }
+
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+@keyframes holo-sheen {
+  0% {
+    background-position: -200% -200%;
+  }
+
+  100% {
+    background-position: 200% 200%;
+  }
+}
+
+/* ─────────────────────────────────────────
+   RESULTS SUMMARY
+───────────────────────────────────────── */
+.results-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  animation: card-enter 0.4s ease both;
+}
+
+.summary-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  color: #c4b5fd;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 380px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.summary-card {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  border-radius: 10px;
+  border: 2px solid var(--card-color, #a0a0b0);
+  background: #0f0f1e;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--glow-color, #a0a0b0) 40%, transparent);
+  animation: card-enter 0.4s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+
+.summary-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.summary-card:nth-child(2) {
+  animation-delay: 0.10s;
+}
+
+.summary-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.summary-card:nth-child(4) {
+  animation-delay: 0.20s;
+}
+
+.summary-card:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.summary-card.ultraRare {
+  border-color: #f59e0b;
+  animation-name: card-enter, ultra-pulse;
+  animation-duration: 0.4s, 2.5s;
+  animation-timing-function: cubic-bezier(0.34, 1.3, 0.64, 1), ease-in-out;
+  animation-fill-mode: both, none;
+  animation-iteration-count: 1, infinite;
+}
+
+.summary-rarity {
+  flex-shrink: 0;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(0, 0, 0, 0.5);
+}
