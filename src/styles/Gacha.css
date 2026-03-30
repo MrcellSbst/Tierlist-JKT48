@@ -34,6 +34,8 @@
 .gacha-header-content {
   position: relative;
   z-index: 1;
+  /* Enough top padding so the absolute back button doesn't overlap the title */
+  padding-top: 2.5rem;
 }
 
 .back-btn-container {
@@ -741,6 +743,26 @@
 @media (max-width: 480px) {
   .gacha-card.single-card {
     width: 250px;
+  }
+
+  /* On mobile, stack the back button above the title instead of
+     overlapping it with absolute positioning */
+  .back-btn-container {
+    position: static;
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .gacha-header-content {
+    padding-top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .gacha-header {
+    padding: 1.5rem 1rem 2rem;
   }
 }
 
