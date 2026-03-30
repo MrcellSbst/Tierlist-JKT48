@@ -105,7 +105,9 @@
 }
 
 .droppable.is-over {
-    background-color: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(229, 0, 20, 0.12) 0%, rgba(229, 0, 20, 0.04) 100%);
+    box-shadow: inset 0 0 0 2px rgba(229, 0, 20, 0.35);
+    border-radius: 4px;
 }
 
 .tier-content {
@@ -115,6 +117,39 @@
     padding: 1rem;
     min-height: 140px;
     background-color: rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+/* ── Empty tier placeholder ── */
+.tier-empty-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    animation: fadeInPlaceholder 0.25s ease both;
+}
+
+.tier-empty-placeholder span {
+    border: 2px dashed rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    padding: 10px 28px;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.droppable.is-over .tier-empty-placeholder span {
+    border-color: rgba(229, 0, 20, 0.55);
+    color: rgba(229, 0, 20, 0.7);
+}
+
+@keyframes fadeInPlaceholder {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
 }
 
 
@@ -281,14 +316,39 @@
     overflow: hidden;
     cursor: grab;
     transition: transform 0.2s;
+    /* Snap-in when placed into a tier */
+    animation: snapIn 0.25s ease both;
+}
+
+@keyframes snapIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ── Save spinner ── */
+.save-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 .song-image.dragging {
     opacity: 0.3;
+    animation: none; /* cancel snapIn so inline opacity wins */
 }
 
 .song-image.overlay {
     cursor: grabbing;
+    animation: none;
 }
 
 .song-background {

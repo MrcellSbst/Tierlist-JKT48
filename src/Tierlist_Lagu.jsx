@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     DndContext,
@@ -66,7 +66,7 @@ import {
 
 
 
-const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContextMenu, isSelected, isDragMode }) => {
+const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContextMenu, isSelected, isDragMode, setlistImageInfo }) => {
     const style = {
         opacity: isSelected ? 0.5 : isDragging ? 0.3 : 1,
         cursor: isDragMode ? (dragOverlay ? 'grabbing' : 'grab') : 'pointer',
@@ -76,26 +76,6 @@ const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContext
         border: isSelected ? '2px solid #4CAF50' : 'none'
     };
 
-    // Get the selected setlist from localStorage
-    const selectedSetlist = localStorage.getItem('selectedSetlist') || "Aturan Anti Cinta";
-
-    // Map of special cases where the filename differs from the standard format
-    const specialCases = {
-        "BELIEVE": "BELIEVE",
-        "Fly! Team T": "Fly!_Team_T",
-        "Ingin Bertemu": "Ingin_Bertemu"
-    };
-
-    // Get the filename, either from special cases or by standard formatting
-    const imageFilename = specialCases[selectedSetlist] ||
-        selectedSetlist
-            .split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join('_');
-
-    // Special case for file extension
-    const extension = selectedSetlist === "Ingin Bertemu" ? 'webp' : 'jpg';
-
     return (
         <div
             className={`song-image ${isDragging ? 'dragging' : ''} ${dragOverlay ? 'overlay' : ''}`}
@@ -104,7 +84,7 @@ const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContext
             onContextMenu={(e) => onContextMenu && onContextMenu(e, song)}
         >
             <img
-                src={`/asset/Setlist/${imageFilename}.${extension}`}
+                src={`/asset/Setlist/${setlistImageInfo.filename}.${setlistImageInfo.extension}`}
                 alt={song.name}
                 className="song-background"
             />
@@ -113,7 +93,7 @@ const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContext
     );
 };
 
-const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelected, isDragMode }) => {
+const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelected, isDragMode, setlistImageInfo }) => {
     const {
         attributes,
         listeners,
@@ -154,6 +134,7 @@ const SortableImage = ({ image, isDragging, onImageClick, onContextMenu, isSelec
                 onContextMenu={onContextMenu}
                 isSelected={isSelected}
                 isDragMode={isDragMode}
+                setlistImageInfo={setlistImageInfo}
             />
         </div>
     );
@@ -205,81 +186,51 @@ const Tierlist = () => {
     useEffect(() => {
         const setlistName = localStorage.getItem('selectedSetlist') || "Aturan Anti Cinta";
         setSelectedSetlist(setlistName);
-        console.log('Loading songs for setlist:', setlistName);
 
-        // Load songs for the selected setlist
         const songList = setlistSongs[setlistName].map((songName, index) => ({
             id: `song-${songName}`,
             name: songName,
             containerId: 'image-pool',
             originalIndex: index
         }));
-        console.log('Initial song list:', songList);
 
-        // First set the initial song list
-        setSongs(songList);
-
-        // Then check for draft loading
         const draftId = localStorage.getItem('currentDraftId');
-        console.log('Current draft ID:', draftId);
 
         if (draftId) {
             const manualDrafts = JSON.parse(localStorage.getItem('tierlistManualDrafts') || '[]');
             const autoDrafts = JSON.parse(localStorage.getItem('tierlistAutoSaveDrafts') || '[]');
-
-            // Combine all drafts
             const allDrafts = [...manualDrafts, ...autoDrafts];
-            console.log('Available drafts:', allDrafts);
-
-            // Find the specific draft
             const draftToLoad = allDrafts.find(d => d.id.toString() === draftId.toString());
-            console.log('Found draft to load:', draftToLoad);
 
             if (draftToLoad) {
-                console.log('Loading draft with rows:', draftToLoad.rows);
-                console.log('Loading draft with songs:', draftToLoad.songs);
-
-                // Set the rows first
                 setRows(draftToLoad.rows || initialRows);
                 setTierlistTitle(draftToLoad.title || '');
 
-                // Update song positions from draft
                 const updatedSongs = songList.map(song => {
-                    // Find the saved song by matching both ID and name for extra safety
                     const savedSong = draftToLoad.songs.find(s =>
                         s.id === song.id ||
                         (s.id === `song-${song.name}` || s.id === `song-${song.id}`)
                     );
-                    console.log(`Mapping song ${song.id}:`, {
-                        found: !!savedSong,
-                        newContainer: savedSong?.containerId || 'image-pool'
-                    });
                     return savedSong ? { ...song, containerId: savedSong.containerId } : song;
                 });
-
-                console.log('Final updated songs:', updatedSongs);
                 setSongs(updatedSongs);
             } else {
-                console.log('No matching draft found for ID:', draftId);
+                setSongs(songList);
             }
         } else {
-            console.log('No draft ID found, starting fresh');
+            setSongs(songList);
         }
 
-        // Clear the current draft ID after loading
         localStorage.removeItem('currentDraftId');
     }, []);
 
     // Track changes in available items count
     useEffect(() => {
         const currentAvailable = songs.filter(song => song.containerId === 'image-pool').length;
-
-        // Only count as a change if the number actually changed
         if (currentAvailable !== availableCount) {
             setAvailableCount(currentAvailable);
             setLastAvailableCount(availableCount);
             setChangeCounter(prev => prev + 1);
-            console.log('Available count changed:', currentAvailable, 'Change counter:', changeCounter + 1);
         }
     }, [songs]);
 
@@ -364,25 +315,18 @@ const Tierlist = () => {
                 // Remove the dragged image from its current position
                 const newImages = prev.filter(img => img.id !== active.id);
 
-                // Find all images in the target container
-                const containerImages = newImages.filter(img => img.containerId === overId);
+                // Find the last index in the target container — O(n)
+                let lastContainerImageIndex = -1;
+                for (let idx = 0; idx < newImages.length; idx++) {
+                    if (newImages[idx].containerId === overId) lastContainerImageIndex = idx;
+                }
 
-                // Find the index after the last image in the target container
-                const lastContainerImageIndex = newImages.findIndex(img =>
-                    img.containerId === overId &&
-                    containerImages.indexOf(img) === containerImages.length - 1
-                );
-
-                // Create the updated image with new container
                 const updatedImage = { ...activeImage, containerId: overId };
 
-                // If there are no images in the container or we couldn't find the last image
-                if (containerImages.length === 0 || lastContainerImageIndex === -1) {
-                    // Just append to the end of the array
+                if (lastContainerImageIndex === -1) {
                     return [...newImages, updatedImage];
                 }
 
-                // Insert after the last image in the container
                 newImages.splice(lastContainerImageIndex + 1, 0, updatedImage);
                 return newImages;
             });
@@ -407,25 +351,18 @@ const Tierlist = () => {
                 // Remove the dragged image from its current position
                 const newImages = prev.filter(img => img.id !== active.id);
 
-                // Find all images in the target container
-                const containerImages = newImages.filter(img => img.containerId === overContainer);
+                // Find the last index in the target container — O(n)
+                let lastContainerImageIndex = -1;
+                for (let idx = 0; idx < newImages.length; idx++) {
+                    if (newImages[idx].containerId === overContainer) lastContainerImageIndex = idx;
+                }
 
-                // Find the index after the last image in the target container
-                const lastContainerImageIndex = newImages.findIndex(img =>
-                    img.containerId === overContainer &&
-                    containerImages.indexOf(img) === containerImages.length - 1
-                );
-
-                // Create the updated image with new container
                 const updatedImage = { ...activeImage, containerId: overContainer };
 
-                // If there are no images in the container or we couldn't find the last image
-                if (containerImages.length === 0 || lastContainerImageIndex === -1) {
-                    // Just append to the end of the array
+                if (lastContainerImageIndex === -1) {
                     return [...newImages, updatedImage];
                 }
 
-                // Insert after the last image in the container
                 newImages.splice(lastContainerImageIndex + 1, 0, updatedImage);
                 return newImages;
             });
@@ -506,20 +443,45 @@ const Tierlist = () => {
         setRows(prev => [...prev, newRow]);
     };
 
-    const getImagesForContainer = (containerId) => {
-        const filteredImages = songs.filter(img => {
-            const matchesContainer = img.containerId === containerId;
-            const matchesSearch = containerId === 'image-pool'
-                ? img.name.toLowerCase().includes(searchTerm.toLowerCase())
-                : true;
-            return matchesContainer && matchesSearch;
-        });
-        // Sort by original index when in image pool
-        if (containerId === 'image-pool') {
-            return filteredImages.sort((a, b) => a.originalIndex - b.originalIndex);
+    // Compute setlist image info once (was reading localStorage on every DraggableImage render)
+    const setlistImageInfo = useMemo(() => {
+        const name = selectedSetlist || localStorage.getItem('selectedSetlist') || "Aturan Anti Cinta";
+        const specialCases = {
+            "BELIEVE": "BELIEVE",
+            "Fly! Team T": "Fly!_Team_T",
+            "Ingin Bertemu": "Ingin_Bertemu"
+        };
+        const filename = specialCases[name] ||
+            name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
+        const extension = name === "Ingin Bertemu" ? 'webp' : 'jpg';
+        return { filename, extension };
+    }, [selectedSetlist]);
+
+    // Pre-group songs by containerId — rebuilt only when songs state changes
+    const songsByContainer = useMemo(() => {
+        const map = {};
+        for (const s of songs) {
+            if (!map[s.containerId]) map[s.containerId] = [];
+            map[s.containerId].push(s);
         }
-        return filteredImages;
-    };
+        return map;
+    }, [songs]);
+
+    const getImagesForContainer = useCallback((containerId) => {
+        const containerSongs = songsByContainer[containerId] || [];
+
+        if (containerId === 'image-pool' && searchTerm) {
+            const lower = searchTerm.toLowerCase();
+            const filtered = containerSongs.filter(s => s.name.toLowerCase().includes(lower));
+            return filtered.sort((a, b) => a.originalIndex - b.originalIndex);
+        }
+
+        if (containerId === 'image-pool') {
+            return [...containerSongs].sort((a, b) => a.originalIndex - b.originalIndex);
+        }
+
+        return containerSongs;
+    }, [songsByContainer, searchTerm]);
 
     const activeImage = activeId ? songs.find(img => img.id === activeId) : null;
 
@@ -543,8 +505,11 @@ const Tierlist = () => {
         }
     };
 
+    const [isSaving, setIsSaving] = useState(false);
+
     const handleSave = async () => {
-        if (!tierlistRef.current) return;
+        if (!tierlistRef.current || isSaving) return;
+        setIsSaving(true);
 
         try {
             const rowsContainer = tierlistRef.current.querySelector('.tier-rows-container');
@@ -666,6 +631,8 @@ const Tierlist = () => {
         } catch (error) {
             console.error('Error saving tierlist:', error);
             alert('Failed to save image. Please try again or use a screenshot instead.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -673,28 +640,22 @@ const Tierlist = () => {
     useEffect(() => {
         const updateWidth = () => {
             if (titleInputRef.current && tierlistRef.current) {
-                // Get the width of the first tier row for reference
                 const firstRow = tierlistRef.current.querySelector('.tier-row');
                 if (!firstRow) return;
 
                 const rowWidth = firstRow.offsetWidth;
 
-                // Create a hidden span to measure text width
-                const span = document.createElement('span');
-                span.className = 'tierlist-title-measure';
-                span.style.font = window.getComputedStyle(titleInputRef.current).font;
-                span.textContent = tierlistTitle || titleInputRef.current.placeholder;
-                document.body.appendChild(span);
+                // Use canvas for text measurement — no DOM insertion/removal
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.font = window.getComputedStyle(titleInputRef.current).font;
+                const text = tierlistTitle || titleInputRef.current.placeholder || '';
+                const textWidth = Math.ceil(ctx.measureText(text).width);
+                const padding = 24;
+                const newWidth = Math.min(Math.max(300, textWidth + padding), rowWidth);
 
-                // Calculate width with padding
-                const textWidth = span.offsetWidth;
-                const padding = 24; // 12px padding on each side
-                const newWidth = Math.min(Math.max(300, textWidth + padding), rowWidth); // between 300px and row width
-
-                document.body.removeChild(span);
                 setInputWidth(newWidth);
 
-                // Update position for header title
                 const rowRect = firstRow.getBoundingClientRect();
                 const viewportWidth = document.documentElement.clientWidth;
                 const rowCenterX = rowRect.left + (rowRect.width / 2);
@@ -799,15 +760,15 @@ const Tierlist = () => {
 
                     newImages = newImages.filter(img => img.id !== selId);
 
-                    const containerImages = newImages.filter(img => img.containerId === tierId);
-                    const lastContainerImageIndex = newImages.findIndex(img =>
-                        img.containerId === tierId &&
-                        containerImages.indexOf(img) === containerImages.length - 1
-                    );
+                    // Find the last index in the target container — O(n)
+                    let lastContainerImageIndex = -1;
+                    for (let idx = 0; idx < newImages.length; idx++) {
+                        if (newImages[idx].containerId === tierId) lastContainerImageIndex = idx;
+                    }
 
                     const updatedImage = { ...activeImage, containerId: tierId };
 
-                    if (containerImages.length === 0 || lastContainerImageIndex === -1) {
+                    if (lastContainerImageIndex === -1) {
                         newImages = [...newImages, updatedImage];
                     } else {
                         newImages.splice(lastContainerImageIndex + 1, 0, updatedImage);
@@ -846,9 +807,7 @@ const Tierlist = () => {
 
     // Auto-save effect
     useEffect(() => {
-        console.log('Change counter:', changeCounter);
         if (changeCounter >= 2) {
-            console.log('Auto-saving draft...');
             const draft = {
                 type: 'song',
                 setlist: selectedSetlist,
@@ -864,37 +823,27 @@ const Tierlist = () => {
             manageDrafts(draft, true);
             setChangeCounter(0);
 
-            // Show auto-save indicator
             setShowAutoSave(true);
             setTimeout(() => setShowAutoSave(false), 2000);
-            console.log('Draft auto-saved');
         }
     }, [changeCounter, rows, songs, tierlistTitle, selectedSetlist]);
 
     // Function to manage drafts in localStorage
     const manageDrafts = (newDraft, isAutoSave = false) => {
-        console.log('Managing drafts, isAutoSave:', isAutoSave);
         const storageKey = isAutoSave ? 'tierlistAutoSaveDrafts' : 'tierlistManualDrafts';
         const maxDrafts = isAutoSave ? 3 : 5;
 
         let drafts = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        console.log('Current drafts:', drafts);
-        drafts = drafts.filter(d => d.type === 'song' && d.setlist === selectedSetlist); // Only keep drafts of the same type and setlist
-
-        // Add new draft
+        drafts = drafts.filter(d => d.type === 'song' && d.setlist === selectedSetlist);
         drafts.unshift({
             ...newDraft,
             type: 'song',
             setlist: selectedSetlist,
             completion: calculateCompletion(newDraft.songs),
             isAutoSave,
-            id: Date.now()  // Unique ID for the draft
+            id: Date.now()
         });
-
-        // Keep only the most recent drafts
         drafts = drafts.slice(0, maxDrafts);
-        console.log('Updated drafts:', drafts);
-
         localStorage.setItem(storageKey, JSON.stringify(drafts));
     };
 
@@ -1032,6 +981,11 @@ const Tierlist = () => {
                                             items={getImagesForContainer(row.id).map(img => img.id)}
                                             strategy={rectSortingStrategy}
                                         >
+                                            {getImagesForContainer(row.id).length === 0 && (
+                                                <div className="tier-empty-placeholder">
+                                                    <span>Drop here</span>
+                                                </div>
+                                            )}
                                             {getImagesForContainer(row.id).map((image) => (
                                                 <SortableImage
                                                     key={image.id}
@@ -1041,6 +995,7 @@ const Tierlist = () => {
                                                     onContextMenu={handleImageRightClick}
                                                     isSelected={selectedImages.has(image.id)}
                                                     isDragMode={isDragMode}
+                                                    setlistImageInfo={setlistImageInfo}
                                                 />
                                             ))}
                                         </SortableContext>
@@ -1094,11 +1049,16 @@ const Tierlist = () => {
                         <Button
                             variant="contained"
                             color="success"
-                            startIcon={<Save />}
+                            startIcon={isSaving ? (
+                                <span className="save-spinner" />
+                            ) : (
+                                <Save />
+                            )}
                             onClick={handleSave}
+                            disabled={isSaving}
                             className="action-button"
                         >
-                            Save as Image
+                            {isSaving ? 'Saving…' : 'Save as Image'}
                         </Button>
                     </div>
 
@@ -1177,6 +1137,7 @@ const Tierlist = () => {
                                             onContextMenu={handleImageRightClick}
                                             isSelected={selectedImages.has(image.id)}
                                             isDragMode={isDragMode}
+                                            setlistImageInfo={setlistImageInfo}
                                         />
                                     ))}
                                 </SortableContext>
@@ -1190,6 +1151,7 @@ const Tierlist = () => {
                                 song={songs.find(img => img.id === activeId)}
                                 dragOverlay
                                 isDragMode={isDragMode}
+                                setlistImageInfo={setlistImageInfo}
                             />
                         ) : null}
                     </DragOverlay>

@@ -207,6 +207,33 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
 
     const IDLE_SPEED = 0.09; // radians per second (~5°/s)
 
+    // Pre-compute font size + truncated label for every entry once when entries change.
+    // Without this, the measureText shrink-loop runs on every animation frame (60fps × N entries).
+    const labelCache = useMemo(() => {
+        const n = entries.length;
+        if (n === 0) return [];
+
+        // Use an offscreen canvas so we never touch the visible canvas
+        const offscreen = document.createElement('canvas');
+        const ctx = offscreen.getContext('2d');
+
+        // Use the same radius formula as the visible canvas (680px wide/tall)
+        const radius = Math.min(340, 340) - 8; // 332px
+        const maxWidth = radius * 0.72;
+        const maxFontSize = n > 30 ? 14 : n > 20 ? 17 : n > 12 ? 20 : 24;
+
+        return entries.map(entry => {
+            let fontSize = maxFontSize;
+            ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
+            const rawLabel = entry.label.length > 18 ? entry.label.slice(0, 16) + '\u2026' : entry.label;
+            while (ctx.measureText(rawLabel).width > maxWidth && fontSize > 8) {
+                fontSize--;
+                ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
+            }
+            return { fontSize, label: rawLabel };
+        });
+    }, [entries]);
+
     const drawWheel = useCallback((angle) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -248,7 +275,10 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
             ctx.lineWidth = 1.5;
             ctx.stroke();
 
-            // Label — radial orientation, always readable
+            // Label — use cached font size and text (no measureText loop per frame)
+            const cached = labelCache[i];
+            if (!cached) return;
+
             const mid = startA + sliceAngle / 2;
             const labelR = radius * 0.60;
             const lx = cx + labelR * Math.cos(mid);
@@ -258,23 +288,12 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
             ctx.translate(lx, ly);
             const isRightHalf = Math.cos(mid) >= 0;
             ctx.rotate(isRightHalf ? mid : mid + Math.PI);
-
-            const maxFontSize = n > 30 ? 14 : n > 20 ? 17 : n > 12 ? 20 : 24;
-            let fontSize = maxFontSize;
-            const maxWidth = radius * 0.72;
-            ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
-
-            while (ctx.measureText(entry.label).width > maxWidth && fontSize > 8) {
-                fontSize--;
-                ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
-            }
-
-            const label = entry.label.length > 18 ? entry.label.slice(0, 16) + '…' : entry.label;
+            ctx.font = `bold ${cached.fontSize}px 'Segoe UI', sans-serif`;
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.shadowColor = 'rgba(0,0,0,0.8)';
             ctx.shadowBlur = 4;
-            ctx.fillText(label, 0, fontSize / 3);
+            ctx.fillText(cached.label, 0, cached.fontSize / 3);
             ctx.restore();
         });
 
@@ -289,7 +308,7 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
         ctx.strokeStyle = '#aaa';
         ctx.lineWidth = 2;
         ctx.stroke();
-    }, [entries]);
+    }, [entries, labelCache]);
 
     // Easing: ease-out-cubic then end at exact stop
     const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);

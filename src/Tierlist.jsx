@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     DndContext,
@@ -152,7 +152,88 @@ const exMemberFiles = memberData.exMemberFiles || [];
 const timLoveList = memberData.tim_love || [];
 const timLoveSet = new Set(timLoveList.map(f => f.toLowerCase()));
 
+// Shared image-list builder — used by both initial load and handleReset
+const buildImageList = (tierlistTypeParam, memberType, generation, videoType) => {
+    let imageList = [];
 
+    if (tierlistTypeParam === 'setlist') {
+        imageList = setlistFiles.map((filename, index) => ({
+            id: `setlist-${filename}`,
+            src: `/asset/Setlist/${filename}`,
+            name: formatSetlistName(filename),
+            containerId: 'image-pool',
+            originalIndex: index
+        }));
+    } else if (tierlistTypeParam === 'ramadan') {
+        imageList = ssRamadanFiles.map((filename, index) => ({
+            id: `ramadan-${filename}`,
+            src: `/asset/SSRamadan/${filename}`,
+            name: formatSetlistName(filename),
+            containerId: 'image-pool',
+            originalIndex: index
+        }));
+    } else if (tierlistTypeParam === 'video') {
+        let videoFiles = [];
+        if (videoType === 'all') videoFiles = [...spvFiles, ...mvFiles];
+        else if (videoType === 'mv') videoFiles = mvFiles;
+        else if (videoType === 'spv') videoFiles = spvFiles;
+
+        imageList = videoFiles.map((filename, index) => ({
+            id: `video-${filename}`,
+            src: `/asset/SPV_MV/${filename}`,
+            name: formatVideoName(filename),
+            containerId: 'image-pool',
+            originalIndex: index
+        }));
+    } else {
+        const matchesGeneration = (filename) => {
+            if (generation === 'all') return true;
+            if (generation === 'genvall') {
+                const base = filename.includes('/') ? filename.split('/').pop() : filename;
+                return /^JKT48VGen\d+_/i.test(base) || /^JKT48V_Gen\d+_/i.test(base);
+            }
+            const base = filename.includes('/') ? filename.split('/').pop() : filename;
+            if (generation.toLowerCase().startsWith('genv')) {
+                const n = generation.slice(4);
+                return base.startsWith(`JKT48V_Gen${n}_`) || base.startsWith(`JKT48VGen${n}_`);
+            }
+            if (generation.toLowerCase().startsWith('gen')) {
+                return base.startsWith(`Gen${generation.slice(3)}_`);
+            }
+            return true;
+        };
+
+        let currentIndex = 0;
+        if (memberType === 'active' || memberType === 'all') {
+            const active = activeMemberFiles
+                .filter(matchesGeneration)
+                .map((filename) => ({
+                    id: `member-${filename}`,
+                    src: `/asset/member_active/${filename}`,
+                    name: formatMemberName(filename),
+                    isTimLove: timLoveSet.has(filename.toLowerCase()),
+                    containerId: 'image-pool',
+                    originalIndex: currentIndex++
+                }));
+            imageList = [...imageList, ...active];
+        }
+        if (memberType === 'ex' || memberType === 'all') {
+            const ex = exMemberFiles
+                .filter(matchesGeneration)
+                .map((filename) => ({
+                    id: `member-${filename}`,
+                    src: `/asset/exmember/${filename.replace(/\\/g, '/')}`,
+                    name: formatMemberName(filename),
+                    isTimLove: timLoveSet.has(filename.toLowerCase()),
+                    containerId: 'image-pool',
+                    originalIndex: currentIndex++
+                }));
+            imageList = [...imageList, ...ex];
+        }
+    }
+
+    return imageList;
+};
 
 
 
@@ -272,13 +353,10 @@ const Tierlist = () => {
     // Track changes in available items count
     useEffect(() => {
         const currentAvailable = images.filter(img => img.containerId === 'image-pool').length;
-
-        // Only count as a change if the number actually changed
         if (currentAvailable !== availableCount) {
             setAvailableCount(currentAvailable);
             setLastAvailableCount(availableCount);
             setChangeCounter(prev => prev + 1);
-            console.log('Available count changed:', currentAvailable, 'Change counter:', changeCounter + 1);
         }
     }, [images]);
 
@@ -344,9 +422,7 @@ const Tierlist = () => {
 
     // Auto-save effect
     useEffect(() => {
-        console.log('Change counter:', changeCounter);
-        if (changeCounter >= 5) {  // Changed from 2 to 5
-            console.log('Auto-saving draft...');
+        if (changeCounter >= 5) {
             const draft = {
                 type: tierlistType,
                 rows: rows,
@@ -360,7 +436,6 @@ const Tierlist = () => {
             };
             manageDrafts(draft, true);
             setChangeCounter(0);
-            console.log('Draft auto-saved');
         }
     }, [changeCounter, rows, images, tierlistTitle, tierlistType]);
 
@@ -373,27 +448,19 @@ const Tierlist = () => {
 
     // Function to manage drafts in localStorage
     const manageDrafts = (newDraft, isAutoSave = false) => {
-        console.log('Managing drafts, isAutoSave:', isAutoSave);
         const storageKey = isAutoSave ? 'tierlistAutoSaveDrafts' : 'tierlistManualDrafts';
         const maxDrafts = isAutoSave ? 3 : 5;
 
         let drafts = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        console.log('Current drafts:', drafts);
-        drafts = drafts.filter(d => d.type === tierlistType); // Only keep drafts of the same type
-
-        // Add new draft
+        drafts = drafts.filter(d => d.type === tierlistType);
         drafts.unshift({
             ...newDraft,
             type: tierlistType,
             completion: calculateCompletion(newDraft.images),
             isAutoSave,
-            id: Date.now()  // Unique ID for the draft
+            id: Date.now()
         });
-
-        // Keep only the most recent drafts
         drafts = drafts.slice(0, maxDrafts);
-        console.log('Updated drafts:', drafts);
-
         localStorage.setItem(storageKey, JSON.stringify(drafts));
     };
 
@@ -405,140 +472,28 @@ const Tierlist = () => {
         const draftId = localStorage.getItem('currentDraftId');
 
         setTierlistType(tierlistType);
-        console.log('Initial load with:', { tierlistType, memberType, generation, videoType, draftId });
 
-        // Load the base image list
-        let imageList = [];
+        let imageList = buildImageList(tierlistType, memberType, generation, videoType);
 
-        if (tierlistType === 'setlist') {
-            imageList = setlistFiles.map((filename, index) => ({
-                id: `setlist-${filename}`,
-                src: `/asset/Setlist/${filename}`,
-                name: formatSetlistName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else if (tierlistType === 'ramadan') {
-            imageList = ssRamadanFiles.map((filename, index) => ({
-                id: `ramadan-${filename}`,
-                src: `/asset/SSRamadan/${filename}`,
-                name: formatSetlistName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else if (tierlistType === 'video') {
-            let videoFiles = [];
-            if (videoType === 'all') {
-                videoFiles = [...spvFiles, ...mvFiles];
-            } else if (videoType === 'mv') {
-                videoFiles = mvFiles;
-            } else if (videoType === 'spv') {
-                videoFiles = spvFiles;
-            }
-
-            imageList = videoFiles.map((filename, index) => ({
-                id: `video-${filename}`,
-                src: `/asset/SPV_MV/${filename}`,
-                name: formatVideoName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else {
-            // Helper function to check if a filename matches the generation
-            const matchesGeneration = (filename) => {
-                if (generation === 'all') return true;
-                if (generation === 'genvall') {
-                    const baseFilename = filename.includes('/') ? filename.split('/').pop() : filename;
-                    return /^JKT48VGen\d+_/i.test(baseFilename) || /^JKT48V_Gen\d+_/i.test(baseFilename);
-                }
-
-                const baseFilename = filename.includes('/') ? filename.split('/').pop() : filename;
-
-                // Handle JKT48V generations generically: genv1, genv2, ...
-                if (generation.toLowerCase().startsWith('genv')) {
-                    const vGenNumber = generation.slice(4); // after 'genv'
-                    const vPrefixUnderscore = `JKT48V_Gen${vGenNumber}_`;
-                    const vPrefixCompact = `JKT48VGen${vGenNumber}_`;
-                    return baseFilename.startsWith(vPrefixUnderscore) || baseFilename.startsWith(vPrefixCompact);
-                }
-
-                // Handle regular generations: gen1, gen2, ...
-                if (generation.toLowerCase().startsWith('gen')) {
-                    const prefix = `Gen${generation.slice(3)}_`;
-                    return baseFilename.startsWith(prefix);
-                }
-
-                // Fallback: if pattern unknown, include
-                return true;
-            };
-
-            let currentIndex = 0;
-
-            // Load active members if needed
-            if (memberType === 'active' || memberType === 'all') {
-                const activeMemberImages = activeMemberFiles
-                    .filter(filename => matchesGeneration(filename))
-                    .map((filename) => ({
-                        id: `member-${filename}`,
-                        src: `/asset/member_active/${filename}`,
-                        name: formatMemberName(filename),
-                        isTimLove: timLoveSet.has(filename.toLowerCase()),
-                        containerId: 'image-pool',
-                        originalIndex: currentIndex++
-                    }));
-                imageList = [...imageList, ...activeMemberImages];
-            }
-
-            // Load ex-members if needed
-            if (memberType === 'ex' || memberType === 'all') {
-                const exMembersList = exMemberFiles
-                    .filter(filename => matchesGeneration(filename))
-                    .map((filename) => ({
-                        id: `member-${filename}`,
-                        src: `/asset/exmember/${filename.replace(/\\/g, '/')}`,
-                        name: formatMemberName(filename),
-                        isTimLove: timLoveSet.has(filename.toLowerCase()),
-                        containerId: 'image-pool',
-                        originalIndex: currentIndex++
-                    }));
-                imageList = [...imageList, ...exMembersList];
-            }
-        }
-
-        // If we have a draft ID, try to load the draft
         if (draftId) {
-            console.log('Loading draft with ID:', draftId);
             const manualDrafts = JSON.parse(localStorage.getItem('tierlistManualDrafts') || '[]');
             const autoDrafts = JSON.parse(localStorage.getItem('tierlistAutoSaveDrafts') || '[]');
             const allDrafts = [...manualDrafts, ...autoDrafts];
-
             const draftToLoad = allDrafts.find(d => d.id.toString() === draftId.toString());
-            console.log('Found draft:', draftToLoad);
 
             if (draftToLoad) {
-                // Apply draft data
                 setRows(draftToLoad.rows || initialRows);
                 setTierlistTitle(draftToLoad.title || '');
-
-                // Apply image positions from draft
                 imageList = imageList.map(img => {
                     const savedImage = draftToLoad.images.find(i => i.id === img.id);
-                    if (savedImage) {
-                        console.log(`Moving ${img.id} to ${savedImage.containerId}`);
-                        return { ...img, containerId: savedImage.containerId };
-                    }
-                    return img;
+                    return savedImage ? { ...img, containerId: savedImage.containerId } : img;
                 });
             }
         } else {
-            // Starting fresh - use initial rows
-            console.log('Starting fresh tierlist');
             setRows(initialRows);
             setTierlistTitle('');
         }
 
-        // Set the final image list
-        console.log('Setting final image list:', imageList);
         setImages(imageList);
     }, []);
 
@@ -591,21 +546,16 @@ const Tierlist = () => {
                 // Remove the dragged image from its current position
                 const newImages = prev.filter(img => img.id !== active.id);
 
-                // Find all images in the target container
-                const containerImages = newImages.filter(img => img.containerId === overId);
-
-                // Find the index after the last image in the target container
-                const lastContainerImageIndex = newImages.findIndex(img =>
-                    img.containerId === overId &&
-                    containerImages.indexOf(img) === containerImages.length - 1
-                );
+                // Find the last index in the array belonging to the target container — O(n)
+                let lastContainerImageIndex = -1;
+                for (let idx = 0; idx < newImages.length; idx++) {
+                    if (newImages[idx].containerId === overId) lastContainerImageIndex = idx;
+                }
 
                 // Create the updated image with new container
                 const updatedImage = { ...activeImage, containerId: overId };
 
-                // If there are no images in the container or we couldn't find the last image
-                if (containerImages.length === 0 || lastContainerImageIndex === -1) {
-                    // Just append to the end of the array
+                if (lastContainerImageIndex === -1) {
                     return [...newImages, updatedImage];
                 }
 
@@ -649,21 +599,16 @@ const Tierlist = () => {
                 // Remove the dragged image from its current position
                 const newImages = prev.filter(img => img.id !== active.id);
 
-                // Find all images in the target container
-                const containerImages = newImages.filter(img => img.containerId === overContainer);
-
-                // Find the index after the last image in the target container
-                const lastContainerImageIndex = newImages.findIndex(img =>
-                    img.containerId === overContainer &&
-                    containerImages.indexOf(img) === containerImages.length - 1
-                );
+                // Find the last index in the array belonging to the target container — O(n)
+                let lastContainerImageIndex = -1;
+                for (let idx = 0; idx < newImages.length; idx++) {
+                    if (newImages[idx].containerId === overContainer) lastContainerImageIndex = idx;
+                }
 
                 // Create the updated image with new container
                 const updatedImage = { ...activeImage, containerId: overContainer };
 
-                // If there are no images in the container or we couldn't find the last image
-                if (containerImages.length === 0 || lastContainerImageIndex === -1) {
-                    // Just append to the end of the array
+                if (lastContainerImageIndex === -1) {
                     return [...newImages, updatedImage];
                 }
 
@@ -731,56 +676,57 @@ const Tierlist = () => {
         setRows(prev => [...prev, newRow]);
     };
 
-    const getImagesForContainer = (containerId) => {
-        const filteredImages = images.filter(img => {
-            if (img.containerId !== containerId) return false;
+    // Pre-group images by containerId — rebuilt only when `images` state changes,
+    // not on every render. O(1) lookup inside getImagesForContainer during drag.
+    const imagesByContainer = useMemo(() => {
+        const map = {};
+        for (const img of images) {
+            if (!map[img.containerId]) map[img.containerId] = [];
+            map[img.containerId].push(img);
+        }
+        return map;
+    }, [images]);
 
-            if (containerId === 'image-pool' && searchTerm) {
+    const getImagesForContainer = useCallback((containerId) => {
+        const containerImages = imagesByContainer[containerId] || [];
+
+        if (containerId === 'image-pool' && searchTerm) {
+            const searchLower = searchTerm.toLowerCase();
+            const rawWords = searchLower.split(/\s+/).filter(Boolean);
+            const mergedWords = [];
+            for (let i = 0; i < rawWords.length; i++) {
+                const word = rawWords[i];
+                const next = rawWords[i + 1];
+                if ((word === 'gen' || word === 'genv') && next && /^\d+$/.test(next)) {
+                    mergedWords.push(`${word}${next}`);
+                    i++;
+                    continue;
+                }
+                mergedWords.push(word);
+            }
+
+            const filtered = containerImages.filter(img => {
                 if (!img.id || typeof img.id !== 'string') return false;
-
                 const searchableName = parseNameForSearch(img.id);
                 const searchableDisplay = `${searchableName} ${(img.name || '').toLowerCase()}`;
-                const searchLower = searchTerm.toLowerCase();
-
-                // Normalize search terms and merge patterns like "gen 1" -> "gen1"
-                const rawWords = searchLower.split(/\s+/).filter(Boolean);
-                const mergedWords = [];
-                for (let i = 0; i < rawWords.length; i++) {
-                    const word = rawWords[i];
-                    const next = rawWords[i + 1];
-                    if ((word === 'gen' || word === 'genv') && next && /^\d+$/.test(next)) {
-                        mergedWords.push(`${word}${next}`);
-                        i++; // skip next
-                        continue;
-                    }
-                    mergedWords.push(word);
-                }
-
-                const searchableTokens = searchableName.split(/\s+/).filter(Boolean);
-
-                // Require every search token to match: gens must match exact token; others substring match
-                const matches = mergedWords.every(word => {
+                return mergedWords.every(word => {
                     if (/^genv?\d+$/i.test(word)) {
                         const re = new RegExp(`\\b${word}\\b`, 'i');
                         return re.test(searchableName);
                     }
                     return searchableDisplay.includes(word);
                 });
+            });
 
-                return matches;
-            }
-
-            return true;
-        });
-
-        if (containerId === 'image-pool') {
-            // Sort the image pool by immutable originalIndex so items
-            // return to their initial positions when sent back to pool
-            return filteredImages.sort((a, b) => a.originalIndex - b.originalIndex);
+            return filtered.sort((a, b) => a.originalIndex - b.originalIndex);
         }
 
-        return filteredImages;
-    };
+        if (containerId === 'image-pool') {
+            return [...containerImages].sort((a, b) => a.originalIndex - b.originalIndex);
+        }
+
+        return containerImages;
+    }, [imagesByContainer, searchTerm]);
 
 
 
@@ -788,112 +734,21 @@ const Tierlist = () => {
     const activeImage = activeId ? images.find(img => img.id === activeId) : null;
 
     const handleReset = () => {
-        // Reset rows to initial state
         setRows([...initialRows]);
-
-        // Reset images to initial state
-        const tierlistType = localStorage.getItem('tierlistType') || 'member';
+        const tierlistTypeVal = localStorage.getItem('tierlistType') || 'member';
         const memberType = localStorage.getItem('memberType') || 'active';
         const generation = localStorage.getItem('generation') || 'all';
         const videoType = localStorage.getItem('videoType') || 'all';
-
-        let imageList = [];
-
-        if (tierlistType === 'setlist') {
-            imageList = setlistFiles.map((filename, index) => ({
-                id: `setlist-${filename}`,
-                src: `/asset/Setlist/${filename}`,
-                name: formatSetlistName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else if (tierlistType === 'ramadan') {
-            imageList = ssRamadanFiles.map((filename, index) => ({
-                id: `ramadan-${filename}`,
-                src: `/asset/SSRamadan/${filename}`,
-                name: formatSetlistName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else if (tierlistType === 'video') {
-            let videoFiles = [];
-            if (videoType === 'all') {
-                videoFiles = [...spvFiles, ...mvFiles];
-            } else if (videoType === 'mv') {
-                videoFiles = mvFiles;
-            } else if (videoType === 'spv') {
-                videoFiles = spvFiles;
-            }
-
-            imageList = videoFiles.map((filename, index) => ({
-                id: `video-${filename}`,
-                src: `/asset/SPV_MV/${filename}`,
-                name: formatVideoName(filename),
-                containerId: 'image-pool',
-                originalIndex: index
-            }));
-        } else {
-            // Helper function to check if a filename matches the generation
-            const matchesGeneration = (filename) => {
-                if (generation === 'all') return true;
-
-                const baseFilename = filename.includes('/') ? filename.split('/').pop() : filename;
-
-                // Handle JKT48V generations generically: genv1, genv2, ...
-                if (generation.toLowerCase().startsWith('genv')) {
-                    const vGenNumber = generation.slice(4); // after 'genv'
-                    const vPrefix = `JKT48V_Gen${vGenNumber}_`;
-                    return baseFilename.startsWith(vPrefix);
-                }
-
-                // Handle regular generations: gen1, gen2, ...
-                if (generation.toLowerCase().startsWith('gen')) {
-                    const prefix = `Gen${generation.slice(3)}_`;
-                    return baseFilename.startsWith(prefix);
-                }
-
-                // Fallback: if pattern unknown, include
-                return true;
-            };
-
-            let currentIndex = 0;
-
-            // Load active members if needed
-            if (memberType === 'active' || memberType === 'all') {
-                const activeMemberImages = activeMemberFiles
-                    .filter(filename => matchesGeneration(filename))
-                    .map((filename) => ({
-                        id: `member-${filename}`,
-                        src: `/asset/member_active/${filename}`,
-                        name: formatMemberName(filename),
-                        isTimLove: timLoveSet.has(filename.toLowerCase()),
-                        containerId: 'image-pool',
-                        originalIndex: currentIndex++
-                    }));
-                imageList = [...imageList, ...activeMemberImages];
-            }
-
-            // Load ex-members if needed
-            if (memberType === 'ex' || memberType === 'all') {
-                const exMembersList = exMemberFiles
-                    .filter(filename => matchesGeneration(filename))
-                    .map((filename) => ({
-                        id: `member-${filename}`,
-                        src: `/asset/exmember/${filename.replace(/\\/g, '/')}`,
-                        name: formatMemberName(filename),
-                        isTimLove: timLoveSet.has(filename.toLowerCase()),
-                        containerId: 'image-pool',
-                        originalIndex: currentIndex++
-                    }));
-                imageList = [...imageList, ...exMembersList];
-            }
-        }
-
-        setImages(imageList);
+        setImages(buildImageList(tierlistTypeVal, memberType, generation, videoType));
     };
 
+
+
+    const [isSaving, setIsSaving] = useState(false);
+
     const handleSave = async () => {
-        if (!tierlistRef.current) return;
+        if (!tierlistRef.current || isSaving) return;
+        setIsSaving(true);
 
         try {
             const rowsContainer = tierlistRef.current.querySelector('.tier-rows-container');
@@ -1020,6 +875,8 @@ const Tierlist = () => {
         } catch (error) {
             console.error('Error saving tierlist:', error);
             alert('Failed to save image. Please try again or use a screenshot instead.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -1027,25 +884,20 @@ const Tierlist = () => {
     useEffect(() => {
         const updateWidth = () => {
             if (titleInputRef.current && tierlistRef.current) {
-                // Get the width of the first tier row for reference
                 const firstRow = tierlistRef.current.querySelector('.tier-row');
                 if (!firstRow) return;
 
                 const rowWidth = firstRow.offsetWidth;
 
-                // Create a hidden span to measure text width
-                const span = document.createElement('span');
-                span.className = 'tierlist-title-measure';
-                span.style.font = window.getComputedStyle(titleInputRef.current).font;
-                span.textContent = tierlistTitle || titleInputRef.current.placeholder;
-                document.body.appendChild(span);
+                // Use canvas for text measurement — no DOM insertion/removal needed
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.font = window.getComputedStyle(titleInputRef.current).font;
+                const text = tierlistTitle || titleInputRef.current.placeholder || '';
+                const textWidth = Math.ceil(ctx.measureText(text).width);
+                const padding = 24;
+                const newWidth = Math.min(Math.max(300, textWidth + padding), rowWidth);
 
-                // Calculate width with padding
-                const textWidth = span.offsetWidth;
-                const padding = 24; // 12px padding on each side
-                const newWidth = Math.min(Math.max(300, textWidth + padding), rowWidth); // between 300px and row width
-
-                document.body.removeChild(span);
                 setInputWidth(newWidth);
 
                 // Update position for header title
@@ -1120,18 +972,15 @@ const Tierlist = () => {
                     // Remove the image from its current position
                     newImages = newImages.filter(img => img.id !== selId);
 
-                    // Find all images currently in the target container
-                    const containerImages = newImages.filter(img => img.containerId === tierId);
-
-                    // Find the index after the last image in the target container
-                    const lastContainerImageIndex = newImages.findIndex(img =>
-                        img.containerId === tierId &&
-                        containerImages.indexOf(img) === containerImages.length - 1
-                    );
+                    // Find the last index in the target container — O(n)
+                    let lastContainerImageIndex = -1;
+                    for (let idx = 0; idx < newImages.length; idx++) {
+                        if (newImages[idx].containerId === tierId) lastContainerImageIndex = idx;
+                    }
 
                     const updatedImage = { ...activeImage, containerId: tierId };
 
-                    if (containerImages.length === 0 || lastContainerImageIndex === -1) {
+                    if (lastContainerImageIndex === -1) {
                         newImages = [...newImages, updatedImage];
                     } else {
                         newImages.splice(lastContainerImageIndex + 1, 0, updatedImage);
@@ -1325,6 +1174,11 @@ const Tierlist = () => {
                                             items={getImagesForContainer(row.id).map(img => img.id)}
                                             strategy={rectSortingStrategy}
                                         >
+                                            {getImagesForContainer(row.id).length === 0 && (
+                                                <div className="tier-empty-placeholder">
+                                                    <span>Drop here</span>
+                                                </div>
+                                            )}
                                             {getImagesForContainer(row.id).map((image) => (
                                                 <SortableImage
                                                     key={image.id}
@@ -1387,11 +1241,16 @@ const Tierlist = () => {
                         <Button
                             variant="contained"
                             color="success"
-                            startIcon={<Save />}
+                            startIcon={isSaving ? (
+                                <span className="save-spinner" />
+                            ) : (
+                                <Save />
+                            )}
                             onClick={handleSave}
+                            disabled={isSaving}
                             className="action-button"
                         >
-                            Save as Image
+                            {isSaving ? 'Saving…' : 'Save as Image'}
                         </Button>
                         <Button
                             variant="contained"

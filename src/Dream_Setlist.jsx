@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
 import { Button, ToggleButton, ToggleButtonGroup, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Paper, Switch, FormControlLabel, Typography, Box, IconButton, Menu, ListItemIcon, ListItemText, Autocomplete, InputAdornment } from '@mui/material';
 import { Settings, ArrowUpward, ArrowDownward, Edit, Delete, Save, Search, ArrowBack, Info } from '@mui/icons-material';
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, pointerWithin, useDroppable } from '@dnd-kit/core';
@@ -322,7 +322,6 @@ const DreamSetlist = () => {
     const [title, setTitle] = useState('');
     const tierlistRef = useRef(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filteredImages, setFilteredImages] = useState([]);
     const navigate = useNavigate();
 
     // Check if it's first visit when component mounts
@@ -362,16 +361,23 @@ const DreamSetlist = () => {
         }
     }, [step, memberType]);
 
-    // Add effect to filter images based on search
-    useEffect(() => {
-        if (step === 1) {
-            const filtered = images.filter(image => {
-                const searchString = parseNameForSearch(image.src);
-                return searchString.includes(searchTerm.toLowerCase());
-            });
-            setFilteredImages(filtered);
+    // Pre-group images by container — O(1) lookup in render instead of repeated .filter()
+    const imagesByContainer = useMemo(() => {
+        const map = {};
+        for (const img of images) {
+            if (!map[img.containerId]) map[img.containerId] = [];
+            map[img.containerId].push(img);
         }
-    }, [searchTerm, images, step]);
+        return map;
+    }, [images]);
+
+    // Derive filtered pool images from state directly — no extra render cycle
+    const filteredPoolImages = useMemo(() => {
+        const pool = imagesByContainer['image-pool'] || [];
+        if (!searchTerm) return pool;
+        const lower = searchTerm.toLowerCase();
+        return pool.filter(image => parseNameForSearch(image.src).includes(lower));
+    }, [imagesByContainer, searchTerm]);
 
     // ── Sync row-header widths so all rows share the same column width ──
     useLayoutEffect(() => {
@@ -486,15 +492,16 @@ const DreamSetlist = () => {
                 if (activeImage.containerId === overId) return prev;
 
                 const newImages = prev.filter(img => img.id !== active.id);
-                const containerImages = newImages.filter(img => img.containerId === overId);
-                const lastContainerImageIndex = newImages.findIndex(img =>
-                    img.containerId === overId &&
-                    containerImages.indexOf(img) === containerImages.length - 1
-                );
+
+                // Find the last index in the target container — O(n)
+                let lastContainerImageIndex = -1;
+                for (let idx = 0; idx < newImages.length; idx++) {
+                    if (newImages[idx].containerId === overId) lastContainerImageIndex = idx;
+                }
 
                 const updatedImage = { ...activeImage, containerId: overId };
 
-                if (containerImages.length === 0 || lastContainerImageIndex === -1) {
+                if (lastContainerImageIndex === -1) {
                     return [...newImages, updatedImage];
                 }
 
@@ -571,19 +578,12 @@ const DreamSetlist = () => {
                     const selImage = newImages.find(img => img.id === selId);
                     if (!selImage || selImage.containerId === tierId) continue;
 
-                    // Get all images in the target tier (for index calculation)
-                    const tierImages = newImages.filter(img => img.containerId === tierId);
-
                     // Remove from current position
                     newImages = newImages.filter(img => img.id !== selId);
 
-                    // Create updated version
                     const updatedImage = {
                         ...selImage,
-                        containerId: tierId,
-                        originalIndex: tierImages.length > 0
-                            ? Math.max(...tierImages.map(img => img.originalIndex)) + 1
-                            : 0
+                        containerId: tierId
                     };
 
                     newImages = [...newImages, updatedImage];
@@ -1100,10 +1100,10 @@ const DreamSetlist = () => {
                                                     <Droppable id={row.id}>
                                                         <div className="tier-content">
                                                             <SortableContext
-                                                                items={images.filter(img => img.containerId === row.id).map(img => img.id)}
+                                                                items={(imagesByContainer[row.id] || []).map(img => img.id)}
                                                                 strategy={rectSortingStrategy}
                                                             >
-                                                                {images.filter(img => img.containerId === row.id).map((image) => (
+                                                                {(imagesByContainer[row.id] || []).map((image) => (
                                                                     <SortableImage
                                                                         key={image.id}
                                                                         image={image}
@@ -1183,14 +1183,10 @@ const DreamSetlist = () => {
                                         <Droppable id="image-pool">
                                             <div className="image-pool">
                                                 <SortableContext
-                                                    items={(searchTerm ? filteredImages : images)
-                                                        .filter(img => img.containerId === 'image-pool')
-                                                        .map(img => img.id)}
+                                                    items={filteredPoolImages.map(img => img.id)}
                                                     strategy={rectSortingStrategy}
                                                 >
-                                                    {(searchTerm ? filteredImages : images)
-                                                        .filter(img => img.containerId === 'image-pool')
-                                                        .map((image) => (
+                                                    {filteredPoolImages.map((image) => (
                                                             <SortableImage
                                                                 key={image.id}
                                                                 image={image}
@@ -1451,7 +1447,7 @@ const DreamSetlist = () => {
                                             borderRadius: '8px',
                                             padding: '12px'
                                         }}>
-                                            {images.filter(image => image.containerId === row.id).map(image => (
+                                            {(imagesByContainer[row.id] || []).map(image => (
                                                 <DraggableImage
                                                     key={image.id}
                                                     image={image}
@@ -1462,7 +1458,7 @@ const DreamSetlist = () => {
                                                     isInTable={false}
                                                 />
                                             ))}
-                                            {images.filter(image => image.containerId === row.id).length === 0 && (
+                                            {(imagesByContainer[row.id] || []).length === 0 && (
                                                 <Typography variant="body2" color="rgba(255,255,255,0.5)" sx={{ p: 2, textAlign: 'center' }}>
                                                     No members in {row.name}
                                                 </Typography>
