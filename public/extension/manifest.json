@@ -25,7 +25,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://jkt48.com/mypage/point-history*",
+        "https://jkt48.com/*",
+        "https://*.jkt48.com/*",
         "http://localhost:*/*",
         "https://*.vercel.app/*",
         "https://tierlistjkt48.my.id/*",

@@ -1,58 +1,90 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>JKT48 Points History Exporter</title>
+  <title>JKT48 Points Exporter</title>
   <style>
     body {
-      width: 300px;
-      padding: 10px;
-      font-family: Arial, sans-serif;
+      width: 260px;
+      padding: 20px 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      margin: 0;
     }
-    button {
-      width: 100%;
-      padding: 8px;
-      background-color: #ff69b4;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-bottom: 8px;
+
+    .logo {
+      font-size: 32px;
+      text-align: center;
+      margin-bottom: 10px;
     }
-    button:hover {
-      background-color: #ff1493;
-    }
-    .btn-api {
-      background-color: #2196F3;
-    }
-    .btn-api:hover {
-      background-color: #0b7dda;
-    }
-    #status {
-      color: #666;
-      margin-top: 10px;
+
+    h2 {
       font-size: 14px;
-      word-wrap: break-word;
+      font-weight: 700;
+      text-align: center;
+      margin: 0 0 6px;
+      color: #fff;
     }
-    .error {
-      color: #ff0000;
+
+    p {
+      font-size: 11.5px;
+      color: rgba(255, 255, 255, 0.55);
+      text-align: center;
+      line-height: 1.5;
+      margin: 0 0 16px;
     }
-    .code-preview {
-      background: #f4f4f4;
-      padding: 5px;
-      border-radius: 4px;
-      font-family: monospace;
-      font-size: 10px;
-      white-space: pre-wrap;
-      max-height: 100px;
-      overflow-y: auto;
+
+    .tip {
+      background: rgba(229, 0, 20, 0.12);
+      border: 1px solid rgba(229, 0, 20, 0.3);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 11.5px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.6;
+    }
+
+    .tip strong {
+      color: #fff;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      padding: 10px;
+      background: linear-gradient(135deg, #E50014, #a0000f);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      filter: brightness(1.15);
     }
   </style>
 </head>
+
 <body>
-  <h2>JKT48 Points History Exporter</h2>
-  <button id="exportBtn">Export Points History (V1 - HTML)</button>
-  <button id="exportApiBtn" class="btn-api">Export via API (V2 - Fast)</button>
-  <div id="status"></div>
-  <script src="popup.js"></script>
+  <div class="logo">🎀</div>
+  <h2>JKT48 Points Exporter</h2>
+  <p>The exporter is now available as a<br>floating panel inside jkt48.com.</p>
+  <div class="tip">
+    <strong>How to use:</strong><br>
+    1. Go to <strong>jkt48.com</strong><br>
+    2. Look for the <strong>🎀 button</strong> in the<br>
+    &nbsp;&nbsp;&nbsp;bottom-left corner<br>
+    3. Click it to open the export panel
+  </div>
+  <a class="btn" href="https://jkt48.com/transaction-history" target="_blank">
+    Open Transaction History →
+  </a>
 </body>
-</html> 
+
+</html>

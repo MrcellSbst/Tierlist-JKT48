@@ -131,7 +131,7 @@ const PointHistory = () => {
             const purpose = (row.purpose || '').trim().toUpperCase();
 
             // Current Points should only increase on Topups, and decrease ONLY if they paid using JKT48 Points!
-            if (purpose === 'JKT48 POINTS' || method.includes('POINT') || method.includes('POIN') || !row.paymentMethod) {
+            if (purpose === 'PEMBELIAN POIN JKT48' || method.includes('POINT') || method.includes('POIN') || !row.paymentMethod) {
                 return total + points;
             }
             return total;
@@ -160,7 +160,7 @@ const PointHistory = () => {
                 buyPointsRaw: row.buyPoints 
             });
             
-            if (purpose === 'JKT48 POINTS' && points > 0) {
+            if (purpose === 'PEMBELIAN POIN JKT48' && points > 0) {
                 console.log('Found topup:', points);
                 return total + points;
             }
@@ -209,7 +209,7 @@ const PointHistory = () => {
 
         pointsData.forEach(row => {
             const purp = (row.purpose || '').trim();
-            if (purp === 'JKT48 POINTS' || purp === 'Masa Berlaku Habis') {
+            if (purp === 'Pembelian Poin JKT48' || purp === 'Masa Berlaku Habis') {
                 return;
             }
 
