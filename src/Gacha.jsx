@@ -5,8 +5,9 @@ import './styles/Gacha.css'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 const UR_PITY_LIMIT = 5
-const LS_KEY_PITY   = 'gacha_ur_pity'
-const LS_KEY_OWNED  = 'gacha_owned_urs'
+const LS_KEY_PITY       = 'gacha_ur_pity'
+const LS_KEY_OWNED      = 'gacha_owned_urs'
+const LS_KEY_COLLECTION = 'gacha_collection'
 
 // ─── Gacha Engine ──────────────────────────────────────────────────────────
 function pickRandom(pool) {
@@ -178,6 +179,12 @@ export default function Gacha() {
     catch { return new Set() }
   })
 
+  // cardCollection: { [cardId]: count } — all rarities, duplicates counted
+  const [cardCollection, setCardCollection] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY_COLLECTION) || '{}') }
+    catch { return {} }
+  })
+
   const [phase,        setPhase]        = useState('idle') // idle | cutting | opening
   const [pack,         setPack]         = useState([])
   const [cardIndex,    setCardIndex]    = useState(0)      // card currently on screen
@@ -185,6 +192,8 @@ export default function Gacha() {
   const [history,      setHistory]      = useState([])
   const [gotUR,        setGotUR]        = useState(false)
   const [packRotY,     setPackRotY]     = useState(0)
+  const [showCollection, setShowCollection] = useState(false)
+  const [zoomedCard,     setZoomedCard]     = useState(null)
 
   useEffect(() => {
     try { localStorage.setItem(LS_KEY_PITY, String(packsWithoutUR)) }
@@ -195,6 +204,11 @@ export default function Gacha() {
     try { localStorage.setItem(LS_KEY_OWNED, JSON.stringify([...ownedURs])) }
     catch {}
   }, [ownedURs])
+
+  useEffect(() => {
+    try { localStorage.setItem(LS_KEY_COLLECTION, JSON.stringify(cardCollection)) }
+    catch {}
+  }, [cardCollection])
 
   // Click the pack to open it -> trigger cutting phase
   const handlePackClick = useCallback(() => {
@@ -214,6 +228,15 @@ export default function Gacha() {
       const pulledURs = newPack.filter(c => c.rarity === 'ultraRare').map(c => c.id)
       setOwnedURs(prev => new Set([...prev, ...pulledURs]))
     }
+
+    // Track ALL pulled cards in the collection (duplicates counted for non-UR)
+    setCardCollection(prev => {
+      const next = { ...prev }
+      newPack.forEach(c => {
+        next[c.id] = (next[c.id] || 0) + 1
+      })
+      return next
+    })
     
     // Play cutting animation, then transition to opening
     setPackRotY(0)
@@ -310,7 +333,17 @@ export default function Gacha() {
 
             {history.length > 0 && (
               <div className="history-section">
-                <h3 className="history-title">Recent Pulls</h3>
+                <div className="history-section-header">
+                  <h3 className="history-title">Recent Pulls</h3>
+                  {Object.keys(cardCollection).length > 0 && (
+                    <button
+                      className="btn-collection-open"
+                      onClick={() => setShowCollection(true)}
+                    >
+                      🃏 My Collection
+                    </button>
+                  )}
+                </div>
                 <div className="history-list">
                   {history.map((h, hi) => {
                     const stats = getRarityStats(h)
@@ -411,6 +444,91 @@ export default function Gacha() {
           )
         })()}
       </main>
+
+      {/* ── Collection Modal ── */}
+      {showCollection && (
+        <div className="collection-modal-overlay" onClick={() => setShowCollection(false)}>
+          <div className="collection-modal" onClick={e => e.stopPropagation()}>
+            <div className="collection-modal-header">
+              <h2 className="collection-modal-title">🃏 My Collection</h2>
+              <button className="collection-modal-close" onClick={() => setShowCollection(false)} aria-label="Close">×</button>
+            </div>
+            <div className="collection-modal-body">
+              {['ultraRare', 'rare', 'uncommon', 'common'].map(rarity => {
+                const cfg = RARITY_CONFIG[rarity]
+                const cards = ALL_CARDS.filter(c => c.rarity === rarity && cardCollection[c.id])
+                if (cards.length === 0) return null
+                return (
+                  <div key={rarity} className="collection-rarity-group">
+                    <div className="collection-rarity-label" style={{ color: cfg.color }}>
+                      <span className="odds-dot" style={{ background: cfg.color }} />
+                      {cfg.label}
+                      <span className="collection-rarity-count">{cards.length} card{cards.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="collection-grid">
+                      {cards.map(card => (
+                        <div
+                          key={card.id}
+                          className="collection-card"
+                          onClick={() => setZoomedCard({ card, cfg })}
+                          title="Click to zoom"
+                        >
+                          <div className="collection-card-img-wrap" style={{ '--glow': cfg.glow }}>
+                            <img src={card.img} alt={card.name} className="collection-card-img" />
+                            {cardCollection[card.id] > 1 && (
+                              <span className="collection-count-badge">×{cardCollection[card.id]}</span>
+                            )}
+                          </div>
+                          <span className="collection-card-name">{card.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* ── Card Zoom Lightbox (inside modal so it layers correctly) ── */}
+            {zoomedCard && (
+              <div
+                className="card-zoom-overlay"
+                onClick={() => setZoomedCard(null)}
+              >
+                <div className="card-zoom-content" onClick={e => e.stopPropagation()}>
+                  <div
+                    className="card-zoom-img-wrap"
+                    style={{ '--glow': zoomedCard.cfg.glow, '--card-color': zoomedCard.cfg.color }}
+                  >
+                    <img
+                      src={zoomedCard.card.img}
+                      alt={zoomedCard.card.name}
+                      className="card-zoom-img"
+                    />
+                    {zoomedCard.card.rarity === 'ultraRare' && (
+                      <div className="holo-overlay" aria-hidden="true" />
+                    )}
+                    {cardCollection[zoomedCard.card.id] > 1 && (
+                      <span className="collection-count-badge card-zoom-badge">
+                        ×{cardCollection[zoomedCard.card.id]} owned
+                      </span>
+                    )}
+                  </div>
+                  <p className="card-zoom-name" style={{ color: zoomedCard.cfg.color }}>
+                    {zoomedCard.card.name}
+                  </p>
+                  <p className="card-zoom-rarity">{zoomedCard.cfg.label}</p>
+                  <button
+                    className="card-zoom-close"
+                    onClick={() => setZoomedCard(null)}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
