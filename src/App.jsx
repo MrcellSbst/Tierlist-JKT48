@@ -14,6 +14,7 @@ import ViewportManager from './components/ViewportManager'
 import DreamSetlist from './Dream_Setlist';
 import RoulettePage from './roulette';
 import GachaPage from './Gacha';
+import MobileTierlist from './Mobile_Tierlist';
 import './styles/App.css'
 
 const DisabledFeature = () => (
@@ -56,6 +57,7 @@ function App() {
             <Route path="/dream-setlist" element={<DreamSetlist />} />
             <Route path="/point-history" element={<PointHistory />} />
             <Route path="/roulette" element={<RoulettePage />} />
+            <Route path="/mobile-tierlist" element={<MobileTierlist />} />
             <Route path="/gacha" element={<GachaPage />} />
             <Route path="/this-or-that/*" element={<DisabledFeature />} />
             <Route path="*" element={<NotFound />} />
