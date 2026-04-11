@@ -223,21 +223,21 @@ export const setlistSongs = {
     ],
 
     "Kira Kira Girls": [
-    "Indahnya Senyum Manismu DST",
-    "Aishiteraburu",
-    "Sakura Kita Makan Bersama",
-    "Laptime Masa Remaja",
-    "Candy",
-    "Hubungan Kau dan Aku",
-    "Natasha yang Ku Cinta",
-    "Maafkan Hai Permataku",
-    "100 Meter Ke Minimarket",
-    "Adyth",
-    "Cool Girl",
-    "Apakah Kau Melihat Mentari Senja",
-    "Masa Depan yang Menyilaukan Mata",
-    "Everyday Kachuusa",
-    "Gadis Remaja",
+        "Indahnya Senyum Manismu DST",
+        "Aishiteraburu",
+        "Sakura Kita Makan Bersama",
+        "Laptime Masa Remaja",
+        "Candy",
+        "Hubungan Kau dan Aku",
+        "Natasha yang Ku Cinta",
+        "Maafkan Hai Permataku",
+        "100 Meter Ke Minimarket",
+        "Adyth",
+        "Cool Girl",
+        "Apakah Kau Melihat Mentari Senja",
+        "Masa Depan yang Menyilaukan Mata",
+        "Everyday Kachuusa",
+        "Gadis Remaja",
     ],
 
     "Pajama Drive": [
@@ -257,6 +257,24 @@ export const setlistSongs = {
         "Wasshoi J!",
         "Suifu wa Arashi ni Yume wo Miru (Pelaut yang Melihat Mimpi di Tengah Badai)",
         "Shiroi Shirts (Baju Putih)"
+    ],
+    "Passion 200%": [
+        "Dekat Namun Jauh",
+        "Cinta Tak Berbalas Finally",
+        "Keringat Itu Tidak Berbohong",
+        "Langit Biru Cinta Searah",
+        "End Roll",
+        "Si Bintang Jatuh yang Egois",
+        "Pada Malam yang Berbadai",
+        "Sang Hujan yang Kejam",
+        "Musim Panas yang Kacau",
+        "Bentuk Sang Rembulan",
+        "Kapasitas Ikan Migrasi",
+        "Fan Letter",
+        "Magic Hour",
+        "Beloklah ke Kanan!",
+        "Cinta Pertama Butterfly",
+        "Pareo Adalah Emerald"
     ],
     "Pertaruhan Cinta": [
         "GO AND FIGHT!",
@@ -358,5 +376,5 @@ export const setlistSongs = {
         "Pinocchio Gun (Pasukan Pinokio)",
         "Tegami no Koto (Tentang Suratku)"
     ],
-    
+
 };

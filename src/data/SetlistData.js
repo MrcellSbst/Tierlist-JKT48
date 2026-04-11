@@ -14,6 +14,7 @@ export const setlistFiles = [
     'Ingin_Bertemu.webp',
     'Kira_Kira_Girls.jpg',
     'Pajama_Drive.jpg',
+    'Passion_200%.jpg',
     'Pertaruhan_Cinta.jpg',
     'Saka_Agari.jpg',
     'Romansa_Sang_Gadis.jpg',
