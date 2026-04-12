@@ -84,7 +84,7 @@ const DraggableImage = ({ song, isDragging, dragOverlay, onImageClick, onContext
             onContextMenu={(e) => onContextMenu && onContextMenu(e, song)}
         >
             <img
-                src={`/asset/Setlist/${setlistImageInfo.filename}.${setlistImageInfo.extension}`}
+                src={`/asset/Setlist/${encodeURIComponent(`${setlistImageInfo.filename}.${setlistImageInfo.extension}`)}`}
                 alt={song.name}
                 className="song-background"
             />

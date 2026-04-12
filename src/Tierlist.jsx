@@ -159,7 +159,7 @@ const buildImageList = (tierlistTypeParam, memberType, generation, videoType) =>
     if (tierlistTypeParam === 'setlist') {
         imageList = setlistFiles.map((filename, index) => ({
             id: `setlist-${filename}`,
-            src: `/asset/Setlist/${filename}`,
+            src: `/asset/Setlist/${encodeURIComponent(filename)}`,
             name: formatSetlistName(filename),
             containerId: 'image-pool',
             originalIndex: index
