@@ -421,9 +421,9 @@ const dreamSetlistSongs = [
   { id: 'song422', title: ' Suatu Saat Bertemu - JKT48 Virtual' },
   { id: 'song423', title: 'GO AND FIGHT!' },
   { id: 'song424', title: 'Wish You' },
-  { id: 'song425', title: 'City Lights'},
+  { id: 'song425', title: 'City Lights' },
   { id: 'song426', title: "Bunga yang 'Kan Mekar Suatu Saat" },
-  { id: 'song427', title: 'Dai Dai Dai'},
+  { id: 'song427', title: 'Dai Dai Dai' },
   { id: 'song428', title: 'Sahabat atau Cinta' },
   { id: 'song429', title: 'Onyx' },
   { id: 'song430', title: 'Percik Kecil Theater Version' },
@@ -438,7 +438,8 @@ const dreamSetlistSongs = [
   { id: 'song439', title: 'Oh My Pumpkin!' },
   { id: 'song440', title: 'Waktunya Membuktikan' },
   { id: 'song441', title: 'Percik Kecil' },
-  { id: 'song442', title: "Andai 'Ku Bukan Idola.webp" },
+  { id: 'song442', title: "Andai 'Ku Bukan Idola" },
+  { id: 'song443', title: "Dekat Namun Jauh" },
 
   // ... (continue for all songs provided by the user, incrementing id)
 ];

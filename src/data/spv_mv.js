@@ -11,6 +11,7 @@ export const mvFiles = [
     'Cinta_yang_Tulus,_Crescendo_(Junai_no_Crescendo).webp',
     'Dakishimecha_Ikenai_(Tidak_Boleh_Pelukan).webp',
     'Dirimu_Melody_(Kimi_wa_Melody).webp',
+    'Dekat_Namun_Jauh.webp',
     'Everyday,_Kachuusha_(Dance_Version).webp',
     'Everyday,_Kachuusha_(Story_Version).webp',
     'Flying_Get.webp',
@@ -51,7 +52,7 @@ export const mvFiles = [
     'Value_Milikku_Saja.webp',
     'Waktunya Membuktikan - JKT48 X Musikal Keluarga Cemara.webp',
     'Yuuhi_wo_Miteiruka_(Apakah_Kau_Melihat_Mentari_Senja).webp'
-    
+
 ];
 
 export const spvFiles = [
