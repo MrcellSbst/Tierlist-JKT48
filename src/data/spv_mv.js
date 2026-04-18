@@ -50,6 +50,7 @@ export const mvFiles = [
     'Sweet_&_Bitter.webp',
     'UZA.webp',
     'Value_Milikku_Saja.webp',
+    'WAKAKA_PEOPLE.webp',
     'Waktunya Membuktikan - JKT48 X Musikal Keluarga Cemara.webp',
     'Yuuhi_wo_Miteiruka_(Apakah_Kau_Melihat_Mentari_Senja).webp'
 

@@ -377,4 +377,23 @@ export const setlistSongs = {
         "Tegami no Koto (Tentang Suratku)"
     ],
 
+    "Dream Bakudan": [
+        "Wakaka People",
+        "Sekarang Para Para",
+        "Angin Musim Semi Pertama",
+        "Tak Ingin Jadi Orang Hebat",
+        "Bird",
+        "Pulang Kampung",
+        "Dua Orang yang Terlarang",
+        "Berandalan Di Surga",
+        "Kenyataan yang Telah Ternoda",
+        "Garis Pergantian Hari Cinta",
+        "Kebenaran Tinju Ini",
+        "Rasa Sayang yang Dulu Aku Remehkan",
+        "Flying High",
+        "Team Dream Oshi",
+        "Adrenalin Masa Puber",
+        "Ingin Meraih Puncak"
+    ],
+
 };

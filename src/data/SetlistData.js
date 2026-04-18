@@ -7,6 +7,7 @@ export const setlistFiles = [
     'Cara_Meminum_Ramune.jpg',
     'Demi_Seseorang.jpg',
     'Dewi_Theater.jpg',
+    'Dream_Bakudan.png',
     'Fajar_Sang_Idola.jpg',
     'Fly!_Team_T.jpg',
     'Gadis_Gadis_Remaja.jpg',
@@ -20,5 +21,5 @@ export const setlistFiles = [
     'Romansa_Sang_Gadis.jpg',
     'Sambil_Menggandeng_Erat_Tanganku.jpg',
     'Sekarang_Sedang_Jatuh_Cinta.jpg',
-    'Tunas_di_Balik_Seragam.jpg'
+    'Tunas_di_Balik_Seragam.jpg',
 ];
