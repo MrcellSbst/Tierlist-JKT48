@@ -8,7 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import domtoimage from 'dom-to-image-more';
 import dreamSetlistSongs from './data/DreamSetlist_Songs';
 import { activeMemberFiles, exMemberFiles } from './data/memberData';
-import logo from './assets/icon/TierlistIcon.png';
+
 import './Dream_Setlist.css';
 import { useNavigate } from 'react-router-dom';
 import ViewportManager from './components/ViewportManager';
@@ -867,7 +867,7 @@ const DreamSetlist = () => {
                         display: 'flex',
                         alignItems: 'center',
                     }}>
-                        <img src={logo} alt="JKT48 Tierlist Logo" className="header-logo" style={{
+                        <img src="/asset/icon/TierlistIcon.png" alt="JKT48 Tierlist Logo" className="header-logo" style={{
                             width: '50px',
                             height: '50px',
                             marginRight: '15px'

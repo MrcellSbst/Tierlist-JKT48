@@ -36,7 +36,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { wishlistPrices, getAllCategories, isUserDefinedPrice } from './data/wishlistpriceData';
 import domtoimage from 'dom-to-image-more';
 import * as XLSX from 'xlsx';
-import calculatorLogo from '/asset/icon/CalculatorLogo.png';
+const calculatorLogo = '/asset/icon/CalculatorLogo.png';
 
 // Create a dark theme
 const darkTheme = createTheme({
@@ -579,7 +579,7 @@ const Calculator = () => {
                                 <ArrowBackIcon />
                             </IconButton>
                             <img
-                                src={calculatorLogo}
+                                src="/asset/icon/CalculatorLogo.png"
                                 alt="Calculator Logo"
                                 style={{
                                     height: '40px',

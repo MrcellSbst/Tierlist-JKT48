@@ -57,7 +57,7 @@ import domtoimage from 'dom-to-image-more';
 import { setlistSongs } from './data/setlistSongs';
 import './Tierlist.css';
 import './TierlistPage_Lagu.css';
-import logo from './assets/icon/TierlistIcon.png';
+
 import {
     TIER_COLORS, getContrastColor, initialRows,
     formatSetlistName, formatVideoName,
@@ -451,9 +451,13 @@ const Tierlist = () => {
             "Fly! Team T": "Fly!_Team_T",
             "Ingin Bertemu": "Ingin_Bertemu"
         };
+        const extensionMap = {
+            "Ingin Bertemu": 'webp',
+            "Dream Bakudan": 'png',
+        };
         const filename = specialCases[name] ||
             name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
-        const extension = name === "Ingin Bertemu" ? 'webp' : 'jpg';
+        const extension = extensionMap[name] ?? 'jpg';
         return { filename, extension };
     }, [selectedSetlist]);
 
@@ -858,7 +862,7 @@ const Tierlist = () => {
                 </IconButton>
                 <div className="header-title-container">
                     <div className="header-main" onClick={() => navigate('/')}>
-                        <img src={logo} alt="JKT48 Tierlist Logo" className="header-logo" />
+                        <img src="/asset/icon/TierlistIcon.png" alt="JKT48 Tierlist Logo" className="header-logo" />
                         <div className="header-titles">
                             <h1 className="header-title">JKT48 Tierlist</h1>
                         </div>

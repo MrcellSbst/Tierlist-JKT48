@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Homepage.css';
-import homepageLogo from '/asset/icon/HomepageLogo.png';
-import tierlistLogo from './assets/icon/TierlistIcon.png';
+const homepageLogo = '/asset/icon/HomepageLogo.png';
+const tierlistLogo = '/asset/icon/TierlistIcon.png';
 import { setlistSongs } from './data/setlistSongs';
 import { formatDistanceToNow } from 'date-fns';
 

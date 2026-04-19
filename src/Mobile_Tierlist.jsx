@@ -11,7 +11,7 @@ import {
     TIER_COLORS, getContrastColor, initialRows,
     formatSetlistName, formatVideoName,
 } from './components/TierlistShared';
-import logo from './assets/icon/TierlistIcon.png';
+
 import domtoimage from 'dom-to-image-more';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -595,7 +595,7 @@ const MobileTierlist = () => {
                 <header className="mtl-header">
                     <button className="mtl-header__back" onClick={() => navigate(-1)} aria-label="Go back">‹</button>
                     <div className="mtl-header__center">
-                        <img src={logo} alt="logo" className="mtl-header__logo" />
+                        <img src="/asset/icon/TierlistIcon.png" alt="logo" className="mtl-header__logo" />
                         <span className="mtl-header__title">JKT48 Tierlist</span>
                     </div>
                     <button className="mtl-header__help" onClick={() => setShowWelcome(true)} aria-label="Help">?</button>

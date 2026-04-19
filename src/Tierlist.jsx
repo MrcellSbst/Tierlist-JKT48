@@ -56,7 +56,7 @@ import {
 import domtoimage from 'dom-to-image-more';
 import './Tierlist.css';
 import './TierlistPage_Lagu.css';
-import logo from './assets/icon/TierlistIcon.png';
+
 import * as memberData from './data/memberData';
 import {
     mvFiles,
@@ -1045,7 +1045,7 @@ const Tierlist = () => {
                 </IconButton>
                 <div className="header-title-container">
                     <div className="header-main" onClick={() => navigate('/')}>
-                        <img src={logo} alt="JKT48 Tierlist Logo" className="header-logo" />
+                        <img src="/asset/icon/TierlistIcon.png" alt="JKT48 Tierlist Logo" className="header-logo" />
                         <div className="header-titles">
                             <h1 className="header-title">JKT48 Tierlist</h1>
                         </div>
