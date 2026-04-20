@@ -177,7 +177,7 @@ function MenuScreen({ onPick }) {
                 <button className="gw-menu-card" id="btn-single" onClick={() => onPick('setup-single')}>
                     <div className="gw-menu-card-icon">⚡</div>
                     <div className="gw-menu-card-label">Single Player</div>
-                    <div className="gw-menu-card-desc">Flip cards, ask yourself yes/no questions, and guess the secret member!</div>
+                    <div className="gw-menu-card-desc">For those who want to play IRL with your friends</div>
                 </button>
                 <button className="gw-menu-card" id="btn-multi" onClick={() => onPick('online-lobby')}>
                     <div className="gw-menu-card-icon">🌐</div>

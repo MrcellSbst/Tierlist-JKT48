@@ -76,9 +76,6 @@ const HomepageGames = () => {
                 <button className="nav-button" onClick={() => navigate('/roulette')}>
                     Member Roulette
                 </button>
-                <button className="nav-button" onClick={() => navigate('/guess-who')}>
-                    Guess Who
-                </button>
             </div>
         </div>
     );
