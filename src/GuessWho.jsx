@@ -624,19 +624,27 @@ function MultiLobby({ filters, joinCode, nickname, onBack }) {
 
         insertCoin(opts)
             .then(() => {
-                // Set the player's display name using the nickname they entered
-                try {
-                    const player = myPlayer();
-                    if (player && nickname?.trim()) {
-                        player.setProfile({ name: nickname.trim() });
-                    }
-                } catch (e) { /* silently ignore profile errors */ }
-
                 if (isHost()) {
                     setState('poolOrder', pool.map(m => m.filename), true);
                     setState('phase', 'picking', true);
                 }
-                setReady(true);
+                // myPlayer() may be null for a tick — poll until available,
+                // then apply the nickname via setProfile (best-effort cosmetic).
+                // The authoritative nickname is broadcast via Playroom state in OnlineGame.
+                const tryProfile = (left) => {
+                    try {
+                        const player = myPlayer();
+                        if (player) {
+                            const name = nickname?.trim();
+                            if (name) player.setProfile({ name });
+                            setReady(true);
+                            return;
+                        }
+                    } catch { /* ignore */ }
+                    if (left > 0) setTimeout(() => tryProfile(left - 1), 100);
+                    else setReady(true); // give up, show game anyway
+                };
+                tryProfile(15);
             })
             .catch(err => setError(err?.message || 'Connection failed. Check the room code and try again.'));
     }, []);
@@ -662,7 +670,7 @@ function MultiLobby({ filters, joinCode, nickname, onBack }) {
         </div>
     );
 
-    return <OnlineGame allPool={pool} filters={filters} onBack={onBack} />;
+    return <OnlineGame allPool={pool} filters={filters} onBack={onBack} myNickname={nickname?.trim() || ''} />;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -671,7 +679,7 @@ function MultiLobby({ filters, joinCode, nickname, onBack }) {
 // secret. Either player can submit a Final Guess targeting the OTHER player.
 // The target player confirms/denies. First correct guess wins.
 // ────────────────────────────────────────────────────────────────────────────
-function OnlineGame({ allPool, filters, onBack }) {
+function OnlineGame({ allPool, filters, onBack, myNickname }) {
     const amHost = useIsHost();
     const players = usePlayersList();
     const me = myPlayer();
@@ -683,8 +691,10 @@ function OnlineGame({ allPool, filters, onBack }) {
     const [pickedPlayers, setPickedPlayers] = useMultiplayerState('pickedPlayers', {});
     const [winnerId, setWinnerId] = useMultiplayerState('winnerId', null);
     const [revealedSecrets, setRevealedSecrets] = useMultiplayerState('revealedSecrets', {});
+    // Nickname registry: host and guest each write to their own key — no merge conflicts
+    const [hostNick, setHostNick] = useMultiplayerState('hostNick', '');
+    const [guestNick, setGuestNick] = useMultiplayerState('guestNick', '');
     // messages uses plain useState + RPC so the RPC handler always has a stable setter reference
-    // (useMultiplayerState's setter is not referentially stable — causes stale closure bugs)
     const [messages, setMessages] = useState([]);
 
     // ── Local State ──
@@ -695,6 +705,15 @@ function OnlineGame({ allPool, filters, onBack }) {
     const [roomCode, setRoomCode] = useState('');
     const [copied, setCopied] = useState(false);
     const chatEndRef = useRef(null);
+
+    // Register own nickname in Playroom state once on mount.
+    // Uses isHost() (synchronous) instead of amHost (hook) because the hook
+    // can still be false on the first render tick even for the actual host.
+    useEffect(() => {
+        if (!myNickname) return;
+        if (isHost()) setHostNick(myNickname);
+        else setGuestNick(myNickname);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Build pool: look up host's poolOrder in the FULL member set (so guest never drops cards)
     const fullPool = useMemo(() => buildMemberPool({ memberStatus: 'all', generation: 'all', team: 'all' }), []);
@@ -739,23 +758,31 @@ function OnlineGame({ allPool, filters, onBack }) {
         });
     }, []);
 
+    // Helper: use isHost() (synchronous) so the host/guest key decision is
+    // always correct regardless of whether amHost hook has updated yet.
+    const getPlayerName = useCallback((p) => {
+        if (!p) return 'Unknown';
+        const iAmHost = isHost();
+        const pIsHost = iAmHost ? (p.id === me?.id) : (p.id !== me?.id);
+        const nick = pIsHost ? hostNick : guestNick;
+        return nick || p.getProfile()?.name || 'Unknown';
+    }, [me, hostNick, guestNick]);
+
     const sendMsg = useCallback((text, type = 'chat', extra = {}) => {
         const profile = me?.getProfile() || {};
         const msg = {
             id: Date.now() + '-' + Math.random().toString(36).slice(2),
             playerId: me?.id,
-            player: profile.name || 'Unknown',
+            player: (isHost() ? hostNick : guestNick) || myNickname || profile.name || 'Unknown',
             color: profile.color?.hexString || '#ffffff',
             text, type, ts: Date.now(), ...extra,
         };
-        // Add to local state immediately — RPC.Mode.OTHERS won't echo back to ourselves
         setMessages(prev => {
             if (prev.some(m => m.id === msg.id)) return prev;
             return [...prev, msg];
         });
-        // Broadcast to the other player
         RPC.call('newMsg', msg, RPC.Mode.OTHERS);
-    }, [me]);
+    }, [me, hostNick, guestNick, myNickname]);
 
     const copyCode = () => {
         if (!roomCode) return;
@@ -815,7 +842,7 @@ function OnlineGame({ allPool, filters, onBack }) {
                                 return (
                                     <div key={p.id} className="gw-player-chip" style={{ borderColor: prof.color?.hexString || '#555' }}>
                                         <span className="gw-player-chip-dot" style={{ background: prof.color?.hexString || '#555' }} />
-                                        {prof.name} {hasPicked ? '✅' : '⏳'}
+                                        {getPlayerName(p)} {hasPicked ? '✅' : '⏳'}
                                     </div>
                                 );
                             })}
@@ -833,7 +860,7 @@ function OnlineGame({ allPool, filters, onBack }) {
                     <h2 className="gw-pick-title">Pick YOUR Secret Member</h2>
                     <p className="gw-pick-hint">
                         Your opponent will try to guess this. Don't show them!
-                        {other && <span style={{ color: '#f5c518' }}> {other.getProfile().name} {otherHasPicked ? 'has picked ✅' : 'is choosing…'}</span>}
+                        {other && <span style={{ color: '#f5c518' }}> {getPlayerName(other)} {otherHasPicked ? 'has picked ✅' : 'is choosing…'}</span>}
                     </p>
                     {roomCode && (
                         <div className="gw-room-code-badge" style={{ marginTop: 8 }}>
@@ -875,7 +902,7 @@ function OnlineGame({ allPool, filters, onBack }) {
                 <div className="gw-done-card">
                     <div className="gw-done-trophy">🏆</div>
                     <h2 className="gw-done-title">
-                        {winner ? `${winner.getProfile().name} Wins!` : 'Game Over!'}
+                        {winner ? `${getPlayerName(winner)} Wins!` : 'Game Over!'}
                     </h2>
                     <div className="gw-done-reveals">
                         {players.map(p => {
@@ -886,7 +913,7 @@ function OnlineGame({ allPool, filters, onBack }) {
                             return (
                                 <div key={p.id} className="gw-done-reveal-item">
                                     <div className="gw-done-reveal-label" style={{ color: prof.color?.hexString }}>
-                                        {isMe ? 'Your' : prof.name + "'s"} secret:
+                                        {isMe ? 'Your' : getPlayerName(p) + "'s"} secret:
                                     </div>
                                     {member ? (
                                         <div className="gw-done-reveal-card">
@@ -980,10 +1007,11 @@ function OnlineGame({ allPool, filters, onBack }) {
                 <div className="gw-players-pills">
                     {players.map(p => {
                         const prof = p.getProfile();
+                        const displayName = getPlayerName(p);
                         return (
-                            <div key={p.id} className="gw-player-dot" title={prof.name}
+                            <div key={p.id} className="gw-player-dot" title={displayName}
                                 style={{ background: prof.color?.hexString || '#888' }}>
-                                {prof.name?.charAt(0)}
+                                {displayName?.charAt(0)}
                             </div>
                         );
                     })}
@@ -1066,7 +1094,7 @@ function OnlineGame({ allPool, filters, onBack }) {
 
                     {/* Final guess — both players guess the opponent's secret */}
                     <div className="gw-guess-form">
-                        <div className="gw-guess-label">🎯 Guess {other ? other.getProfile().name + "'s" : "opponent's"} secret:</div>
+                        <div className="gw-guess-label">🎯 Guess {other ? getPlayerName(other) + "'s" : "opponent's"} secret:</div>
                         <form className="gw-guess-row"
                             onSubmit={e => { e.preventDefault(); handleFinalGuess(); }}>
                             <input className="gw-guess-input" placeholder="Type member name…"
