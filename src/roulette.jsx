@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { activeMemberFiles, exMemberFiles, tim_love, tim_dream, tim_passion } from './data/memberData';
+import { activeMemberFiles, exMemberFiles, tim_love, tim_dream, tim_passion, tim_trainee } from './data/memberData';
 import './roulette.css';
 
 
@@ -39,6 +39,7 @@ const TEAM_MAP = {
     team_love: tim_love,
     team_dream: tim_dream,
     team_passion: tim_passion,
+    team_trainee: tim_trainee,
 };
 
 const matchesGeneration = (filename, generation) => {
@@ -458,6 +459,7 @@ const GenCheckboxDropdown = ({ selectedGenerations, onChange }) => {
         gens.push({ value: 'team_love', label: '💗 Tim Love', group: 'Teams' });
         gens.push({ value: 'team_dream', label: '✨ Tim Dream', group: 'Teams' });
         gens.push({ value: 'team_passion', label: '🔥 Tim Passion', group: 'Teams' });
+        gens.push({ value: 'team_trainee', label: '💜 Tim Trainee', group: 'Teams' });
         return gens;
     }, []);
 
