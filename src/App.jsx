@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Box } from '@mui/material'
-import Homepage, { HomepageTierlist } from './Homepage'
+import Homepage, { HomepageTierlist, HomepageTools, HomepageGames } from './Homepage'
 import Tierlist from './Tierlist'
 import TierlistLagu from './Tierlist_Lagu'
 import Calculator from './Calculator'
@@ -51,6 +51,8 @@ function App() {
         <Box sx={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Homepage />} />
+            <Route path="/tools" element={<HomepageTools />} />
+            <Route path="/games" element={<HomepageGames />} />
             <Route path="/homepagetierlist" element={<HomepageTierlist />} />
             <Route path="/calculator" element={<Calculator />} />
             <Route path="/tierlist" element={<Tierlist />} />

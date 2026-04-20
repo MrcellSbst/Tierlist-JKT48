@@ -27,14 +27,57 @@ const Homepage = () => {
             <img src={homepageLogo} alt="JKT48 Fan Tools Logo" className="app-logo" />
             <h1 className="title">MY JKT48 TIERLIST</h1>
             <div className="nav-buttons-container landing">
+                <button className="nav-button" onClick={() => navigate('/tools')}>
+                    Tools
+                </button>
+                <button className="nav-button" onClick={() => navigate('/games')}>
+                    Games
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// ── Tools page ───────────────────────────────────────────────────────────────
+const HomepageTools = () => {
+    const navigate = useNavigate();
+
+    return (
+        <div className="homepage-container">
+            <button onClick={() => navigate('/')} className="back-button">
+                ← Back to Homepage
+            </button>
+            <img src={homepageLogo} alt="JKT48 Tools Logo" className="app-logo" />
+            <h1 className="title">TOOLS</h1>
+            <div className="nav-buttons-container landing">
                 <button className="nav-button" onClick={() => navigate('/homepagetierlist')}>
                     Tierlist Maker
                 </button>
                 <button className="nav-button" onClick={() => navigate('/dream-setlist')}>
                     Dream Setlist
                 </button>
+            </div>
+        </div>
+    );
+};
+
+// ── Games page ───────────────────────────────────────────────────────────────
+const HomepageGames = () => {
+    const navigate = useNavigate();
+
+    return (
+        <div className="homepage-container">
+            <button onClick={() => navigate('/')} className="back-button">
+                ← Back to Homepage
+            </button>
+            <img src={homepageLogo} alt="JKT48 Games Logo" className="app-logo" />
+            <h1 className="title">GAMES</h1>
+            <div className="nav-buttons-container landing">
                 <button className="nav-button" onClick={() => navigate('/roulette')}>
                     Member Roulette
+                </button>
+                <button className="nav-button" onClick={() => navigate('/guess-who')}>
+                    Guess Who
                 </button>
             </div>
         </div>
@@ -254,5 +297,5 @@ const HomepageTierlist = () => {
     );
 };
 
-export { HomepageTierlist };
+export { HomepageTierlist, HomepageTools, HomepageGames };
 export default Homepage;
