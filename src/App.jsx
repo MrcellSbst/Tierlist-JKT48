@@ -15,6 +15,7 @@ import DreamSetlist from './Dream_Setlist';
 import RoulettePage from './roulette';
 import GachaPage from './Gacha';
 import MobileTierlist from './Mobile_Tierlist';
+import GuessWho from './GuessWho';
 import './styles/App.css'
 
 const DisabledFeature = () => (
@@ -59,6 +60,7 @@ function App() {
             <Route path="/roulette" element={<RoulettePage />} />
             <Route path="/mobile-tierlist" element={<MobileTierlist />} />
             <Route path="/gacha" element={<GachaPage />} />
+            <Route path="/guess-who" element={<GuessWho />} />
             <Route path="/this-or-that/*" element={<DisabledFeature />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
