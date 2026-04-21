@@ -2094,6 +2094,96 @@
     text-align: center;
 }
 
+/* ─── GUESS COMPARISON (done screen) ─────────────────────────────────────── */
+.gw-done-reveals {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.gw-done-reveal-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+}
+
+.gw-done-reveal-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #8888aa;
+}
+
+.gw-done-guess-comparison {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.gw-done-guess-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 120px;
+}
+
+.gw-done-guess-col-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #555577;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.gw-done-guess-badge {
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: center;
+    width: 100%;
+}
+
+.gw-done-guess-badge.correct {
+    background: rgba(52, 211, 153, 0.15);
+    border: 1.5px solid rgba(52, 211, 153, 0.4);
+    color: #6ee7b7;
+}
+
+.gw-done-guess-badge.wrong {
+    background: rgba(248, 113, 113, 0.12);
+    border: 1.5px solid rgba(248, 113, 113, 0.35);
+    color: #fca5a5;
+}
+
+.gw-done-guess-arrow {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #444466;
+    flex-shrink: 0;
+}
+
+/* ─── GUESS SUBMITTED state (in-game sidebar) ────────────────────────────── */
+.gw-guess-submitted {
+    background: rgba(52, 211, 153, 0.08);
+    border: 1.5px solid rgba(52, 211, 153, 0.25);
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+.gw-guess-waiting {
+    font-size: 0.8rem;
+    color: #6ee7b7;
+    opacity: 0.75;
+    margin-top: 4px;
+}
+
 .gw-done-chat-log {
     width: 100%;
     display: flex;
@@ -2474,4 +2564,146 @@
     cursor: not-allowed;
     transform: none !important;
     box-shadow: none !important;
+}
+
+/* ─── GUESS CONFIRM POPUP ────────────────────────────────────────────────────── */
+.gw-popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: gwFadeIn 0.18s ease;
+}
+
+@keyframes gwFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.gw-popup-card {
+    background: linear-gradient(145deg, rgba(30, 20, 50, 0.98), rgba(20, 12, 35, 0.98));
+    border: 1px solid rgba(245, 197, 24, 0.3);
+    border-radius: 24px;
+    padding: 36px 32px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(245,197,24,0.1);
+    animation: gwPopIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes gwPopIn {
+    from { opacity: 0; transform: scale(0.82) translateY(20px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.gw-popup-icon {
+    font-size: 2.8rem;
+}
+
+.gw-popup-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fff;
+    margin: 0;
+}
+
+.gw-popup-sub {
+    font-size: 0.88rem;
+    color: #8888aa;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.gw-popup-sub strong {
+    color: #f5c518;
+}
+
+.gw-popup-guess-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #f5c518;
+    background: rgba(245, 197, 24, 0.1);
+    border: 1.5px solid rgba(245, 197, 24, 0.3);
+    border-radius: 12px;
+    padding: 10px 24px;
+    text-align: center;
+    width: 100%;
+    letter-spacing: 0.02em;
+}
+
+.gw-popup-warning {
+    font-size: 0.75rem;
+    color: #fb923c;
+    text-align: center;
+    opacity: 0.85;
+}
+
+.gw-popup-btns {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.gw-popup-cancel {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: #8888aa;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+
+.gw-popup-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #bbb;
+}
+
+.gw-popup-confirm {
+    flex: 1.6;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #e53e2d, #f5c518);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.02em;
+}
+
+.gw-popup-confirm:hover {
+    opacity: 0.88;
+    transform: scale(1.03);
+}
+
+/* ─── REMATCH WAITING ────────────────────────────────────────────────────────── */
+.gw-rematch-waiting {
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(245, 197, 24, 0.25);
+    background: rgba(245, 197, 24, 0.08);
+    color: #fde68a;
+    font-size: 0.88rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }

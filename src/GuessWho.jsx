@@ -149,7 +149,7 @@ export default function GuessWho() {
             )}
             {screen === 'multi' && (
                 <MultiLobby filters={filters} joinCode={joinCode} nickname={nickname}
-                    onBack={() => window.location.reload()} />
+                    onBack={() => window.location.replace(window.location.pathname)} />
             )}
         </div>
     );
@@ -691,6 +691,16 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
     const [pickedPlayers, setPickedPlayers] = useMultiplayerState('pickedPlayers', {});
     const [winnerId, setWinnerId] = useMultiplayerState('winnerId', null);
     const [revealedSecrets, setRevealedSecrets] = useMultiplayerState('revealedSecrets', {});
+    // Two separate guess-result slots — one per player, each written by exactly one client (no race)
+    // hostGuessEntry: result of host's guess, written by the GUEST (who is the target)
+    // guestGuessEntry: result of guest's guess, written by the HOST (who is the target)
+    const [hostGuessEntry, setHostGuessEntry] = useMultiplayerState('hostGuessEntry', null);
+    const [guestGuessEntry, setGuestGuessEntry] = useMultiplayerState('guestGuessEntry', null);
+    // hostPlayerId: written once by host so result screen knows which player is which
+    const [hostPlayerId, setHostPlayerId] = useMultiplayerState('hostPlayerId', null);
+    // Rematch votes — each player sets their own flag (no merge conflict)
+    const [hostWantsRematch, setHostWantsRematch] = useMultiplayerState('hostWantsRematch', false);
+    const [guestWantsRematch, setGuestWantsRematch] = useMultiplayerState('guestWantsRematch', false);
     // Nickname registry: host and guest each write to their own key — no merge conflicts
     const [hostNick, setHostNick] = useMultiplayerState('hostNick', '');
     const [guestNick, setGuestNick] = useMultiplayerState('guestNick', '');
@@ -702,17 +712,26 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
     const [eliminated, setEliminated] = useState(new Set());
     const [chatInput, setChatInput] = useState('');
     const [guessInput, setGuessInput] = useState('');
+    const [pendingGuess, setPendingGuess] = useState(null); // non-null = confirm popup open
+    const [iHaveSentGuess, setIHaveSentGuess] = useState(false); // true immediately after locking in
     const [roomCode, setRoomCode] = useState('');
     const [copied, setCopied] = useState(false);
     const chatEndRef = useRef(null);
+    const processedGuessIds = useRef(new Set()); // tracks auto-confirmed guess message ids
+    const mySecretRef = useRef(null);
+    useEffect(() => { mySecretRef.current = mySecret; }, [mySecret]);
 
     // Register own nickname in Playroom state once on mount.
     // Uses isHost() (synchronous) instead of amHost (hook) because the hook
     // can still be false on the first render tick even for the actual host.
     useEffect(() => {
         if (!myNickname) return;
-        if (isHost()) setHostNick(myNickname);
-        else setGuestNick(myNickname);
+        if (isHost()) {
+            setHostNick(myNickname);
+            if (me?.id) setHostPlayerId(me.id);
+        } else {
+            setGuestNick(myNickname);
+        }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Build pool: look up host's poolOrder in the FULL member set (so guest never drops cards)
@@ -733,6 +752,51 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
         }
     }, [pickedPlayers, phase, amHost]);
 
+    // When both players have submitted a final guess, host ends the game
+    useEffect(() => {
+        if (phase !== 'play' || !amHost) return;
+        if (!hostGuessEntry || !guestGuessEntry) return;
+        // Determine winner: host won if hostGuessEntry.correct, guest won if guestGuessEntry.correct
+        if (hostGuessEntry.correct) {
+            setWinnerId(hostPlayerId);
+        } else if (guestGuessEntry.correct) {
+            const guestPlayer = players.find(p => p.id !== hostPlayerId);
+            setWinnerId(guestPlayer?.id || null);
+        } else {
+            setWinnerId(null);
+        }
+        setPhase('done');
+    }, [hostGuessEntry, guestGuessEntry, phase, amHost, hostPlayerId, players]);
+
+    // When both want a rematch, host resets all shared state back to picking
+    useEffect(() => {
+        if (!hostWantsRematch || !guestWantsRematch) return;
+        if (!amHost) return;
+        // Reset shared game state
+        setPhase('picking');
+        setPickedPlayers({});
+        setWinnerId(null);
+        setHostGuessEntry(null);
+        setGuestGuessEntry(null);
+        setHostWantsRematch(false);
+        setGuestWantsRematch(false);
+    }, [hostWantsRematch, guestWantsRematch, amHost]);
+
+    // Reset local state whenever phase goes back to picking (rematch started)
+    const prevPhaseRef = useRef(phase);
+    useEffect(() => {
+        if (prevPhaseRef.current === 'done' && phase === 'picking') {
+            setMySecret(null);
+            setEliminated(new Set());
+            setMessages([]);
+            setIHaveSentGuess(false);
+            setChatInput('');
+            setGuessInput('');
+            processedGuessIds.current = new Set();
+        }
+        prevPhaseRef.current = phase;
+    }, [phase]);
+
     // Room code — retry since skipLobby may delay it by a tick
     useEffect(() => {
         const tryGet = () => {
@@ -744,6 +808,25 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
         };
         tryGet();
     }, []);
+
+    // Auto-confirm incoming guess messages that target me — compare with my secret
+    useEffect(() => {
+        if (!messages || !me) return;
+        messages.forEach(msg => {
+            if (msg.type !== 'guess' || msg.targetPlayerId !== me.id) return;
+            if (processedGuessIds.current.has(msg.id)) return;
+            const secret = mySecretRef.current;
+            if (!secret) return;
+            processedGuessIds.current.add(msg.id);
+            const correct = msg.guessText.trim().toLowerCase() === secret.name.toLowerCase();
+            const entry = { guessText: msg.guessText, correct, revealedFn: secret.filename };
+            // Each client only writes to the slot for their OPPONENT's guess (no race condition)
+            // If I'm the host, the guesser targeting me is the guest → write guestGuessEntry
+            // If I'm the guest, the guesser targeting me is the host → write hostGuessEntry
+            if (isHost()) setGuestGuessEntry(entry);
+            else setHostGuessEntry(entry);
+        });
+    }, [messages, me]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Scroll chat to bottom
     useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -818,6 +901,10 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             <button className="gw-copy-btn" onClick={copyCode}>{copied ? '✓ Copied!' : 'Copy Code'}</button>
                         </div>
                     )}
+                    <button className="gw-btn-back" style={{ marginTop: 8 }}
+                        onClick={() => window.location.replace(window.location.pathname)}>
+                        ✕ Cancel
+                    </button>
                 </div>
             </div>
         );
@@ -889,51 +976,54 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
 
     // ── Phase: done ───────────────────────────────────────────────────────────
     if (phase === 'done') {
-        const myRevealedFn = revealedSecrets && revealedSecrets[me?.id];
-        const canIReveal = !myRevealedFn && mySecret; // I haven't revealed yet and I know my secret
-
-        const revealMySecret = () => {
-            if (!mySecret) return;
-            setRevealedSecrets({ ...(revealedSecrets || {}), [me.id]: mySecret.filename });
-        };
-
         return (
             <div className="gw-screen gw-done-screen">
                 <div className="gw-done-card">
-                    <div className="gw-done-trophy">🏆</div>
+                    <div className="gw-done-trophy">{winner ? '🏆' : '🤝'}</div>
                     <h2 className="gw-done-title">
-                        {winner ? `${getPlayerName(winner)} Wins!` : 'Game Over!'}
+                        {winner ? `${getPlayerName(winner)} Wins!` : 'Both guessed wrong!'}
                     </h2>
                     <div className="gw-done-reveals">
                         {players.map(p => {
                             const prof = p.getProfile();
-                            const fn = revealedSecrets && revealedSecrets[p.id];
-                            const member = fn && fullPool.find(m => m.filename === fn);
                             const isMe = p.id === me?.id;
+                            const opponentPlayer = players.find(pl => pl.id !== p.id);
+                            // Determine which guess entry belongs to player p
+                            const pIsHost = p.id === hostPlayerId;
+                            const guessEntry = pIsHost ? hostGuessEntry : guestGuessEntry;
+                            const correctFn = guessEntry?.revealedFn;
+                            const correctMember = correctFn && fullPool.find(m => m.filename === correctFn);
+                            const guessedText = guessEntry?.guessText;
+                            const wasCorrect = guessEntry?.correct;
                             return (
                                 <div key={p.id} className="gw-done-reveal-item">
                                     <div className="gw-done-reveal-label" style={{ color: prof.color?.hexString }}>
-                                        {isMe ? 'Your' : getPlayerName(p) + "'s"} secret:
+                                        {isMe ? 'You' : getPlayerName(p)} guessed {opponentPlayer ? (isMe ? getPlayerName(opponentPlayer) : getPlayerName(players.find(pl => pl.id !== p.id)) ) + "'s" : "opponent's"} secret:
                                     </div>
-                                    {member ? (
-                                        <div className="gw-done-reveal-card">
-                                            <img src={member.src} alt={member.name} className="gw-done-photo"
-                                                onError={e => { e.target.style.display = 'none'; }} />
-                                            <div className="gw-done-name">{member.name}</div>
-                                            <div className="gw-done-meta">{member.generation}{member.team ? ` • ${member.team}` : ''}</div>
+                                    <div className="gw-done-guess-comparison">
+                                        <div className="gw-done-guess-col">
+                                            <div className="gw-done-guess-col-label">{isMe ? 'Your guess' : `${getPlayerName(p)}'s guess`}</div>
+                                            <div className={`gw-done-guess-badge ${wasCorrect ? 'correct' : 'wrong'}`}>
+                                                {wasCorrect ? '✅' : '❌'} {guessedText || '(no guess)'}
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <div className="gw-done-reveal-card gw-done-reveal-hidden">
-                                            <div className="gw-done-photo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>🔒</div>
-                                            <div className="gw-done-name">Never guessed</div>
-                                            {/* Only the owner of this secret can reveal it */}
-                                            {isMe && canIReveal && (
-                                                <button className="gw-btn-reveal-secret" onClick={revealMySecret}>
-                                                    🔓 Reveal My Secret
-                                                </button>
+                                        <div className="gw-done-guess-arrow">vs</div>
+                                        <div className="gw-done-guess-col">
+                                            <div className="gw-done-guess-col-label">Correct answer</div>
+                                            {correctMember ? (
+                                                <div className="gw-done-reveal-card">
+                                                    <img src={correctMember.src} alt={correctMember.name} className="gw-done-photo"
+                                                        onError={e => { e.target.style.display = 'none'; }} />
+                                                    <div className="gw-done-name">{correctMember.name}</div>
+                                                    <div className="gw-done-meta">{correctMember.generation}{correctMember.team ? ` • ${correctMember.team}` : ''}</div>
+                                                </div>
+                                            ) : (
+                                                <div className="gw-done-reveal-card gw-done-reveal-hidden">
+                                                    <div className="gw-done-name">Unknown</div>
+                                                </div>
                                             )}
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             );
                         })}
@@ -949,7 +1039,32 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             ))}
                         </div>
                     </div>
-                    <button className="gw-btn-back" onClick={onBack}>← Back to Menu</button>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                        {/* Play Again — rematch with same opponent */}
+                        {(() => {
+                            const iAmHost = isHost();
+                            const iVoted = iAmHost ? hostWantsRematch : guestWantsRematch;
+                            const theyVoted = iAmHost ? guestWantsRematch : hostWantsRematch;
+                            if (iVoted && !theyVoted) {
+                                return (
+                                    <div className="gw-rematch-waiting">
+                                        ⏳ Waiting for {other ? getPlayerName(other) : 'opponent'} to rematch…
+                                    </div>
+                                );
+                            }
+                            return (
+                                <button className="gw-btn-start" onClick={() => {
+                                    if (iAmHost) setHostWantsRematch(true);
+                                    else setGuestWantsRematch(true);
+                                }}>
+                                    🔄 Play Again
+                                </button>
+                            );
+                        })()}
+                        <button className="gw-btn-back" onClick={() => window.location.replace(window.location.pathname)}>
+                            ← Back to Menu
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -966,31 +1081,32 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
         setChatInput('');
     };
 
+    // iHaveGuessed: use local flag so UI locks immediately without waiting for opponent to confirm
+    const iHaveGuessed = iHaveSentGuess;
+
+    // Open the confirm popup instead of sending immediately
     const handleFinalGuess = () => {
-        if (!guessInput.trim() || !other) return;
-        sendMsg(`🎯 FINAL GUESS: "${guessInput.trim()}"`, 'guess', {
-            guessText: guessInput.trim(),
+        if (!guessInput.trim() || !other || iHaveGuessed) return;
+        setPendingGuess(guessInput.trim());
+    };
+
+    // Called when user confirms the popup — actually sends the guess
+    const confirmAndSend = () => {
+        if (!pendingGuess || !other || iHaveGuessed) return;
+        sendMsg(`🔒 ${(isHost() ? hostNick : guestNick) || myNickname || 'Player'} has locked in their guess!`, 'guess', {
+            guessText: pendingGuess,
             targetPlayerId: other.id,
         });
         setGuessInput('');
-    };
-
-    const confirmGuess = (msg, correct) => {
-        if (!mySecret) return;
-        if (correct) {
-            sendMsg(`✅ ${msg.player} guessed correctly! My secret was ${mySecret.name}!`, 'system');
-            setRevealedSecrets({ ...(revealedSecrets || {}), [me.id]: mySecret.filename });
-            setWinnerId(msg.playerId);
-            setPhase('done');
-        } else {
-            sendMsg(`❌ "${msg.guessText}" is wrong! Keep asking!`, 'system');
-        }
+        setPendingGuess(null);
+        setIHaveSentGuess(true);
     };
 
     const answerYes = () => sendMsg('✅ YES!', 'answer');
     const answerNo = () => sendMsg('❌ NO!', 'answer');
 
     return (
+        <>
         <div className="gw-screen gw-game-screen gw-online-game">
             {/* Top bar */}
             <div className="gw-topbar">
@@ -1071,13 +1187,6 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                                         <span className="gw-msg-player" style={{ color: msg.color }}>{msg.player}:</span>
                                     )}
                                     <span className="gw-msg-text">{msg.text}</span>
-                                    {/* Show confirm/deny only to the player being guessed */}
-                                    {msg.type === 'guess' && msg.targetPlayerId === me?.id && (
-                                        <div className="gw-confirm-row">
-                                            <button className="gw-confirm-yes" onClick={() => confirmGuess(msg, true)}>✅ Correct!</button>
-                                            <button className="gw-confirm-no" onClick={() => confirmGuess(msg, false)}>❌ Wrong</button>
-                                        </div>
-                                    )}
                                 </div>
                             ))}
                             <div ref={chatEndRef} />
@@ -1093,21 +1202,28 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                     </div>
 
                     {/* Final guess — both players guess the opponent's secret */}
-                    <div className="gw-guess-form">
-                        <div className="gw-guess-label">🎯 Guess {other ? getPlayerName(other) + "'s" : "opponent's"} secret:</div>
-                        <form className="gw-guess-row"
-                            onSubmit={e => { e.preventDefault(); handleFinalGuess(); }}>
-                            <input className="gw-guess-input" placeholder="Type member name…"
-                                value={guessInput} onChange={e => setGuessInput(e.target.value)}
-                                enterKeyHint="send"
-                                autoComplete="off"
-                                list="gw-ml-online" />
-                            <datalist id="gw-ml-online">
-                                {pool.map(m => <option key={m.filename} value={m.name} />)}
-                            </datalist>
-                            <button type="submit" className="gw-btn-guess">Guess!</button>
-                        </form>
-                    </div>
+                    {iHaveGuessed ? (
+                        <div className="gw-guess-form gw-guess-submitted">
+                            <div className="gw-guess-label">✅ Guess locked in!</div>
+                            <div className="gw-guess-waiting">Waiting for {other ? getPlayerName(other) : 'opponent'} to lock in their guess…</div>
+                        </div>
+                    ) : (
+                        <div className="gw-guess-form">
+                            <div className="gw-guess-label">🎯 Guess {other ? getPlayerName(other) + "'s" : "opponent's"} secret:</div>
+                            <form className="gw-guess-row"
+                                onSubmit={e => { e.preventDefault(); handleFinalGuess(); }}>
+                                <input className="gw-guess-input" placeholder="Type member name…"
+                                    value={guessInput} onChange={e => setGuessInput(e.target.value)}
+                                    enterKeyHint="send"
+                                    autoComplete="off"
+                                    list="gw-ml-online" />
+                                <datalist id="gw-ml-online">
+                                    {pool.map(m => <option key={m.filename} value={m.name} />)}
+                                </datalist>
+                                <button type="submit" className="gw-btn-guess">Lock In!</button>
+                            </form>
+                        </div>
+                    )}
 
                     <div className="gw-hint-guide">
                         <div className="gw-guide-title">💡 How to Play</div>
@@ -1115,12 +1231,30 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             <li>Ask your opponent yes/no questions about their secret</li>
                             <li>Answer <strong>YES ✅ / NO ❌</strong> about YOUR own secret</li>
                             <li>Flip cards to eliminate members that don't match</li>
-                            <li>Submit a <strong>Final Guess</strong> when you're ready!</li>
-                            <li>Your opponent confirms if you're right</li>
+                            <li>Type a name and press <strong>Lock In!</strong> — confirm in the popup</li>
+                            <li>Results revealed when both players have locked in!</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
+
+        {/* Guess Confirmation Popup */}
+        {pendingGuess && (
+            <div className="gw-popup-overlay" onClick={() => setPendingGuess(null)}>
+                <div className="gw-popup-card" onClick={e => e.stopPropagation()}>
+                    <div className="gw-popup-icon">🎯</div>
+                    <div className="gw-popup-title">Lock in your guess?</div>
+                    <div className="gw-popup-sub">You're guessing <strong>{other ? getPlayerName(other) + "'s" : "your opponent's"}</strong> secret is:</div>
+                    <div className="gw-popup-guess-name">{pendingGuess}</div>
+                    <div className="gw-popup-warning">⚠️ This cannot be changed once submitted!</div>
+                    <div className="gw-popup-btns">
+                        <button className="gw-popup-cancel" onClick={() => setPendingGuess(null)}>Cancel</button>
+                        <button className="gw-popup-confirm" onClick={confirmAndSend}>🔒 Lock It In!</button>
+                    </div>
+                </div>
+            </div>
+        )}
+    </>
     );
 }
