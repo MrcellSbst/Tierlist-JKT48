@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     insertCoin,
     myPlayer,
@@ -159,12 +160,23 @@ export default function GuessWho() {
 // MENU
 // ────────────────────────────────────────────────────────────────────────────
 function MenuScreen({ onPick }) {
+    const navigate = useNavigate();
     return (
         <div className="gw-screen gw-menu">
+            <button className="gw-btn-back" style={{ alignSelf: 'flex-start' }} onClick={() => navigate('/games')}>← Back</button>
             <div className="gw-logo-wrap">
                 <div className="gw-logo-board">
-                    {['🙂', '😎', '😊', '🤔', '😄', '😃'].map((e, i) => (
-                        <div key={i} className="gw-logo-card">{e}</div>
+                    {[
+                        'Gen11_grace_octaviani.jpg',
+                        'Gen12_aurhel_alana.jpg',
+                        'Gen11_cynthia_yaputera.jpg',
+                        'Gen13_Astrella_Virgiananda.jpg',
+                        'Gen13_Jemima_Evodie.jpg',
+                        'Gen13_Jacqueline_Immanuela.jpg',
+                    ].map((file, i) => (
+                        <div key={i} className="gw-logo-card">
+                            <img src={`/asset/member_active/${file}`} alt="" draggable={false} />
+                        </div>
                     ))}
                 </div>
                 <h1 className="gw-logo-title">
@@ -998,7 +1010,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             return (
                                 <div key={p.id} className="gw-done-reveal-item">
                                     <div className="gw-done-reveal-label" style={{ color: prof.color?.hexString }}>
-                                        {isMe ? 'You' : getPlayerName(p)} guessed {opponentPlayer ? (isMe ? getPlayerName(opponentPlayer) : getPlayerName(players.find(pl => pl.id !== p.id)) ) + "'s" : "opponent's"} secret:
+                                        {isMe ? 'You' : getPlayerName(p)} guessed {opponentPlayer ? (isMe ? getPlayerName(opponentPlayer) : getPlayerName(players.find(pl => pl.id !== p.id))) + "'s" : "opponent's"} secret:
                                     </div>
                                     <div className="gw-done-guess-comparison">
                                         <div className="gw-done-guess-col">
@@ -1107,154 +1119,154 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
 
     return (
         <>
-        <div className="gw-screen gw-game-screen gw-online-game">
-            {/* Top bar */}
-            <div className="gw-topbar">
-                <button className="gw-btn-back" onClick={onBack}>← Menu</button>
-                <div className="gw-topbar-center">
-                    <div className="gw-stat-pill">🃏 {pool.length - eliminated.size} left</div>
-                    {eliminated.size > 0 && <div className="gw-stat-pill gw-stat-elim">❌ {eliminated.size} out</div>}
-                    {roomCode && (
-                        <div className="gw-room-code-pill" onClick={copyCode} title="Click to copy">
-                            🔑 {roomCode} {copied ? '✓' : '📋'}
-                        </div>
-                    )}
-                </div>
-                <div className="gw-players-pills">
-                    {players.map(p => {
-                        const prof = p.getProfile();
-                        const displayName = getPlayerName(p);
-                        return (
-                            <div key={p.id} className="gw-player-dot" title={displayName}
-                                style={{ background: prof.color?.hexString || '#888' }}>
-                                {displayName?.charAt(0)}
+            <div className="gw-screen gw-game-screen gw-online-game">
+                {/* Top bar */}
+                <div className="gw-topbar">
+                    <button className="gw-btn-back" onClick={onBack}>← Menu</button>
+                    <div className="gw-topbar-center">
+                        <div className="gw-stat-pill">🃏 {pool.length - eliminated.size} left</div>
+                        {eliminated.size > 0 && <div className="gw-stat-pill gw-stat-elim">❌ {eliminated.size} out</div>}
+                        {roomCode && (
+                            <div className="gw-room-code-pill" onClick={copyCode} title="Click to copy">
+                                🔑 {roomCode} {copied ? '✓' : '📋'}
                             </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            <div className="gw-game-layout">
-                {/* Board */}
-                <div className="gw-board-col">
-                    <div className="gw-board-instructions">
-                        Flip cards to eliminate members. Ask yes/no questions and answer about YOUR secret!
+                        )}
                     </div>
-                    <Board members={pool} eliminated={eliminated} onToggle={toggle} revealedFilename={null} />
+                    <div className="gw-players-pills">
+                        {players.map(p => {
+                            const prof = p.getProfile();
+                            const displayName = getPlayerName(p);
+                            return (
+                                <div key={p.id} className="gw-player-dot" title={displayName}
+                                    style={{ background: prof.color?.hexString || '#888' }}>
+                                    {displayName?.charAt(0)}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
 
-                {/* Sidebar */}
-                <div className="gw-sidebar">
-                    {/* My secret panel — both players see their own */}
-                    {mySecret && (
-                        <div className="gw-host-secret-panel">
-                            <div className="gw-guide-title">🔒 Your Secret (only you see this)</div>
-                            <div className="gw-host-secret-card">
-                                <div className="gw-host-secret-frame">
-                                    <img className="gw-host-secret-photo" src={mySecret.src} alt={mySecret.name}
-                                        onError={e => { e.target.style.display = 'none'; }} />
-                                </div>
-                                <div className="gw-host-secret-info">
-                                    <div className="gw-host-secret-name">{mySecret.name}</div>
-                                    <div className="gw-host-secret-meta">{mySecret.generation}{mySecret.team ? ` • ${mySecret.team}` : ''}</div>
-                                    <div className={`gw-host-status ${mySecret.isActive ? 'active' : 'ex'}`}>
-                                        {mySecret.isActive ? '✨ Active' : '🎓 Ex-Member'}
+                <div className="gw-game-layout">
+                    {/* Board */}
+                    <div className="gw-board-col">
+                        <div className="gw-board-instructions">
+                            Flip cards to eliminate members. Ask yes/no questions and answer about YOUR secret!
+                        </div>
+                        <Board members={pool} eliminated={eliminated} onToggle={toggle} revealedFilename={null} />
+                    </div>
+
+                    {/* Sidebar */}
+                    <div className="gw-sidebar">
+                        {/* My secret panel — both players see their own */}
+                        {mySecret && (
+                            <div className="gw-host-secret-panel">
+                                <div className="gw-guide-title">🔒 Your Secret (only you see this)</div>
+                                <div className="gw-host-secret-card">
+                                    <div className="gw-host-secret-frame">
+                                        <img className="gw-host-secret-photo" src={mySecret.src} alt={mySecret.name}
+                                            onError={e => { e.target.style.display = 'none'; }} />
+                                    </div>
+                                    <div className="gw-host-secret-info">
+                                        <div className="gw-host-secret-name">{mySecret.name}</div>
+                                        <div className="gw-host-secret-meta">{mySecret.generation}{mySecret.team ? ` • ${mySecret.team}` : ''}</div>
+                                        <div className={`gw-host-status ${mySecret.isActive ? 'active' : 'ex'}`}>
+                                            {mySecret.isActive ? '✨ Active' : '🎓 Ex-Member'}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            {/* Both players answer questions about THEIR OWN secret */}
-                            <div className="gw-answer-btns">
-                                <div className="gw-answer-label">Answer about YOUR secret:</div>
-                                <button className="gw-answer-yes" onClick={answerYes}>✅ YES</button>
-                                <button className="gw-answer-no" onClick={answerNo}>❌ NO</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Chat */}
-                    <div className="gw-chat-box">
-                        <div className="gw-chat-header">
-                            💬 Game Chat
-                            <span className="gw-chat-hint">Ask questions • Answer about your own secret</span>
-                        </div>
-                        <div className="gw-chat-messages">
-                            {messages.length === 0 && (
-                                <div className="gw-chat-empty">Ask yes/no questions about the other player's secret!</div>
-                            )}
-                            {messages.map(msg => (
-                                <div key={msg.id} className={`gw-msg gw-msg-${msg.type}`}>
-                                    {msg.type !== 'system' && (
-                                        <span className="gw-msg-player" style={{ color: msg.color }}>{msg.player}:</span>
-                                    )}
-                                    <span className="gw-msg-text">{msg.text}</span>
+                                {/* Both players answer questions about THEIR OWN secret */}
+                                <div className="gw-answer-btns">
+                                    <div className="gw-answer-label">Answer about YOUR secret:</div>
+                                    <button className="gw-answer-yes" onClick={answerYes}>✅ YES</button>
+                                    <button className="gw-answer-no" onClick={answerNo}>❌ NO</button>
                                 </div>
-                            ))}
-                            <div ref={chatEndRef} />
-                        </div>
-                        <form className="gw-chat-input-wrap"
-                            onSubmit={e => { e.preventDefault(); handleSendChat(); }}>
-                            <input className="gw-chat-input" placeholder="Ask or type a message…"
-                                value={chatInput} onChange={e => setChatInput(e.target.value)}
-                                enterKeyHint="send"
-                                autoComplete="off" />
-                            <button type="submit" className="gw-send-btn">→</button>
-                        </form>
-                    </div>
+                            </div>
+                        )}
 
-                    {/* Final guess — both players guess the opponent's secret */}
-                    {iHaveGuessed ? (
-                        <div className="gw-guess-form gw-guess-submitted">
-                            <div className="gw-guess-label">✅ Guess locked in!</div>
-                            <div className="gw-guess-waiting">Waiting for {other ? getPlayerName(other) : 'opponent'} to lock in their guess…</div>
-                        </div>
-                    ) : (
-                        <div className="gw-guess-form">
-                            <div className="gw-guess-label">🎯 Guess {other ? getPlayerName(other) + "'s" : "opponent's"} secret:</div>
-                            <form className="gw-guess-row"
-                                onSubmit={e => { e.preventDefault(); handleFinalGuess(); }}>
-                                <input className="gw-guess-input" placeholder="Type member name…"
-                                    value={guessInput} onChange={e => setGuessInput(e.target.value)}
+                        {/* Chat */}
+                        <div className="gw-chat-box">
+                            <div className="gw-chat-header">
+                                💬 Game Chat
+                                <span className="gw-chat-hint">Ask questions • Answer about your own secret</span>
+                            </div>
+                            <div className="gw-chat-messages">
+                                {messages.length === 0 && (
+                                    <div className="gw-chat-empty">Ask yes/no questions about the other player's secret!</div>
+                                )}
+                                {messages.map(msg => (
+                                    <div key={msg.id} className={`gw-msg gw-msg-${msg.type}`}>
+                                        {msg.type !== 'system' && (
+                                            <span className="gw-msg-player" style={{ color: msg.color }}>{msg.player}:</span>
+                                        )}
+                                        <span className="gw-msg-text">{msg.text}</span>
+                                    </div>
+                                ))}
+                                <div ref={chatEndRef} />
+                            </div>
+                            <form className="gw-chat-input-wrap"
+                                onSubmit={e => { e.preventDefault(); handleSendChat(); }}>
+                                <input className="gw-chat-input" placeholder="Ask or type a message…"
+                                    value={chatInput} onChange={e => setChatInput(e.target.value)}
                                     enterKeyHint="send"
-                                    autoComplete="off"
-                                    list="gw-ml-online" />
-                                <datalist id="gw-ml-online">
-                                    {pool.map(m => <option key={m.filename} value={m.name} />)}
-                                </datalist>
-                                <button type="submit" className="gw-btn-guess">Lock In!</button>
+                                    autoComplete="off" />
+                                <button type="submit" className="gw-send-btn">→</button>
                             </form>
                         </div>
-                    )}
 
-                    <div className="gw-hint-guide">
-                        <div className="gw-guide-title">💡 How to Play</div>
-                        <ul className="gw-guide-list">
-                            <li>Ask your opponent yes/no questions about their secret</li>
-                            <li>Answer <strong>YES ✅ / NO ❌</strong> about YOUR own secret</li>
-                            <li>Flip cards to eliminate members that don't match</li>
-                            <li>Type a name and press <strong>Lock In!</strong> — confirm in the popup</li>
-                            <li>Results revealed when both players have locked in!</li>
-                        </ul>
+                        {/* Final guess — both players guess the opponent's secret */}
+                        {iHaveGuessed ? (
+                            <div className="gw-guess-form gw-guess-submitted">
+                                <div className="gw-guess-label">✅ Guess locked in!</div>
+                                <div className="gw-guess-waiting">Waiting for {other ? getPlayerName(other) : 'opponent'} to lock in their guess…</div>
+                            </div>
+                        ) : (
+                            <div className="gw-guess-form">
+                                <div className="gw-guess-label">🎯 Guess {other ? getPlayerName(other) + "'s" : "opponent's"} secret:</div>
+                                <form className="gw-guess-row"
+                                    onSubmit={e => { e.preventDefault(); handleFinalGuess(); }}>
+                                    <input className="gw-guess-input" placeholder="Type member name…"
+                                        value={guessInput} onChange={e => setGuessInput(e.target.value)}
+                                        enterKeyHint="send"
+                                        autoComplete="off"
+                                        list="gw-ml-online" />
+                                    <datalist id="gw-ml-online">
+                                        {pool.map(m => <option key={m.filename} value={m.name} />)}
+                                    </datalist>
+                                    <button type="submit" className="gw-btn-guess">Lock In!</button>
+                                </form>
+                            </div>
+                        )}
+
+                        <div className="gw-hint-guide">
+                            <div className="gw-guide-title">💡 How to Play</div>
+                            <ul className="gw-guide-list">
+                                <li>Ask your opponent yes/no questions about their secret</li>
+                                <li>Answer <strong>YES ✅ / NO ❌</strong> about YOUR own secret</li>
+                                <li>Flip cards to eliminate members that don't match</li>
+                                <li>Type a name and press <strong>Lock In!</strong> — confirm in the popup</li>
+                                <li>Results revealed when both players have locked in!</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {/* Guess Confirmation Popup */}
-        {pendingGuess && (
-            <div className="gw-popup-overlay" onClick={() => setPendingGuess(null)}>
-                <div className="gw-popup-card" onClick={e => e.stopPropagation()}>
-                    <div className="gw-popup-icon">🎯</div>
-                    <div className="gw-popup-title">Lock in your guess?</div>
-                    <div className="gw-popup-sub">You're guessing <strong>{other ? getPlayerName(other) + "'s" : "your opponent's"}</strong> secret is:</div>
-                    <div className="gw-popup-guess-name">{pendingGuess}</div>
-                    <div className="gw-popup-warning">⚠️ This cannot be changed once submitted!</div>
-                    <div className="gw-popup-btns">
-                        <button className="gw-popup-cancel" onClick={() => setPendingGuess(null)}>Cancel</button>
-                        <button className="gw-popup-confirm" onClick={confirmAndSend}>🔒 Lock It In!</button>
+            {/* Guess Confirmation Popup */}
+            {pendingGuess && (
+                <div className="gw-popup-overlay" onClick={() => setPendingGuess(null)}>
+                    <div className="gw-popup-card" onClick={e => e.stopPropagation()}>
+                        <div className="gw-popup-icon">🎯</div>
+                        <div className="gw-popup-title">Lock in your guess?</div>
+                        <div className="gw-popup-sub">You're guessing <strong>{other ? getPlayerName(other) + "'s" : "your opponent's"}</strong> secret is:</div>
+                        <div className="gw-popup-guess-name">{pendingGuess}</div>
+                        <div className="gw-popup-warning">⚠️ This cannot be changed once submitted!</div>
+                        <div className="gw-popup-btns">
+                            <button className="gw-popup-cancel" onClick={() => setPendingGuess(null)}>Cancel</button>
+                            <button className="gw-popup-confirm" onClick={confirmAndSend}>🔒 Lock It In!</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
-    </>
+            )}
+        </>
     );
 }

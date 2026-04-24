@@ -4,8 +4,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Box } from '@mui/material'
 import Homepage, { HomepageTierlist, HomepageTools, HomepageGames } from './Homepage'
-import Tierlist from './Tierlist'
-import TierlistLagu from './Tierlist_Lagu'
+import TierlistCombined from './Tierlist_Combined'
 import Calculator from './Calculator'
 import PointHistory from './PointHistory'
 import NotFound from './components/NotFound'
@@ -17,6 +16,7 @@ import GachaPage from './Gacha';
 import MobileTierlist from './Mobile_Tierlist';
 import GuessWho from './GuessWho';
 import './styles/App.css'
+
 
 const DisabledFeature = () => (
   <Box
@@ -55,8 +55,8 @@ function App() {
             <Route path="/games" element={<HomepageGames />} />
             <Route path="/homepagetierlist" element={<HomepageTierlist />} />
             <Route path="/calculator" element={<Calculator />} />
-            <Route path="/tierlist" element={<Tierlist />} />
-            <Route path="/tierlist_lagu" element={<TierlistLagu />} />
+            <Route path="/tierlist" element={<TierlistCombined />} />
+            <Route path="/tierlist_lagu" element={<TierlistCombined />} />
             <Route path="/dream-setlist" element={<DreamSetlist />} />
             <Route path="/point-history" element={<PointHistory />} />
             <Route path="/roulette" element={<RoulettePage />} />
