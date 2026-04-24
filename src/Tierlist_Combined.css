@@ -206,7 +206,7 @@
 }
 
 /* ── Droppable ── */
-.droppable { flex: 1; min-width: 650px; min-height: 140px; transition: all 0.2s; position: relative; width: 100%; }
+.droppable { flex: 1; min-width: 650px; min-height: 140px; transition: all 0.2s; position: relative; width: 100%; touch-action: none; }
 .droppable.is-over { background: linear-gradient(135deg, var(--primary-dim) 0%, transparent 100%); }
 .droppable.is-over::after {
     content: '';
@@ -224,6 +224,7 @@
     min-height: 140px;
     background: rgba(255,255,255,0.02);
     width: 100%; position: relative;
+    touch-action: none;
 }
 
 .tier-empty-placeholder {
@@ -540,9 +541,10 @@ button:focus-visible, .MuiButton-root:focus-visible {
     .tierlist-button-container .action-button { width: 100% !important; }
 }
 @media (pointer: coarse) {
-    .member-image, .song-image { transition: none; box-shadow: var(--shadow-sm); }
+    .member-image, .song-image { transition: none; box-shadow: var(--shadow-sm); animation: none; }
     .member-image:hover, .song-image:hover { transform: none; box-shadow: var(--shadow-sm); border-color: transparent; }
     .member-image img { transition: none; }
+    .member-image:hover img { transform: none; }
     .member-image.overlay, .song-image.overlay { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {

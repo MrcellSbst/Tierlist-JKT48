@@ -322,7 +322,7 @@ const TierlistCombined = () => {
     }, []);
 
     // ── Track change counter for auto-save ──
-    const activeItems = mode === 'song' ? songs : images;
+    const activeItems = useMemo(() => mode === 'song' ? songs : images, [mode, songs, images]);
     useEffect(() => {
         const cur = activeItems.filter(x => x.containerId === 'image-pool').length;
         if (cur !== availableCount) {
@@ -402,22 +402,7 @@ const TierlistCombined = () => {
         return () => window.removeEventListener('resize', update);
     }, [tierlistTitle]);
 
-    // ── Mobile zoom ──
-    useEffect(() => {
-        const update = () => {
-            const isMobile = window.innerWidth < 1024;
-            const vp = document.querySelector('meta[name=viewport]');
-            if (isMobile) {
-                const scale = window.innerWidth / 1024;
-                const content = `width=1024, initial-scale=${scale}, minimum-scale=${scale}, maximum-scale=${scale}, user-scalable=no`;
-                if (vp) vp.content = content; else { const m = document.createElement('meta'); m.name = 'viewport'; m.content = content; document.head.appendChild(m); }
-            } else if (vp) { vp.content = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1'; }
-        };
-        update();
-        window.addEventListener('resize', update);
-        window.addEventListener('orientationchange', update);
-        return () => { window.removeEventListener('resize', update); window.removeEventListener('orientationchange', update); };
-    }, []);
+    // ── Mobile zoom handled by ViewportManager in App.jsx ──
 
     // ── Draft helpers ──
     const calculateCompletion = (items) => {
@@ -433,9 +418,10 @@ const TierlistCombined = () => {
         localStorage.setItem(key, JSON.stringify(drafts.slice(0, max)));
     };
 
-    // ── Generic DnD helpers (shared by both modes) ──
-    const getItems  = useCallback(() => mode === 'song' ? songs  : images, [mode, songs, images]);
-    const setItems  = useCallback((fn) => mode === 'song' ? setSongs(fn) : setImages(fn), [mode]);
+    // ── DnD helpers — plain functions matching old version's proven mobile-compatible pattern ──
+    const setCurrentItems = (fn) => {
+        if (mode === 'song') setSongs(fn); else setImages(fn);
+    };
 
     const moveItem = (prevItems, activeItemId, targetId) => {
         const activeItem = prevItems.find(x => x.id === activeItemId);
@@ -449,56 +435,77 @@ const TierlistCombined = () => {
         return without;
     };
 
-    const handleDragStart = useCallback(({ active }) => { if (!isDragMode) return; setActiveId(active.id); }, [isDragMode]);
-    const handleDragOver  = useCallback(({ active, over }) => {
+    const currentItems = mode === 'song' ? songs : images;
+
+    const handleDragStart = ({ active }) => {
+        if (!isDragMode) return;
+        setActiveId(active.id);
+    };
+
+    const handleDragOver = ({ active, over }) => {
         if (!isDragMode || !over) return;
         const overId = over.id;
-        const items  = getItems();
-        if (items.find(x => x.id === overId)) {
-            const a = items.find(x => x.id === active.id);
-            const o = items.find(x => x.id === overId);
-            if (a && o && a.containerId === o.containerId)
-                setItems(prev => { const ai = prev.findIndex(x => x.id === active.id); const oi = prev.findIndex(x => x.id === overId); return arrayMove(prev, ai, oi); });
-        } else if (rows.find(r => r.id === overId) || overId === 'image-pool') {
-            setItems(prev => moveItem(prev, active.id, overId));
+
+        // Hovering over another item — reorder within same container
+        if (currentItems.find(x => x.id === overId)) {
+            const a = currentItems.find(x => x.id === active.id);
+            const o = currentItems.find(x => x.id === overId);
+            if (a && o && a.containerId === o.containerId) {
+                setCurrentItems(prev => {
+                    const ai = prev.findIndex(x => x.id === active.id);
+                    const oi = prev.findIndex(x => x.id === overId);
+                    return arrayMove(prev, ai, oi);
+                });
+            }
         }
-    }, [isDragMode, getItems, setItems, rows]);
-    const handleDragEnd = useCallback(({ active, over }) => {
+        // Hovering over a droppable container
+        else if (rows.find(r => r.id === overId) || overId === 'image-pool') {
+            setCurrentItems(prev => moveItem(prev, active.id, overId));
+        }
+    };
+
+    const handleDragEnd = ({ active, over }) => {
         if (!isDragMode) return;
         if (!over) { setActiveId(null); return; }
         const overId = over.id;
-        const items  = getItems();
-        if (items.find(x => x.id === overId)) {
-            const a = items.find(x => x.id === active.id);
-            const o = items.find(x => x.id === overId);
-            if (a && o && a.containerId === o.containerId)
-                setItems(prev => { const ai = prev.findIndex(x => x.id === active.id); const oi = prev.findIndex(x => x.id === overId); return arrayMove(prev, ai, oi); });
-        } else if (rows.find(r => r.id === overId) || overId === 'image-pool') {
-            setItems(prev => moveItem(prev, active.id, overId));
+
+        if (currentItems.find(x => x.id === overId)) {
+            const a = currentItems.find(x => x.id === active.id);
+            const o = currentItems.find(x => x.id === overId);
+            if (a && o && a.containerId === o.containerId) {
+                setCurrentItems(prev => {
+                    const ai = prev.findIndex(x => x.id === active.id);
+                    const oi = prev.findIndex(x => x.id === overId);
+                    return arrayMove(prev, ai, oi);
+                });
+            }
+        }
+        else if (rows.find(r => r.id === overId) || overId === 'image-pool') {
+            setCurrentItems(prev => moveItem(prev, active.id, overId));
         }
         setActiveId(null);
-    }, [isDragMode, getItems, setItems, rows]);
+    };
 
     // ── Click-to-place handlers ──
-    const handleImageClick = useCallback((image) => {
+    const handleImageClick = (image) => {
         if (isDragMode) return;
         setSelectedImages(prev => { const n = new Set(prev); n.has(image.id) ? n.delete(image.id) : n.add(image.id); return n; });
-    }, [isDragMode]);
-    const handleImageRightClick = useCallback((e, image) => {
+    };
+    const handleImageRightClick = (e, image) => {
         e.preventDefault();
         if (image.containerId !== 'image-pool')
-            setItems(prev => prev.map(x => x.id === image.id ? { ...x, containerId: 'image-pool' } : x));
+            setCurrentItems(prev => prev.map(x => x.id === image.id ? { ...x, containerId: 'image-pool' } : x));
         setSelectedImages(prev => { const n = new Set(prev); n.delete(image.id); return n; });
-    }, [setItems]);
-    const handleTierClick = useCallback((tierId) => {
+    };
+    const handleTierClick = (tierId) => {
         if (isDragMode || !selectedImages.size) return;
-        setItems(prev => {
+        setCurrentItems(prev => {
             let next = [...prev];
             for (const selId of selectedImages) next = moveItem(next, selId, tierId);
             return next;
         });
         setTimeout(() => setSelectedImages(new Set()), 50);
-    }, [isDragMode, selectedImages, setItems]);
+    };
 
     // ── Row CRUD ──
     const handleRowEdit   = useCallback((row) => { setEditingRow(row); setDialogOpen(true); }, []);
@@ -511,8 +518,8 @@ const TierlistCombined = () => {
             [nr[idx], nr[ni]] = [nr[ni], nr[idx]]; return nr;
         });
     }, []);
-    const handleRowClear  = useCallback((rowId) => setItems(prev => prev.map(x => x.containerId === rowId ? { ...x, containerId: 'image-pool' } : x)), [setItems]);
-    const handleRowDelete = useCallback((rowId) => { handleRowClear(rowId); setRows(p => p.filter(r => r.id !== rowId)); }, [handleRowClear]);
+    const handleRowClear  = (rowId) => setCurrentItems(prev => prev.map(x => x.containerId === rowId ? { ...x, containerId: 'image-pool' } : x));
+    const handleRowDelete = (rowId) => { handleRowClear(rowId); setRows(p => p.filter(r => r.id !== rowId)); };
     const handleAddRow    = useCallback(() => setRows(p => [...p, { id: `row-${Date.now()}`, name: `New Tier ${p.length + 1}`, color: '#808080' }]), []);
 
     // ── Reset ──
@@ -603,7 +610,7 @@ const TierlistCombined = () => {
         return container;
     }, [itemsByContainer, searchTerm, mode]);
 
-    const activeItem = activeId ? getItems().find(x => x.id === activeId) : null;
+    const activeItem = activeId ? (mode === 'song' ? songs : images).find(x => x.id === activeId) : null;
 
     // ── Save as image ──────────────────────────────────────────────────────────
     const handleSave = async () => {
@@ -650,21 +657,15 @@ const TierlistCombined = () => {
         } finally { setIsSaving(false); }
     };
 
-    // ── Render helpers ────────────────────────────────────────────────────────
-    const renderSortableCard = useCallback((item) => mode === 'song'
+    // ── Render helpers (inlined to avoid useCallback dep cascades) ──
+    const renderCard = (item) => mode === 'song'
         ? <SortableSongCard key={item.id} image={item} isDragging={item.id === activeId}
             onImageClick={handleImageClick} onContextMenu={handleImageRightClick}
             isSelected={selectedImages.has(item.id)} isDragMode={isDragMode}
             setlistImageInfo={setlistImageInfo} />
         : <SortableMemberCard key={item.id} image={item} isDragging={item.id === activeId}
             onImageClick={handleImageClick} onContextMenu={handleImageRightClick}
-            isSelected={selectedImages.has(item.id)} isDragMode={isDragMode} />,
-    [mode, activeId, handleImageClick, handleImageRightClick, selectedImages, isDragMode, setlistImageInfo]);
-
-    const renderOverlayCard = useCallback(() => !activeItem ? null : mode === 'song'
-        ? <SongCard song={activeItem} dragOverlay isDragMode={isDragMode} setlistImageInfo={setlistImageInfo} />
-        : <MemberCard image={activeItem} dragOverlay isDragMode={isDragMode} />,
-    [activeItem, mode, isDragMode, setlistImageInfo]);
+            isSelected={selectedImages.has(item.id)} isDragMode={isDragMode} />;
 
     // ─────────────────────────────────────────────────────────────────────────
     return (
@@ -735,14 +736,12 @@ const TierlistCombined = () => {
                                     onClear={handleRowClear} onDelete={handleRowDelete} isFirstRow={index === 0} />
                                 <Droppable id={row.id}>
                                     <div className="tier-content">
-                                        {(() => { const rowItems = getItemsForContainer(row.id); return (
-                                        <SortableContext items={rowItems.map(x => x.id)} strategy={rectSortingStrategy}>
-                                            {rowItems.length === 0 && (
+                                        <SortableContext items={getItemsForContainer(row.id).map(x => x.id)} strategy={rectSortingStrategy}>
+                                            {getItemsForContainer(row.id).length === 0 && (
                                                 <div className="tier-empty-placeholder"><span>Drop here</span></div>
                                             )}
-                                            {rowItems.map(renderSortableCard)}
+                                            {getItemsForContainer(row.id).map(renderCard)}
                                         </SortableContext>
-                                        ); })()}
                                     </div>
                                 </Droppable>
                             </div>
@@ -796,16 +795,18 @@ const TierlistCombined = () => {
                         </div>
                         <Droppable id="image-pool">
                             <div className="image-pool">
-                                {(() => { const poolItems = getItemsForContainer('image-pool'); return (
-                                <SortableContext items={poolItems.map(x => x.id)} strategy={rectSortingStrategy}>
-                                    {poolItems.map(renderSortableCard)}
+                                <SortableContext items={getItemsForContainer('image-pool').map(x => x.id)} strategy={rectSortingStrategy}>
+                                    {getItemsForContainer('image-pool').map(renderCard)}
                                 </SortableContext>
-                                ); })()}
                             </div>
                         </Droppable>
                     </div>
 
-                    <DragOverlay>{activeId && isDragMode ? renderOverlayCard() : null}</DragOverlay>
+                    <DragOverlay>{activeId && isDragMode && activeItem ? (
+                        mode === 'song'
+                            ? <SongCard song={activeItem} dragOverlay isDragMode={isDragMode} setlistImageInfo={setlistImageInfo} />
+                            : <MemberCard image={activeItem} dragOverlay isDragMode={isDragMode} />
+                    ) : null}</DragOverlay>
                 </div>
             </DndContext>
 

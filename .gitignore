@@ -46,3 +46,6 @@ build/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# oldge files
+.oldge*
