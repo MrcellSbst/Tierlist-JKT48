@@ -213,13 +213,15 @@
 }
 
 .gw-btn-back {
+
     align-self: flex-start;
     background: rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 100px;
     padding: 7px 18px;
     color: #aaa;
-    font-size: 0.85rem;
+    font-size: 1.05rem;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -242,6 +244,11 @@
 .gw-btn-back:hover {
     background: rgba(255, 255, 255, 0.13);
     color: #fff;
+}
+
+.gw-btn-back-large {
+    padding: 14px 40px;
+    font-family: 'Outfit', sans-serif;
 }
 
 .gw-setup-title {
