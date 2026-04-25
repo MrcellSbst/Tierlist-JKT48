@@ -163,7 +163,7 @@ function MenuScreen({ onPick }) {
     const navigate = useNavigate();
     return (
         <div className="gw-screen gw-menu">
-            <button className="gw-btn-back" style={{ alignSelf: 'flex-start' }} onClick={() => navigate('/games')}>← Back</button>
+            <button className="gw-btn-back gw-btn-back-corner" onClick={() => navigate('/games')}>← Back</button>
             <div className="gw-logo-wrap">
                 <div className="gw-logo-board">
                     {[
@@ -214,7 +214,7 @@ function OnlineLobbyScreen({ onBack, onCreateRoom, onJoinRoom, nickname, onNickn
 
     return (
         <div className="gw-screen gw-menu" style={{ paddingTop: 32 }}>
-            <button className="gw-btn-back" style={{ alignSelf: 'flex-start' }} onClick={onBack}>← Back</button>
+            <button className="gw-btn-back gw-btn-back-corner" onClick={onBack}>← Back</button>
             <div className="gw-logo-wrap" style={{ marginBottom: 4 }}>
                 <div className="gw-logo-jkt" style={{ fontSize: '1rem', letterSpacing: '0.35em' }}>Online Multiplayer</div>
                 <div className="gw-logo-gw" style={{ fontSize: '2rem' }}>How do you want to play?</div>
@@ -271,7 +271,7 @@ function JoinScreen({ onBack, onJoin }) {
 
     return (
         <div className="gw-screen" style={{ justifyContent: 'center', alignItems: 'center', gap: 20 }}>
-            <button className="gw-btn-back" style={{ alignSelf: 'flex-start', marginBottom: 8 }} onClick={onBack}>← Back</button>
+            <button className="gw-btn-back gw-btn-back-corner" onClick={onBack}>← Back</button>
             <div className="gw-join-card">
                 <div className="gw-join-icon">🎮</div>
                 <h2 className="gw-join-title">Join a Room</h2>
@@ -304,7 +304,7 @@ function SetupScreen({ title, filters, setFilters, onBack, onStart, isMulti }) {
     const pool = buildMemberPool(filters);
     return (
         <div className="gw-screen gw-setup">
-            <button className="gw-btn-back" onClick={onBack}>← Back</button>
+            <button className="gw-btn-back gw-btn-back-corner" onClick={onBack}>← Back</button>
             <h2 className="gw-setup-title">{title} — Setup</h2>
             <div className="gw-setup-card">
                 <div className="gw-filter-section">
@@ -472,7 +472,7 @@ function SingleGame({ filters, onBack }) {
         return (
             <div className="gw-screen gw-pick-screen">
                 <div className="gw-pick-header">
-                    <button className="gw-btn-back" onClick={onBack}>← Back</button>
+                    <button className="gw-btn-back gw-btn-back-corner" onClick={onBack}>← Back</button>
                     <div className="gw-pick-crown">🎭</div>
                     <h2 className="gw-pick-title">Player 1 — Pick Your Secret Member</h2>
                     <p className="gw-pick-hint">

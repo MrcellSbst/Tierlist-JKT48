@@ -224,6 +224,21 @@
     transition: all 0.2s;
 }
 
+.gw-btn-back-corner {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 100;
+    margin: 0 !important;
+}
+
+@media (max-width: 768px) {
+    .gw-btn-back-corner {
+        top: 16px;
+        left: 16px;
+    }
+}
+
 .gw-btn-back:hover {
     background: rgba(255, 255, 255, 0.13);
     color: #fff;
