@@ -137,6 +137,27 @@ export const setlistSongs = {
         "Team J Oshi",
         "Bokutachi no Kamihikouki (Pesawat Terbang Kertas Milik Kita)"
     ],
+
+    "Dream Bakudan": [
+        "Wakaka People",
+        "Sekarang Para Para",
+        "Angin Musim Semi Pertama",
+        "Tak Ingin Jadi Orang Hebat",
+        "Bird",
+        "Pulang Kampung",
+        "Dua Orang yang Terlarang",
+        "Berandalan Di Surga",
+        "Kenyataan yang Telah Ternoda",
+        "Garis Pergantian Hari Cinta",
+        "Kebenaran Tinju Ini",
+        "Rasa Sayang yang Dulu Aku Remehkan",
+        "Flying High",
+        "Team Dream Oshi",
+        "Adrenalin Masa Puber",
+        "Ingin Meraih Puncak"
+    ],
+
+
     "Fajar Sang Idola": [
         "Idol no Yoake (Fajar Sang Idola)",
         "Minasan mo go Issho ni (Bersama-sama Semuanya)",
@@ -221,6 +242,28 @@ export const setlistSongs = {
         "JKT48",
         "Skirt, Hirari"
     ],
+
+    "Itadaki Love!": [
+        "12 Seconds",
+        "Gadis yang Paling Cantik di Pinggiran Pantai",
+        "Persentase Meteor",
+        "LOVE TRIP",
+        "Berikan Coklat dengan Bibir",
+        "Pencuri Cinta Pertama",
+        "Khayalan",
+        "Cinta Tak Berbalas Karaage",
+        "Ciuman Juga Kidal",
+        "Malu-Malu Lollypop",
+        "Cowok Durian",
+        "Surat Undangan Sang Angin Laut",
+        "Rapsodi",
+        "Bersama Kamu, Pelangi dan Mentari",
+        "Suka Suka Suka",
+        "Maafkan, Summer"
+    ],
+
+
+
 
     "Kira Kira Girls": [
         "Indahnya Senyum Manismu DST",
@@ -377,23 +420,6 @@ export const setlistSongs = {
         "Tegami no Koto (Tentang Suratku)"
     ],
 
-    "Dream Bakudan": [
-        "Wakaka People",
-        "Sekarang Para Para",
-        "Angin Musim Semi Pertama",
-        "Tak Ingin Jadi Orang Hebat",
-        "Bird",
-        "Pulang Kampung",
-        "Dua Orang yang Terlarang",
-        "Berandalan Di Surga",
-        "Kenyataan yang Telah Ternoda",
-        "Garis Pergantian Hari Cinta",
-        "Kebenaran Tinju Ini",
-        "Rasa Sayang yang Dulu Aku Remehkan",
-        "Flying High",
-        "Team Dream Oshi",
-        "Adrenalin Masa Puber",
-        "Ingin Meraih Puncak"
-    ],
+
 
 };

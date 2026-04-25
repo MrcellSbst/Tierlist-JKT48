@@ -13,6 +13,7 @@ export const setlistFiles = [
     'Gadis_Gadis_Remaja.jpg',
     'Himawarigumi.jpg',
     'Ingin_Bertemu.webp',
+    'Itadaki_Love!.png',
     'Kira_Kira_Girls.jpg',
     'Pajama_Drive.jpg',
     'Passion_200%.jpg',
