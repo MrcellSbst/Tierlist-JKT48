@@ -189,12 +189,12 @@ function MenuScreen({ onPick }) {
                 <button className="gw-menu-card" id="btn-single" onClick={() => onPick('setup-single')}>
                     <div className="gw-menu-card-icon">⚡</div>
                     <div className="gw-menu-card-label">Single Player</div>
-                    <div className="gw-menu-card-desc">For those who want to play IRL with your friends</div>
+                    <div className="gw-menu-card-desc">Untuk bermain secara IRL dengan temanmu</div>
                 </button>
                 <button className="gw-menu-card" id="btn-multi" onClick={() => onPick('online-lobby')}>
                     <div className="gw-menu-card-icon">🌐</div>
                     <div className="gw-menu-card-label">Online Multiplayer</div>
-                    <div className="gw-menu-card-desc">Host a room or join with a code. Chat and guess the secret member!</div>
+                    <div className="gw-menu-card-desc">Buat room atau join dengan kode. Chat dan tebak siapa member rahasia!</div>
                 </button>
             </div>
         </div>
@@ -217,12 +217,12 @@ function OnlineLobbyScreen({ onBack, onCreateRoom, onJoinRoom, nickname, onNickn
             <button className="gw-btn-back gw-btn-back-corner" onClick={onBack}>← Back</button>
             <div className="gw-logo-wrap" style={{ marginBottom: 4 }}>
                 <div className="gw-logo-jkt" style={{ fontSize: '1rem', letterSpacing: '0.35em' }}>Online Multiplayer</div>
-                <div className="gw-logo-gw" style={{ fontSize: '2rem' }}>How do you want to play?</div>
+                <div className="gw-logo-gw" style={{ fontSize: '2rem' }}>Mau buat game seperti apa?</div>
             </div>
 
             {/* Nickname input */}
             <div className="gw-nickname-section">
-                <label className="gw-filter-label" htmlFor="gw-nick-input">Your Nickname</label>
+                <label className="gw-filter-label" htmlFor="gw-nick-input">Nickname-mu</label>
                 <div className="gw-nickname-row">
                     <input
                         id="gw-nick-input"
@@ -238,19 +238,19 @@ function OnlineLobbyScreen({ onBack, onCreateRoom, onJoinRoom, nickname, onNickn
                         {nickname.length}/25
                     </span>
                 </div>
-                {!nickOk && <div className="gw-nick-hint">Required before you can create or join a room</div>}
+                {!nickOk && <div className="gw-nick-hint">Kamu harus buat nickname sebelum kamu bisa buat room</div>}
             </div>
 
             <div className="gw-menu-cards">
                 <button className="gw-menu-card" onClick={onCreateRoom} disabled={!nickOk}>
                     <div className="gw-menu-card-icon">👑</div>
-                    <div className="gw-menu-card-label">Create Room</div>
-                    <div className="gw-menu-card-desc">Pick filters, create a room, and share the <strong style={{ color: '#f5c518' }}>room code</strong> with your friend.</div>
+                    <div className="gw-menu-card-label">Buat Room</div>
+                    <div className="gw-menu-card-desc">Pilih filter, buat room, dan bagikan <strong style={{ color: '#f5c518' }}>kode room</strong> ke temanmu.</div>
                 </button>
                 <button className="gw-menu-card" onClick={onJoinRoom} disabled={!nickOk}>
                     <div className="gw-menu-card-icon">🎮</div>
                     <div className="gw-menu-card-label">Join Room</div>
-                    <div className="gw-menu-card-desc">Enter the room code your host shared to jump straight into the game.</div>
+                    <div className="gw-menu-card-desc">Masukkan kode room yang dibagikan oleh host untuk langsung bermain.</div>
                 </button>
             </div>
         </div>
@@ -274,8 +274,8 @@ function JoinScreen({ onBack, onJoin }) {
             <button className="gw-btn-back gw-btn-back-corner" onClick={onBack}>← Back</button>
             <div className="gw-join-card">
                 <div className="gw-join-icon">🎮</div>
-                <h2 className="gw-join-title">Join a Room</h2>
-                <p className="gw-join-sub">Type the code your host shared with you</p>
+                <h2 className="gw-join-title">Masuk ke Room</h2>
+                <p className="gw-join-sub">Masukkan kode room yang dibagikan oleh host</p>
                 <input
                     id="join-code-input"
                     className="gw-code-input"
@@ -290,7 +290,7 @@ function JoinScreen({ onBack, onJoin }) {
                     spellCheck={false}
                 />
                 <button className="gw-btn-start" onClick={handleJoin} disabled={!code.trim()}>
-                    Join Room →
+                    Masuk Room →
                 </button>
             </div>
         </div>
@@ -305,7 +305,7 @@ function SetupScreen({ title, filters, setFilters, onBack, onStart, isMulti }) {
     return (
         <div className="gw-screen gw-setup">
             <button className="gw-btn-back gw-btn-back-corner" onClick={onBack}>← Back</button>
-            <h2 className="gw-setup-title">{title} — Setup</h2>
+            <h2 className="gw-setup-title">{title} — Pengaturan</h2>
             <div className="gw-setup-card">
                 <div className="gw-filter-section">
                     <div className="gw-filter-group">
@@ -319,7 +319,7 @@ function SetupScreen({ title, filters, setFilters, onBack, onStart, isMulti }) {
                     </div>
                     <div className="gw-filter-row">
                         <div className="gw-filter-group">
-                            <label className="gw-filter-label">Generation</label>
+                            <label className="gw-filter-label">Generasi</label>
                             <select className="gw-select" value={filters.generation}
                                 onChange={e => setFilters(f => ({ ...f, generation: e.target.value }))}>
                                 {GEN_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -335,19 +335,19 @@ function SetupScreen({ title, filters, setFilters, onBack, onStart, isMulti }) {
                     </div>
                 </div>
                 <div className="gw-pool-info">
-                    <span className="gw-pool-num">{pool.length}</span> members in pool
-                    {pool.length < 4 && <span className="gw-pool-warn"> — need at least 4</span>}
+                    <span className="gw-pool-num">{pool.length}</span> member dalam pool
+                    {pool.length < 4 && <span className="gw-pool-warn"> - butuh minimal 4</span>}
                 </div>
                 {isMulti && (
                     <div className="gw-setup-note">
                         <span className="gw-note-icon">🌐</span>
-                        A room will be created. Share the <strong>room code</strong> with your friend to join!
-                        Both players secretly pick a member — then try to guess each other's!
+                        Game room akan dibuat, share kode room kepada teman kalian untuk join!
+                        Nanti, kalian berdua akan memilih satu member secara rahasia, lalu coba tebak member pilihan masing-masing!
                     </div>
                 )}
             </div>
             <button className="gw-btn-start" disabled={pool.length < 4} onClick={onStart}>
-                {isMulti ? 'Create Room 🚀' : 'Start Game 🚀'}
+                {isMulti ? 'Buat Room' : 'Mulai Game'}
             </button>
         </div>
     );
@@ -364,7 +364,7 @@ function MemberCard({ member, eliminated, onClick, highlight }) {
 
     return (
         <div className={`gw-card ${eliminated ? 'gw-card-out' : ''} ${highlight ? 'gw-card-secret' : ''}`}
-            onClick={onClick} title={eliminated ? 'Eliminated' : member.name}>
+            onClick={onClick} title={eliminated ? 'Tereliminasi' : member.name}>
             <div className="gw-card-inner">
                 <div className="gw-card-front">
                     <div className="gw-card-frame">
@@ -414,7 +414,7 @@ function Board({ members, eliminated, onToggle, revealedFilename }) {
 function SecretCard({ member, revealed }) {
     return (
         <div className={`gw-secret-wrap ${revealed ? 'gw-secret-revealed' : ''}`}>
-            <div className="gw-secret-label">Your Secret Member</div>
+            <div className="gw-secret-label">Member Rahasia mu</div>
             <div className="gw-secret-card">
                 {revealed ? (
                     <>
@@ -428,7 +428,7 @@ function SecretCard({ member, revealed }) {
                 ) : (
                     <div className="gw-secret-hidden">
                         <div className="gw-secret-qmark">?</div>
-                        <div className="gw-secret-tap">Tap to peek</div>
+                        <div className="gw-secret-tap">Ketuk untuk melihat</div>
                     </div>
                 )}
             </div>
@@ -474,9 +474,9 @@ function SingleGame({ filters, onBack }) {
                 <div className="gw-pick-header">
                     <button className="gw-btn-back gw-btn-back-corner" onClick={onBack}>← Back</button>
                     <div className="gw-pick-crown">🎭</div>
-                    <h2 className="gw-pick-title">Player 1 — Pick Your Secret Member</h2>
+                    <h2 className="gw-pick-title">Pemain 1 — Pilih Member Rahasia</h2>
                     <p className="gw-pick-hint">
-                        Don't show Player 2! Tap a member to set your secret, then hand the device over.
+                        Jangan tunjukkan ke Player 2! Ketuk member untuk memilih rahasia.
                     </p>
                 </div>
                 <div className="gw-pick-board-grid">
@@ -503,9 +503,9 @@ function SingleGame({ filters, onBack }) {
             <div className="gw-screen gw-done-screen">
                 <div className="gw-done-card">
                     <div className="gw-done-trophy">{phase === 'won' ? '🏆' : '🏳️'}</div>
-                    <h2 className="gw-done-title">{phase === 'won' ? 'Player 2 Wins!' : 'Game Over!'}</h2>
+                    <h2 className="gw-done-title">{phase === 'won' ? 'Player 2 Menang!' : 'Game Over!'}</h2>
                     <div className="gw-done-reveal-item">
-                        <div className="gw-done-reveal-label">The secret member was:</div>
+                        <div className="gw-done-reveal-label">Member Rahasia nya adalah:</div>
                         <div className="gw-done-reveal-card">
                             <img src={secretMember.src} alt={secretMember.name} className="gw-done-photo"
                                 onError={e => { e.target.style.display = 'none'; }} />
@@ -524,7 +524,7 @@ function SingleGame({ filters, onBack }) {
                         </div>
                     )}
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <button className="gw-btn-start" onClick={() => window.location.reload()}>Play Again 🔄</button>
+                        <button className="gw-btn-start" onClick={() => window.location.reload()}>Main Lagi 🔄</button>
                         <button className="gw-btn-back" onClick={onBack}>← Menu</button>
                     </div>
                 </div>
@@ -538,7 +538,7 @@ function SingleGame({ filters, onBack }) {
             <div className="gw-topbar">
                 <button className="gw-btn-back" onClick={onBack}>← Menu</button>
                 <div className="gw-topbar-center">
-                    <div className="gw-stat-pill">🃏 {pool.length - eliminated.size} remaining</div>
+                    <div className="gw-stat-pill">🃏 {pool.length - eliminated.size} Tersisa</div>
                     {eliminated.size > 0 && <div className="gw-stat-pill gw-stat-elim">❌ {eliminated.size} out</div>}
                 </div>
                 <button className="gw-btn-reveal"
@@ -553,7 +553,7 @@ function SingleGame({ filters, onBack }) {
             <div className="gw-game-layout">
                 <div className="gw-board-col">
                     <div className="gw-board-instructions">
-                        Player 2: click cards to eliminate. Ask Player 1 yes/no questions!
+                        Player 2: Klik kartu untuk eliminasi. Tanyakan pertanyaan ya/tidak kepada Player 1!
                     </div>
                     <Board members={pool} eliminated={eliminated} onToggle={toggle} revealedFilename={null} />
                 </div>
@@ -568,7 +568,7 @@ function SingleGame({ filters, onBack }) {
 
                     {/* YES / NO — Player 1 answers questions about their secret */}
                     <div className="gw-host-secret-panel" style={{ marginTop: 0 }}>
-                        <div className="gw-guide-title">💁 Player 1 — answer the question:</div>
+                        <div className="gw-guide-title">💁 Player 1 — jawab pertanyaan:</div>
                         <div className="gw-answer-btns">
                             <button className="gw-answer-yes">✅ YES</button>
                             <button className="gw-answer-no">❌ NO</button>
@@ -593,12 +593,12 @@ function SingleGame({ filters, onBack }) {
                     )}
 
                     <div className="gw-hint-guide">
-                        <div className="gw-guide-title">💡 How to Play</div>
+                        <div className="gw-guide-title">💡 Cara Bermain</div>
                         <ul className="gw-guide-list">
-                            <li><strong>Player 1:</strong> pick a secret, then hand device to Player 2</li>
-                            <li><strong>Player 2:</strong> ask yes/no questions, flip cards to eliminate</li>
-                            <li><strong>Player 1:</strong> peek at your secret and answer YES / NO</li>
-                            <li><strong>Player 2:</strong> when ready, type the name and guess!</li>
+                            <li><strong>Player 1:</strong> pilih member rahasia</li>
+                            <li><strong>Player 2:</strong> ajukan pertanyaan ya/tidak, klik kartu untuk eliminasi</li>
+                            <li><strong>Player 1:</strong> intip member rahasia dan jawab YA / TIDAK</li>
+                            <li><strong>Player 2:</strong> kalau sudah siap, ketik namanya dan tebak!</li>
                         </ul>
                     </div>
 
@@ -760,7 +760,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
         if (phase !== 'picking' || !pickedPlayers) return;
         if (Object.keys(pickedPlayers).length >= 2 && amHost) {
             setPhase('play');
-            sendMsg('🎮 Both players picked a secret! Game starts — ask yes/no questions!', 'system');
+            sendMsg('Kedua pemain telah memilih member rahasia! Permainan dimulai ajukan pertanyaan ya/tidak!', 'system');
         }
     }, [pickedPlayers, phase, amHost]);
 
@@ -904,11 +904,11 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
             <div className="gw-screen gw-online-wait">
                 <div className="gw-wait-card">
                     <div className="gw-wait-spinner" />
-                    <h2 className="gw-wait-title">Waiting for opponent…</h2>
-                    <p className="gw-wait-sub">Share the room code with one friend to start!</p>
+                    <h2 className="gw-wait-title">Menunggu lawan…</h2>
+                    <p className="gw-wait-sub">Bagikan kode ruang ke satu teman untuk memulai!</p>
                     {roomCode && (
                         <div className="gw-room-code-badge">
-                            <div className="gw-room-code-badge-label">🔑 Room Code — share this!</div>
+                            <div className="gw-room-code-badge-label">🔑 Kode Ruang — bagikan ini!</div>
                             <div className="gw-room-code-badge-val">{roomCode}</div>
                             <button className="gw-copy-btn" onClick={copyCode}>{copied ? '✓ Copied!' : 'Copy Code'}</button>
                         </div>
@@ -932,8 +932,8 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                 <div className="gw-screen gw-online-wait">
                     <div className="gw-wait-card">
                         <div className="gw-wait-spinner" />
-                        <h2 className="gw-wait-title">Waiting for opponent…</h2>
-                        <p className="gw-wait-sub">You picked <strong style={{ color: '#f5c518' }}>{mySecret?.name}</strong>. Your opponent is choosing!</p>
+                        <h2 className="gw-wait-title">Menunggu lawan…</h2>
+                        <p className="gw-wait-sub">Anda telah memilih <strong style={{ color: '#f5c518' }}>{mySecret?.name}</strong>. Lawan Anda sedang memilih!</p>
                         <div className="gw-players-joined">
                             {players.map(p => {
                                 const prof = p.getProfile();
@@ -956,10 +956,10 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
             <div className="gw-screen gw-pick-screen">
                 <div className="gw-pick-header">
                     <div className="gw-pick-crown">🔒</div>
-                    <h2 className="gw-pick-title">Pick YOUR Secret Member</h2>
+                    <h2 className="gw-pick-title">Pilih Member Rahasiamu</h2>
                     <p className="gw-pick-hint">
-                        Your opponent will try to guess this. Don't show them!
-                        {other && <span style={{ color: '#f5c518' }}> {getPlayerName(other)} {otherHasPicked ? 'has picked ✅' : 'is choosing…'}</span>}
+                        Lawan kalian akan menebak member ini, jangan beritahu/tunjukan kepada lawan kalian!
+                        {other && <span style={{ color: '#f5c518' }}> {getPlayerName(other)} {otherHasPicked ? 'telah memilih ✅' : 'sedang memilih…'}</span>}
                     </p>
                     {roomCode && (
                         <div className="gw-room-code-badge" style={{ marginTop: 8 }}>
@@ -1010,7 +1010,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             return (
                                 <div key={p.id} className="gw-done-reveal-item">
                                     <div className="gw-done-reveal-label" style={{ color: prof.color?.hexString }}>
-                                        {isMe ? 'You' : getPlayerName(p)} guessed {opponentPlayer ? (isMe ? getPlayerName(opponentPlayer) : getPlayerName(players.find(pl => pl.id !== p.id))) + "'s" : "opponent's"} secret:
+                                        {isMe ? 'You' : getPlayerName(p)} menebak {opponentPlayer ? (isMe ? getPlayerName(opponentPlayer) : getPlayerName(players.find(pl => pl.id !== p.id))) + "'s" : "opponent's"} secret:
                                     </div>
                                     <div className="gw-done-guess-comparison">
                                         <div className="gw-done-guess-col">
@@ -1021,7 +1021,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                                         </div>
                                         <div className="gw-done-guess-arrow">vs</div>
                                         <div className="gw-done-guess-col">
-                                            <div className="gw-done-guess-col-label">Correct answer</div>
+                                            <div className="gw-done-guess-col-label">Jawaban yang benar</div>
                                             {correctMember ? (
                                                 <div className="gw-done-reveal-card">
                                                     <img src={correctMember.src} alt={correctMember.name} className="gw-done-photo"
@@ -1041,7 +1041,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                         })}
                     </div>
                     <div className="gw-done-chat-log">
-                        <div className="gw-guide-title">📋 Game Chat</div>
+                        <div className="gw-guide-title">Game Chat</div>
                         <div className="gw-done-messages">
                             {messages.slice(-12).map(msg => (
                                 <div key={msg.id} className={`gw-msg gw-msg-${msg.type}`}>
@@ -1060,7 +1060,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             if (iVoted && !theyVoted) {
                                 return (
                                     <div className="gw-rematch-waiting">
-                                        ⏳ Waiting for {other ? getPlayerName(other) : 'opponent'} to rematch…
+                                        ⏳ Menunggu {other ? getPlayerName(other) : 'opponent'} untuk main lagi…
                                     </div>
                                 );
                             }
@@ -1069,12 +1069,12 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                                     if (iAmHost) setHostWantsRematch(true);
                                     else setGuestWantsRematch(true);
                                 }}>
-                                    🔄 Play Again
+                                    Main Lagi
                                 </button>
                             );
                         })()}
                         <button className="gw-btn-back" onClick={() => window.location.replace(window.location.pathname)}>
-                            ← Back to Menu
+                            ← Kembali ke menu
                         </button>
                     </div>
                 </div>
@@ -1105,7 +1105,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
     // Called when user confirms the popup — actually sends the guess
     const confirmAndSend = () => {
         if (!pendingGuess || !other || iHaveGuessed) return;
-        sendMsg(`🔒 ${(isHost() ? hostNick : guestNick) || myNickname || 'Player'} has locked in their guess!`, 'guess', {
+        sendMsg(`🔒 ${(isHost() ? hostNick : guestNick) || myNickname || 'Player'} telah mengunci jawaban!`, 'guess', {
             guessText: pendingGuess,
             targetPlayerId: other.id,
         });
@@ -1124,11 +1124,11 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                 <div className="gw-topbar">
                     <button className="gw-btn-back" onClick={onBack}>← Menu</button>
                     <div className="gw-topbar-center">
-                        <div className="gw-stat-pill">🃏 {pool.length - eliminated.size} left</div>
-                        {eliminated.size > 0 && <div className="gw-stat-pill gw-stat-elim">❌ {eliminated.size} out</div>}
+                        <div className="gw-stat-pill">{pool.length - eliminated.size} left</div>
+                        {eliminated.size > 0 && <div className="gw-stat-pill gw-stat-elim">{eliminated.size} out</div>}
                         {roomCode && (
                             <div className="gw-room-code-pill" onClick={copyCode} title="Click to copy">
-                                🔑 {roomCode} {copied ? '✓' : '📋'}
+                                {roomCode} {copied ? '✓' : ''}
                             </div>
                         )}
                     </div>
@@ -1150,7 +1150,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                     {/* Board */}
                     <div className="gw-board-col">
                         <div className="gw-board-instructions">
-                            Flip cards to eliminate members. Ask yes/no questions and answer about YOUR secret!
+                            Pilih member untuk menyingkirkan. Ajukan pertanyaan ya/tidak dan jawab tentang member rahasia Lawan!
                         </div>
                         <Board members={pool} eliminated={eliminated} onToggle={toggle} revealedFilename={null} />
                     </div>
@@ -1160,7 +1160,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                         {/* My secret panel — both players see their own */}
                         {mySecret && (
                             <div className="gw-host-secret-panel">
-                                <div className="gw-guide-title">🔒 Your Secret (only you see this)</div>
+                                <div className="gw-guide-title"> Member Rahasiamu</div>
                                 <div className="gw-host-secret-card">
                                     <div className="gw-host-secret-frame">
                                         <img className="gw-host-secret-photo" src={mySecret.src} alt={mySecret.name}
@@ -1170,15 +1170,15 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                                         <div className="gw-host-secret-name">{mySecret.name}</div>
                                         <div className="gw-host-secret-meta">{mySecret.generation}{mySecret.team ? ` • ${mySecret.team}` : ''}</div>
                                         <div className={`gw-host-status ${mySecret.isActive ? 'active' : 'ex'}`}>
-                                            {mySecret.isActive ? '✨ Active' : '🎓 Ex-Member'}
+                                            {mySecret.isActive ? 'Active' : 'Ex-Member'}
                                         </div>
                                     </div>
                                 </div>
                                 {/* Both players answer questions about THEIR OWN secret */}
                                 <div className="gw-answer-btns">
-                                    <div className="gw-answer-label">Answer about YOUR secret:</div>
-                                    <button className="gw-answer-yes" onClick={answerYes}>✅ YES</button>
-                                    <button className="gw-answer-no" onClick={answerNo}>❌ NO</button>
+                                    <div className="gw-answer-label">Jawaban Tentang Membermu</div>
+                                    <button className="gw-answer-yes" onClick={answerYes}>✅ YA</button>
+                                    <button className="gw-answer-no" onClick={answerNo}>❌ TIDAK</button>
                                 </div>
                             </div>
                         )}
@@ -1186,12 +1186,12 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                         {/* Chat */}
                         <div className="gw-chat-box">
                             <div className="gw-chat-header">
-                                💬 Game Chat
-                                <span className="gw-chat-hint">Ask questions • Answer about your own secret</span>
+                                Obrolan
+                                <span className="gw-chat-hint" style={{ marginLeft: '12px' }}>Ajukan pertanyaan • Jawaban tentang member rahasia</span>
                             </div>
                             <div className="gw-chat-messages">
                                 {messages.length === 0 && (
-                                    <div className="gw-chat-empty">Ask yes/no questions about the other player's secret!</div>
+                                    <div className="gw-chat-empty">Tanyakan pertanyaan ya/tidak tentang rahasia Lawan!</div>
                                 )}
                                 {messages.map(msg => (
                                     <div key={msg.id} className={`gw-msg gw-msg-${msg.type}`}>
@@ -1216,12 +1216,12 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                         {/* Final guess — both players guess the opponent's secret */}
                         {iHaveGuessed ? (
                             <div className="gw-guess-form gw-guess-submitted">
-                                <div className="gw-guess-label">✅ Guess locked in!</div>
-                                <div className="gw-guess-waiting">Waiting for {other ? getPlayerName(other) : 'opponent'} to lock in their guess…</div>
+                                <div className="gw-guess-label">✅ Jawaban Terkunci</div>
+                                <div className="gw-guess-waiting">Menunggu {other ? getPlayerName(other) : 'Lawan'} untuk Mengunci Jawaban</div>
                             </div>
                         ) : (
                             <div className="gw-guess-form">
-                                <div className="gw-guess-label">🎯 Guess {other ? getPlayerName(other) + "'s" : "opponent's"} secret:</div>
+                                <div className="gw-guess-label"> Tebak Siapa Member Rahasia Lawan</div>
                                 <form className="gw-guess-row"
                                     onSubmit={e => { e.preventDefault(); handleFinalGuess(); }}>
                                     <input className="gw-guess-input" placeholder="Type member name…"
@@ -1232,19 +1232,19 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                                     <datalist id="gw-ml-online">
                                         {pool.map(m => <option key={m.filename} value={m.name} />)}
                                     </datalist>
-                                    <button type="submit" className="gw-btn-guess">Lock In!</button>
+                                    <button type="submit" className="gw-btn-guess">Kunci!</button>
                                 </form>
                             </div>
                         )}
 
                         <div className="gw-hint-guide">
-                            <div className="gw-guide-title">💡 How to Play</div>
+                            <div className="gw-guide-title">Cara Bermain</div>
                             <ul className="gw-guide-list">
-                                <li>Ask your opponent yes/no questions about their secret</li>
-                                <li>Answer <strong>YES ✅ / NO ❌</strong> about YOUR own secret</li>
-                                <li>Flip cards to eliminate members that don't match</li>
-                                <li>Type a name and press <strong>Lock In!</strong> — confirm in the popup</li>
-                                <li>Results revealed when both players have locked in!</li>
+                                <li>Ajukan pertanyaan ya/tidak tentang member rahasia Lawan</li>
+                                <li>Jawab <strong>YA ✅ / TIDAK ❌</strong> tentang member rahasia mu</li>
+                                <li>Tutup kartu untuk mengeliminasi anggota yang tidak cocok</li>
+                                <li>Ketik nama dan tekan <strong>Kunci!</strong> — konfirmasi di popup</li>
+                                <li>Hasil terungkap ketika kedua pemain telah mengunci!</li>
                             </ul>
                         </div>
                     </div>
@@ -1256,13 +1256,13 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                 <div className="gw-popup-overlay" onClick={() => setPendingGuess(null)}>
                     <div className="gw-popup-card" onClick={e => e.stopPropagation()}>
                         <div className="gw-popup-icon">🎯</div>
-                        <div className="gw-popup-title">Lock in your guess?</div>
-                        <div className="gw-popup-sub">You're guessing <strong>{other ? getPlayerName(other) + "'s" : "your opponent's"}</strong> secret is:</div>
+                        <div className="gw-popup-title">Yakin Mau Mengunci Jawaban?</div>
+                        <div className="gw-popup-sub">Tebakanmu tentang member rahasia Lawan adalah:</div>
                         <div className="gw-popup-guess-name">{pendingGuess}</div>
-                        <div className="gw-popup-warning">⚠️ This cannot be changed once submitted!</div>
+                        <div className="gw-popup-warning">⚠️ Ini tidak bisa diubah setelah terkunci!</div>
                         <div className="gw-popup-btns">
-                            <button className="gw-popup-cancel" onClick={() => setPendingGuess(null)}>Cancel</button>
-                            <button className="gw-popup-confirm" onClick={confirmAndSend}>🔒 Lock It In!</button>
+                            <button className="gw-popup-cancel" onClick={() => setPendingGuess(null)}>Batal</button>
+                            <button className="gw-popup-confirm" onClick={confirmAndSend}>🔒 Kunci!</button>
                         </div>
                     </div>
                 </div>
