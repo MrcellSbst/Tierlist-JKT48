@@ -83,7 +83,24 @@ const parseNameForSearch = (filename) => {
 const activeMemberFiles = memberData.activeMemberFiles || [];
 const exMemberFiles     = memberData.exMemberFiles     || [];
 const timLoveList       = memberData.tim_love          || [];
+const timDreamList      = memberData.tim_dream         || [];
+const timPassionList    = memberData.tim_passion       || [];
+const timTraineeList    = memberData.tim_trainee       || [];
+
 const timLoveSet        = new Set(timLoveList.map(f => f.toLowerCase()));
+const timDreamSet       = new Set(timDreamList.map(f => f.toLowerCase()));
+const timPassionSet     = new Set(timPassionList.map(f => f.toLowerCase()));
+const timTraineeSet     = new Set(timTraineeList.map(f => f.toLowerCase()));
+
+const getTeamIndex = (filename) => {
+    const fn = filename.toLowerCase();
+    if (timLoveSet.has(fn)) return 1;
+    if (timDreamSet.has(fn)) return 2;
+    if (timPassionSet.has(fn)) return 3;
+    if (timTraineeSet.has(fn)) return 4;
+    if (fn.includes('jkt48v')) return 5;
+    return 6;
+};
 
 const buildImageList = (tierlistTypeParam, memberType, generation, videoType) => {
     let imageList = [];
@@ -124,14 +141,23 @@ const buildImageList = (tierlistTypeParam, memberType, generation, videoType) =>
         };
         let idx = 0;
         if (memberType === 'active' || memberType === 'all') {
-            imageList = [...imageList, ...activeMemberFiles.filter(matchesGeneration).map(filename => ({
+            const sortedActive = [...activeMemberFiles].sort((a, b) => {
+                const teamA = getTeamIndex(a);
+                const teamB = getTeamIndex(b);
+                if (teamA !== teamB) return teamA - teamB;
+                return formatMemberName(a).toLowerCase().localeCompare(formatMemberName(b).toLowerCase());
+            });
+            imageList = [...imageList, ...sortedActive.filter(matchesGeneration).map(filename => ({
                 id: `member-${filename}`, src: `/asset/member_active/${filename}`,
                 name: formatMemberName(filename), isTimLove: timLoveSet.has(filename.toLowerCase()),
                 containerId: 'image-pool', originalIndex: idx++,
             }))];
         }
         if (memberType === 'ex' || memberType === 'all') {
-            imageList = [...imageList, ...exMemberFiles.filter(matchesGeneration).map(filename => ({
+            const sortedEx = [...exMemberFiles].sort((a, b) => {
+                return formatMemberName(a).toLowerCase().localeCompare(formatMemberName(b).toLowerCase());
+            });
+            imageList = [...imageList, ...sortedEx.filter(matchesGeneration).map(filename => ({
                 id: `member-${filename}`, src: `/asset/exmember/${filename.replace(/\\/g, '/')}`,
                 name: formatMemberName(filename), isTimLove: timLoveSet.has(filename.toLowerCase()),
                 containerId: 'image-pool', originalIndex: idx++,
