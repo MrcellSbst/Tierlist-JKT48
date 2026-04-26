@@ -1801,7 +1801,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    flex: 1;
+    min-height: 280px;
 }
 
 .gw-chat-header {
@@ -1945,6 +1945,7 @@
     padding: 8px 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     align-items: center;
+    margin-top: auto;
 }
 
 .gw-chat-input {
@@ -2342,16 +2343,26 @@
         flex-direction: column;
     }
 
-    /* Chat box on mobile: constrain messages area so input isn't pushed off screen */
+    /* Chat box on mobile: fixed to bottom to hover over board */
     .gw-online-game .gw-chat-box {
         display: flex;
         flex-direction: column;
+        flex: none;
+        height: 220px;
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        z-index: 100;
+        background: #1a1a2e; /* solid background so board doesn't show through */
+        box-shadow: 0 -5px 30px rgba(0,0,0,0.9);
+        border: 2px solid rgba(245, 197, 24, 0.5);
     }
 
     .gw-online-game .gw-chat-messages {
-        max-height: 140px;
-        min-height: 60px;
-        flex-shrink: 1;
+        max-height: none;
+        flex: 1;
+        min-height: 0;
     }
 
     /* Chat input row: always visible, bigger tap targets */
