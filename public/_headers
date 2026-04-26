@@ -1,0 +1,28 @@
+# Security headers for all routes
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Aggressive cache for hashed JS/CSS bundles (Vite adds content hashes)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache images for 30 days
+/asset/member_active/*
+  Cache-Control: public, max-age=2592000
+/asset/exmember/*
+  Cache-Control: public, max-age=2592000
+/asset/Setlist/*
+  Cache-Control: public, max-age=2592000
+/asset/SSRamadan/*
+  Cache-Control: public, max-age=2592000
+/asset/SPV_MV/*
+  Cache-Control: public, max-age=2592000
+/asset/icon/*
+  Cache-Control: public, max-age=86400
+
+# No cache for HTML (ensure fresh app shell)
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
