@@ -125,19 +125,30 @@ const buildImageList = (tierlistTypeParam, memberType, generation, videoType) =>
         }));
     } else {
         const matchesGeneration = (filename) => {
-            if (generation === 'all') return true;
-            if (generation === 'genvall') {
-                const base = filename.includes('/') ? filename.split('/').pop() : filename;
-                return /^JKT48VGen\d+_/i.test(base) || /^JKT48V_Gen\d+_/i.test(base);
+            let genArray = [];
+            try {
+                const parsed = JSON.parse(generation);
+                genArray = Array.isArray(parsed) ? parsed : [generation];
+            } catch {
+                genArray = [generation];
             }
+            if (genArray.includes('all')) return true;
+
             const base = filename.includes('/') ? filename.split('/').pop() : filename;
-            if (generation.toLowerCase().startsWith('genv')) {
-                const n = generation.slice(4);
-                return base.startsWith(`JKT48V_Gen${n}_`) || base.startsWith(`JKT48VGen${n}_`);
-            }
-            if (generation.toLowerCase().startsWith('gen'))
-                return base.startsWith(`Gen${generation.slice(3)}_`);
-            return true;
+
+            return genArray.some(gen => {
+                if (gen === 'genvall') {
+                    return /^JKT48VGen\d+_/i.test(base) || /^JKT48V_Gen\d+_/i.test(base);
+                }
+                if (gen.toLowerCase().startsWith('genv')) {
+                    const n = gen.slice(4);
+                    return base.startsWith(`JKT48V_Gen${n}_`) || base.startsWith(`JKT48VGen${n}_`);
+                }
+                if (gen.toLowerCase().startsWith('gen')) {
+                    return base.startsWith(`Gen${gen.slice(3)}_`);
+                }
+                return true;
+            });
         };
         let idx = 0;
         if (memberType === 'active' || memberType === 'all') {
@@ -207,7 +218,16 @@ const SortableMemberCard = React.memo(({ image, isDragging, onImageClick, onCont
 });
 
 // ─── Song card ───────────────────────────────────────────────────────────────
-const SongCard = React.memo(({ song, isDragging, dragOverlay, onImageClick, onContextMenu, isSelected, isDragMode, setlistImageInfo }) => {
+const getSetlistImageInfo = (name) => {
+    if (!name) name = 'Aturan Anti Cinta';
+    const specialCases = { 'BELIEVE': 'BELIEVE', 'Fly! Team T': 'Fly!_Team_T', 'Ingin Bertemu': 'Ingin_Bertemu' };
+    const extensionMap  = { 'Ingin Bertemu': 'webp', 'Dream Bakudan': 'png' };
+    const filename  = specialCases[name] || name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
+    const extension = extensionMap[name] ?? 'jpg';
+    return { filename, extension };
+};
+
+const SongCard = React.memo(({ song, isDragging, dragOverlay, onImageClick, onContextMenu, isSelected, isDragMode }) => {
     const style = {
         opacity: isSelected ? 0.5 : isDragging ? 0.3 : 1,
         cursor: isDragMode ? (dragOverlay ? 'grabbing' : 'grab') : 'pointer',
@@ -216,6 +236,7 @@ const SongCard = React.memo(({ song, isDragging, dragOverlay, onImageClick, onCo
         zIndex: dragOverlay ? 999 : 1,
         border: isSelected ? '2px solid #4CAF50' : undefined,
     };
+    const info = getSetlistImageInfo(song.setlistName || 'Aturan Anti Cinta');
     return (
         <div
             className={`song-image ${isDragging ? 'dragging' : ''} ${dragOverlay ? 'overlay' : ''}`}
@@ -224,7 +245,7 @@ const SongCard = React.memo(({ song, isDragging, dragOverlay, onImageClick, onCo
             onContextMenu={(e) => onContextMenu?.(e, song)}
         >
             <img
-                src={`/asset/Setlist/${encodeURIComponent(`${setlistImageInfo.filename}.${setlistImageInfo.extension}`)}`}
+                src={`/asset/Setlist/${encodeURIComponent(`${info.filename}.${info.extension}`)}`}
                 alt={song.name} className="song-background"
             />
             <div className="song-name">{song.name}</div>
@@ -232,7 +253,7 @@ const SongCard = React.memo(({ song, isDragging, dragOverlay, onImageClick, onCo
     );
 });
 
-const SortableSongCard = React.memo(({ image, isDragging, onImageClick, onContextMenu, isSelected, isDragMode, setlistImageInfo }) => {
+const SortableSongCard = React.memo(({ image, isDragging, onImageClick, onContextMenu, isSelected, isDragMode }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
         id: image.id, data: { type: 'image', image },
     });
@@ -244,7 +265,7 @@ const SortableSongCard = React.memo(({ image, isDragging, onImageClick, onContex
             <SongCard song={image} isDragging={isDragging}
                 onImageClick={isDragMode ? onImageClick : null}
                 onContextMenu={onContextMenu} isSelected={isSelected}
-                isDragMode={isDragMode} setlistImageInfo={setlistImageInfo} />
+                isDragMode={isDragMode} />
         </div>
     );
 });
@@ -299,11 +320,27 @@ const TierlistCombined = () => {
 
         if (storedType === 'song') {
             setMode('song');
-            const setlistName = localStorage.getItem('selectedSetlist') || 'Aturan Anti Cinta';
-            setSelectedSetlist(setlistName);
-            const songList = (setlistSongs[setlistName] || []).map((name, i) => ({
-                id: `song-${name}`, name, containerId: 'image-pool', originalIndex: i,
-            }));
+            let setlistNames = [];
+            try {
+                const parsed = JSON.parse(localStorage.getItem('selectedSetlist'));
+                setlistNames = Array.isArray(parsed) ? parsed : [localStorage.getItem('selectedSetlist') || 'Aturan Anti Cinta'];
+            } catch {
+                setlistNames = [localStorage.getItem('selectedSetlist') || 'Aturan Anti Cinta'];
+            }
+            if (setlistNames.length === 0) setlistNames = ['Aturan Anti Cinta'];
+            
+            setSelectedSetlist(setlistNames.join(', '));
+            
+            const songList = [];
+            let songIdx = 0;
+            setlistNames.forEach(name => {
+                (setlistSongs[name] || []).forEach(songName => {
+                    songList.push({
+                        id: `song-${name}-${songName}`, name: songName, containerId: 'image-pool', originalIndex: songIdx++, setlistName: name
+                    });
+                });
+            });
+
             const draftId = localStorage.getItem('currentDraftId');
             if (draftId) {
                 const all = [
@@ -552,8 +589,25 @@ const TierlistCombined = () => {
     const handleReset = () => {
         setRows([...initialRows]);
         if (mode === 'song') {
-            const name = localStorage.getItem('selectedSetlist') || 'Aturan Anti Cinta';
-            setSongs((setlistSongs[name] || []).map((n, i) => ({ id: `song-${n}`, name: n, containerId: 'image-pool', originalIndex: i })));
+            let setlistNames = [];
+            try {
+                const parsed = JSON.parse(localStorage.getItem('selectedSetlist'));
+                setlistNames = Array.isArray(parsed) ? parsed : [localStorage.getItem('selectedSetlist') || 'Aturan Anti Cinta'];
+            } catch {
+                setlistNames = [localStorage.getItem('selectedSetlist') || 'Aturan Anti Cinta'];
+            }
+            if (setlistNames.length === 0) setlistNames = ['Aturan Anti Cinta'];
+
+            const songList = [];
+            let songIdx = 0;
+            setlistNames.forEach(name => {
+                (setlistSongs[name] || []).forEach(songName => {
+                    songList.push({
+                        id: `song-${name}-${songName}`, name: songName, containerId: 'image-pool', originalIndex: songIdx++, setlistName: name
+                    });
+                });
+            });
+            setSongs(songList);
         } else {
             setImages(buildImageList(
                 localStorage.getItem('tierlistType')  || 'member',
@@ -601,14 +655,7 @@ const TierlistCombined = () => {
         return map;
     }, [images, songs, mode]);
 
-    const setlistImageInfo = useMemo(() => {
-        const name = selectedSetlist || localStorage.getItem('selectedSetlist') || 'Aturan Anti Cinta';
-        const specialCases = { 'BELIEVE': 'BELIEVE', 'Fly! Team T': 'Fly!_Team_T', 'Ingin Bertemu': 'Ingin_Bertemu' };
-        const extensionMap  = { 'Ingin Bertemu': 'webp', 'Dream Bakudan': 'png' };
-        const filename  = specialCases[name] || name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
-        const extension = extensionMap[name] ?? 'jpg';
-        return { filename, extension };
-    }, [selectedSetlist]);
+    // `setlistImageInfo` is removed since we use `getSetlistImageInfo` per song now.
 
     const getItemsForContainer = useCallback((containerId) => {
         const container = itemsByContainer[containerId] || [];
@@ -687,8 +734,7 @@ const TierlistCombined = () => {
     const renderCard = (item) => mode === 'song'
         ? <SortableSongCard key={item.id} image={item} isDragging={item.id === activeId}
             onImageClick={handleImageClick} onContextMenu={handleImageRightClick}
-            isSelected={selectedImages.has(item.id)} isDragMode={isDragMode}
-            setlistImageInfo={setlistImageInfo} />
+            isSelected={selectedImages.has(item.id)} isDragMode={isDragMode} />
         : <SortableMemberCard key={item.id} image={item} isDragging={item.id === activeId}
             onImageClick={handleImageClick} onContextMenu={handleImageRightClick}
             isSelected={selectedImages.has(item.id)} isDragMode={isDragMode} />;

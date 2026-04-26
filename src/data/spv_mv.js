@@ -1,4 +1,5 @@
 export const mvFiles = [
+    '12_Seconds.webp',
     '360°_VR_＂LOVE_TRIP＂.webp',
     '360°_VR_＂Mae_Shika_Mukanee＂_(Hanya_Lihat_Ke_Depan).webp',
     "Andai 'Ku Bukan Idola.webp",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
 import './Homepage.css';
 import { setlistSongs } from './data/setlistSongs';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,9 +16,9 @@ function TierlistConfig({ onBack }) {
     const navigate = useNavigate();
     const [tierlistType, setTierlistType] = useState('');
     const [memberType, setMemberType] = useState('active');
-    const [generation, setGeneration] = useState('all');
+    const [generation, setGeneration] = useState(['all']);
     const [videoType, setVideoType] = useState('all');
-    const [setlist, setSetlist] = useState('');
+    const [setlist, setSetlist] = useState([]);
     const [drafts, setDrafts] = useState([]);
     const [toast, setToast] = useState('');
 
@@ -55,9 +56,23 @@ function TierlistConfig({ onBack }) {
         }
     };
 
+    const handleGenerationChange = (event) => {
+        const { target: { value } } = event;
+        let newValues = typeof value === 'string' ? value.split(',') : value;
+        if (newValues.includes('all') && !generation.includes('all')) newValues = ['all'];
+        else if (newValues.includes('all') && newValues.length > 1) newValues = newValues.filter(v => v !== 'all');
+        if (newValues.length === 0) newValues = ['all'];
+        setGeneration(newValues);
+    };
+
+    const handleSetlistChange = (event) => {
+        const { target: { value } } = event;
+        setSetlist(typeof value === 'string' ? value.split(',') : value);
+    };
+
     const handleStart = () => {
         if (!tierlistType) { showToast('Silakan pilih jenis tierlist terlebih dahulu!'); return; }
-        if (tierlistType === 'setlist_song' && !setlist) { showToast('Silakan pilih setlist terlebih dahulu!'); return; }
+        if (tierlistType === 'setlist_song' && setlist.length === 0) { showToast('Silakan pilih setlist terlebih dahulu!'); return; }
         localStorage.removeItem('currentDraftId');
         if (tierlistType === 'setlist' || tierlistType === 'ramadan') {
             localStorage.setItem('tierlistType', tierlistType);
@@ -68,12 +83,12 @@ function TierlistConfig({ onBack }) {
             navigate('/tierlist');
         } else if (tierlistType === 'setlist_song') {
             localStorage.setItem('tierlistType', 'song');
-            localStorage.setItem('selectedSetlist', setlist);
+            localStorage.setItem('selectedSetlist', JSON.stringify(setlist));
             navigate('/tierlist');
         } else {
             localStorage.setItem('tierlistType', 'member');
             localStorage.setItem('memberType', memberType);
-            localStorage.setItem('generation', generation);
+            localStorage.setItem('generation', JSON.stringify(generation));
             navigate('/tierlist');
         }
     };
@@ -104,10 +119,32 @@ function TierlistConfig({ onBack }) {
                             </select>
                         )}
                         {tierlistType === 'setlist_song' && (
-                            <select className="hp2-select" value={setlist} onChange={e => setSetlist(e.target.value)}>
-                                <option value="">— Pilih setlist —</option>
-                                {Object.keys(setlistSongs).map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
+                            <Select
+                                multiple
+                                displayEmpty
+                                value={setlist}
+                                onChange={handleSetlistChange}
+                                renderValue={(selected) => {
+                                    if (selected.length === 0) return <span style={{color: '#666888'}}>— Pilih setlist —</span>;
+                                    return selected.join(', ');
+                                }}
+                                sx={{
+                                    flex: 1, minWidth: 160, color: '#e8e8f0', bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '10px',
+                                    '.MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255,255,255,0.1)' },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#e50014' },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e50014' },
+                                    '.MuiSvgIcon-root': { color: '#666888' },
+                                    height: '42px', fontFamily: 'Inter, sans-serif', fontSize: '0.88rem'
+                                }}
+                                MenuProps={{ PaperProps: { style: { maxHeight: 300, backgroundColor: '#1a1030', color: '#e8e8f0' } } }}
+                            >
+                                {Object.keys(setlistSongs).map(s => (
+                                    <MenuItem key={s} value={s} sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
+                                        <Checkbox checked={setlist.indexOf(s) > -1} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
+                                        <ListItemText primary={s} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
                         )}
                     </div>
                 </div>
@@ -120,16 +157,46 @@ function TierlistConfig({ onBack }) {
                             <option value="ex">Ex-Member</option>
                             <option value="all">Semua Member</option>
                         </select>
-                        <select className="hp2-select" value={generation} onChange={e => setGeneration(e.target.value)}>
-                            <option value="all">Semua Generasi</option>
+                        <Select
+                            multiple
+                            displayEmpty
+                            value={generation}
+                            onChange={handleGenerationChange}
+                            renderValue={(selected) => {
+                                if (selected.includes('all')) return 'Semua Generasi';
+                                return selected.map(g => g.startsWith('genv') ? `JKT48V Gen ${g.replace('genv', '').replace('all', 'Semua')}` : g.startsWith('gen') ? `Gen ${g.slice(3)}` : g).join(', ');
+                            }}
+                            sx={{
+                                flex: 1, minWidth: 160, color: '#e8e8f0', bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '10px',
+                                '.MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255,255,255,0.1)' },
+                                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#e50014' },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e50014' },
+                                '.MuiSvgIcon-root': { color: '#666888' },
+                                height: '42px', fontFamily: 'Inter, sans-serif', fontSize: '0.88rem'
+                            }}
+                            MenuProps={{ PaperProps: { style: { maxHeight: 300, backgroundColor: '#1a1030', color: '#e8e8f0' } } }}
+                        >
+                            <MenuItem value="all" sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
+                                <Checkbox checked={generation.includes('all')} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
+                                <ListItemText primary="Semua Generasi" />
+                            </MenuItem>
                             {Array.from({ length: STANDARD_GEN_COUNT }, (_, i) => i + 1).map(g => (
-                                <option key={g} value={`gen${g}`}>Generasi {g}</option>
+                                <MenuItem key={`gen${g}`} value={`gen${g}`} sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
+                                    <Checkbox checked={generation.indexOf(`gen${g}`) > -1} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
+                                    <ListItemText primary={`Generasi ${g}`} />
+                                </MenuItem>
                             ))}
-                            <option value="genvall">Semua Generasi-V</option>
+                            <MenuItem value="genvall" sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
+                                <Checkbox checked={generation.includes('genvall')} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
+                                <ListItemText primary="Semua Generasi-V" />
+                            </MenuItem>
                             {Array.from({ length: V_GEN_COUNT }, (_, i) => i + 1).map(g => (
-                                <option key={g} value={`genv${g}`}>JKT48V Gen {g}</option>
+                                <MenuItem key={`genv${g}`} value={`genv${g}`} sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
+                                    <Checkbox checked={generation.indexOf(`genv${g}`) > -1} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
+                                    <ListItemText primary={`JKT48V Gen ${g}`} />
+                                </MenuItem>
                             ))}
-                        </select>
+                        </Select>
                     </div>
                 )}
 
