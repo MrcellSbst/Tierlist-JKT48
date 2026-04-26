@@ -2,7 +2,17 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+  
+
+
+
 export default defineConfig({
+	preview: {
+    allowedHosts: ['v1.tierlistjkt48.my.id', 'v3.tierlistjkt48.my.id']
+  },
+	
+	
+	
     plugins: [
         react(),
         VitePWA({
