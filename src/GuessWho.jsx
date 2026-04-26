@@ -119,7 +119,7 @@ const TEAM_OPTIONS = [
 // ────────────────────────────────────────────────────────────────────────────
 export default function GuessWho() {
     const [screen, setScreen] = useState('menu');
-    const [filters, setFilters] = useState({ memberStatus: 'active', generation: 'all', team: 'all' });
+    const [filters, setFilters] = useState({ memberStatus: 'active', generation: 'all', team: 'all', chatAfterGuess: false });
     const [joinCode, setJoinCode] = useState('');
     const [nickname, setNickname] = useState('');
 
@@ -342,6 +342,22 @@ function SetupScreen({ title, filters, setFilters, onBack, onStart, isMulti }) {
                         </div>
                     </div>
                 </div>
+                {isMulti && (
+                    <div className="gw-filter-row" style={{ marginTop: '16px' }}>
+                        <div className="gw-filter-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                            <input 
+                                type="checkbox" 
+                                id="gw-chat-after-guess" 
+                                checked={filters.chatAfterGuess} 
+                                onChange={e => setFilters(f => ({ ...f, chatAfterGuess: e.target.checked }))} 
+                                style={{ width: '18px', height: '18px', accentColor: '#f5c518' }}
+                            />
+                            <label htmlFor="gw-chat-after-guess" className="gw-filter-label" style={{ marginBottom: 0, cursor: 'pointer' }}>
+                                Izinkan Chat Setelah Menebak
+                            </label>
+                        </div>
+                    </div>
+                )}
                 <div className="gw-pool-info">
                     <span className="gw-pool-num">{pool.length}</span> member dalam pool
                     {pool.length < 4 && <span className="gw-pool-warn"> - butuh minimal 4</span>}
@@ -639,6 +655,7 @@ function MultiLobby({ filters, joinCode, nickname, onBack }) {
                 if (isHost()) {
                     setState('poolOrder', pool.map(m => m.filename), true);
                     setState('phase', 'picking', true);
+                    setState('allowChatAfterGuess', filters.chatAfterGuess || false, true);
                 }
                 // myPlayer() may be null for a tick — poll until available,
                 // then apply the nickname via setProfile (best-effort cosmetic).
@@ -700,6 +717,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
     // ── Shared State ──
     const [phase, setPhase] = useMultiplayerState('phase', 'picking');
     const [poolOrder] = useMultiplayerState('poolOrder', []);
+    const [allowChatAfterGuess] = useMultiplayerState('allowChatAfterGuess', false);
     const [pickedPlayers, setPickedPlayers] = useMultiplayerState('pickedPlayers', {});
     const [winnerId, setWinnerId] = useMultiplayerState('winnerId', null);
     const [revealedSecrets, setRevealedSecrets] = useMultiplayerState('revealedSecrets', {});
@@ -721,6 +739,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
 
     // ── Local State ──
     const [mySecret, setMySecret] = useState(null);
+    const [secretRevealed, setSecretRevealed] = useState(false);
     const [eliminated, setEliminated] = useState(new Set());
     const [chatInput, setChatInput] = useState('');
     const [guessInput, setGuessInput] = useState('');
@@ -808,6 +827,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
     useEffect(() => {
         if (prevPhaseRef.current === 'done' && phase === 'picking') {
             setMySecret(null);
+            setSecretRevealed(false);
             setEliminated(new Set());
             setMessages([]);
             setIHaveSentGuess(false);
@@ -1187,7 +1207,13 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                         {mySecret && (
                             <div className="gw-host-secret-panel">
                                 <div className="gw-guide-title"> Member Rahasiamu</div>
-                                <div className="gw-host-secret-card">
+                                <div className="gw-host-secret-card" onClick={() => setSecretRevealed(r => !r)} style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+                                    {!secretRevealed && (
+                                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(26, 26, 46, 0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10, backdropFilter: 'blur(4px)' }}>
+                                            <span style={{ fontSize: '2rem', marginBottom: '8px' }}>👁️</span>
+                                            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#aaa' }}>Tap to Peek</span>
+                                        </div>
+                                    )}
                                     <div className="gw-host-secret-frame">
                                         <img className="gw-host-secret-photo" src={mySecret.src} alt={mySecret.name}
                                             onError={e => { e.target.style.display = 'none'; }} />
@@ -1231,12 +1257,12 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             </div>
                             <form className="gw-chat-input-wrap"
                                 onSubmit={e => { e.preventDefault(); handleSendChat(); }}>
-                                <input className="gw-chat-input" placeholder={iHaveGuessed ? "Chat disabled after guessing" : "Ask or type a message…"}
+                                <input className="gw-chat-input" placeholder={(iHaveGuessed && !allowChatAfterGuess) ? "Chat disabled after guessing" : "Ask or type a message…"}
                                     value={chatInput} onChange={e => setChatInput(e.target.value)}
                                     enterKeyHint="send"
                                     autoComplete="off"
-                                    disabled={iHaveGuessed} />
-                                <button type="submit" className="gw-send-btn" disabled={iHaveGuessed}>→</button>
+                                    disabled={iHaveGuessed && !allowChatAfterGuess} />
+                                <button type="submit" className="gw-send-btn" disabled={iHaveGuessed && !allowChatAfterGuess}>→</button>
                             </form>
                         </div>
 
