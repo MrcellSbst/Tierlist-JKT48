@@ -768,8 +768,17 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
     useEffect(() => {
         if (phase !== 'play' || !amHost) return;
         if (!hostGuessEntry || !guestGuessEntry) return;
-        // Determine winner: host won if hostGuessEntry.correct, guest won if guestGuessEntry.correct
-        if (hostGuessEntry.correct) {
+        
+        // Determine winner:
+        if (hostGuessEntry.correct && guestGuessEntry.correct) {
+            // Both correct: winner is the one who guessed earlier
+            if ((hostGuessEntry.ts || 0) <= (guestGuessEntry.ts || 0)) {
+                setWinnerId(hostPlayerId);
+            } else {
+                const guestPlayer = players.find(p => p.id !== hostPlayerId);
+                setWinnerId(guestPlayer?.id || null);
+            }
+        } else if (hostGuessEntry.correct) {
             setWinnerId(hostPlayerId);
         } else if (guestGuessEntry.correct) {
             const guestPlayer = players.find(p => p.id !== hostPlayerId);
@@ -831,7 +840,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
             if (!secret) return;
             processedGuessIds.current.add(msg.id);
             const correct = msg.guessText.trim().toLowerCase() === secret.name.toLowerCase();
-            const entry = { guessText: msg.guessText, correct, revealedFn: secret.filename };
+            const entry = { guessText: msg.guessText, correct, revealedFn: secret.filename, ts: msg.ts || Date.now() };
             // Each client only writes to the slot for their OPPONENT's guess (no race condition)
             // If I'm the host, the guesser targeting me is the guest → write guestGuessEntry
             // If I'm the guest, the guesser targeting me is the host → write hostGuessEntry
