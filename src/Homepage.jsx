@@ -260,7 +260,7 @@ export function HomepageGames() {
                             <div className="hp2-card-arrow">→</div>
                         </div>
 
-                        {/* Guess Who - hidden
+
                         <div className="hp2-card hp2-card-green" onClick={() => navigate('/guess-who')} style={{ position: 'relative' }}>
                             <span className="hp2-new-pill">New</span>
                             <div className="hp2-card-title">Guess Who?</div>
@@ -270,7 +270,7 @@ export function HomepageGames() {
                             <span className="hp2-tag hp2-tag-green">Multiplayer · Online</span>
                             <div className="hp2-card-arrow">→</div>
                         </div>
-                        */}
+
 
                         {/* Gacha - hidden
                         <div className="hp2-card hp2-card-pink" onClick={() => navigate('/gacha')}>
@@ -382,7 +382,7 @@ export default function Homepage() {
                     <div className="hp2-grid">
                         {[
                             { icon: '', title: 'Tierlist Maker', desc: 'Rank members, setlists & more', path: '/homepagetierlist', accent: 'red', tag: 'Tools', tagClass: 'red' },
-                            // { icon: '', title: 'Guess Who?', desc: 'Play online with friends', path: '/guess-who', accent: 'green', tag: 'NEW · Game', tagClass: 'green', isNew: true },
+                            { icon: '', title: 'Guess Who?', desc: 'Play online with friends', path: '/guess-who', accent: 'green', tag: 'NEW · Game', tagClass: 'green', isNew: true },
                             { icon: '', title: 'Dream Setlist', desc: 'Build your dream concert', path: '/dream-setlist', accent: 'purple', tag: 'Tools', tagClass: 'purple' },
                             { icon: '', title: 'Member Roulette', desc: 'Spin to choose a member', path: '/roulette', accent: 'gold', tag: 'Game', tagClass: 'gold' },
                             // { icon: '', title: 'Gacha', desc: 'Test your luck today', path: '/gacha', accent: 'pink', tag: 'NEW · Game', tagClass: 'pink', isNew: true },

@@ -57,11 +57,18 @@ const getTeamForFile = (filename) => {
     return null;
 };
 
-// Sort by gen number (ascending) then by display name
+// Sort by Team (Love -> Dream -> Passion -> Trainee) then by display name
+const TEAM_PRIORITY = {
+    'Tim Love': 1,
+    'Tim Dream': 2,
+    'Tim Passion': 3,
+    'Tim Trainee': 4,
+};
+
 const sortPool = (pool) => [...pool].sort((a, b) => {
-    const aKey = a.genKey.startsWith('gen') ? parseInt(a.genKey.slice(3)) : 999;
-    const bKey = b.genKey.startsWith('gen') ? parseInt(b.genKey.slice(3)) : 999;
-    if (aKey !== bKey) return aKey - bKey;
+    const aTeamPriority = TEAM_PRIORITY[a.team] || 999;
+    const bTeamPriority = TEAM_PRIORITY[b.team] || 999;
+    if (aTeamPriority !== bTeamPriority) return aTeamPriority - bTeamPriority;
     return a.name.localeCompare(b.name);
 });
 
@@ -123,7 +130,7 @@ export default function GuessWho() {
 
             {/* Single player */}
             {screen === 'setup-single' && (
-                <SetupScreen title="⚡ Single Player" filters={filters} setFilters={setFilters}
+                <SetupScreen title="⚡ Offline Mode" filters={filters} setFilters={setFilters}
                     onBack={() => setScreen('menu')} onStart={() => setScreen('single')} />
             )}
             {screen === 'single' && <SingleGame filters={filters} onBack={() => setScreen('menu')} />}
@@ -183,14 +190,15 @@ function MenuScreen({ onPick }) {
                     <span className="gw-logo-jkt">JKT48</span>
                     <span className="gw-logo-gw">Guess Who?</span>
                 </h1>
-                <p className="gw-logo-sub">The classic face-off game — JKT48 edition!</p>
+                <p className="gw-logo-sub">The classic face-off game, JKT48 edition!</p>
             </div>
+
             <div className="gw-menu-cards">
-                <button className="gw-menu-card" id="btn-single" onClick={() => onPick('setup-single')}>
+                {/*<button className="gw-menu-card" id="btn-single" onClick={() => onPick('setup-single')}>
                     <div className="gw-menu-card-icon">⚡</div>
                     <div className="gw-menu-card-label">Offline Mode</div>
                     <div className="gw-menu-card-desc">Untuk bermain secara IRL dengan temanmu</div>
-                </button>
+                </button>*/}
                 <button className="gw-menu-card" id="btn-multi" onClick={() => onPick('online-lobby')}>
                     <div className="gw-menu-card-icon">🌐</div>
                     <div className="gw-menu-card-label">Online Multiplayer</div>
@@ -305,7 +313,7 @@ function SetupScreen({ title, filters, setFilters, onBack, onStart, isMulti }) {
     return (
         <div className="gw-screen gw-setup">
             <button className="gw-btn-back gw-btn-back-corner" onClick={onBack}>← Back</button>
-            <h2 className="gw-setup-title">{title} — Pengaturan</h2>
+            <h2 className="gw-setup-title">{title} - Pengaturan</h2>
             <div className="gw-setup-card">
                 <div className="gw-filter-section">
                     <div className="gw-filter-group">
@@ -832,8 +840,15 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
         });
     }, [messages, me]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Scroll chat to bottom
-    useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+    // Scroll chat to bottom without scrolling the whole page
+    useEffect(() => {
+        if (chatEndRef.current) {
+            const parent = chatEndRef.current.parentElement;
+            if (parent) {
+                parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' });
+            }
+        }
+    }, [messages]);
 
     // Register RPC listener for chat messages
     useEffect(() => {
@@ -985,9 +1000,9 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                 <div className="gw-done-card">
                     <div className="gw-done-trophy">{winner ? '🏆' : '🤝'}</div>
                     <h2 className="gw-done-title">
-                        {winner ? `${getPlayerName(winner)} Wins!` : 'Both guessed wrong!'}
+                        {winner ? `${getPlayerName(winner)} Menang!` : 'Kalian berdua salah tebak!'}
                     </h2>
-                    <div className="gw-done-reveals">
+                    <div className="gw-done-reveals" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: '32px' }}>
                         {players.map(p => {
                             const prof = p.getProfile();
                             const isMe = p.id === me?.id;
@@ -998,32 +1013,42 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             const correctFn = guessEntry?.revealedFn;
                             const correctMember = correctFn && fullPool.find(m => m.filename === correctFn);
                             const guessedText = guessEntry?.guessText;
+                            const guessedMember = guessedText ? fullPool.find(m => m.name.toLowerCase() === guessedText.toLowerCase()) : null;
                             const wasCorrect = guessEntry?.correct;
                             return (
-                                <div key={p.id} className="gw-done-reveal-item">
-                                    <div className="gw-done-reveal-label" style={{ color: prof.color?.hexString }}>
-                                        {isMe ? 'You' : getPlayerName(p)} menebak {opponentPlayer ? (isMe ? getPlayerName(opponentPlayer) : getPlayerName(players.find(pl => pl.id !== p.id))) + "'s" : "opponent's"} secret:
+                                <div key={p.id} className="gw-done-reveal-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                                    <div className="gw-done-reveal-label" style={{ color: prof.color?.hexString, marginBottom: '12px', fontSize: '0.9rem', fontWeight: 600, textAlign: 'center' }}>
+                                        {isMe ? 'Kamu' : getPlayerName(p)} menebak Member Rahasia {opponentPlayer ? (isMe ? getPlayerName(opponentPlayer) : getPlayerName(players.find(pl => pl.id !== p.id))) : "opponent"}:
                                     </div>
-                                    <div className="gw-done-guess-comparison">
-                                        <div className="gw-done-guess-col">
-                                            <div className="gw-done-guess-col-label">{isMe ? 'Your guess' : `${getPlayerName(p)}'s guess`}</div>
-                                            <div className={`gw-done-guess-badge ${wasCorrect ? 'correct' : 'wrong'}`}>
-                                                {wasCorrect ? '✅' : '❌'} {guessedText || '(no guess)'}
-                                            </div>
+                                    <div className="gw-done-guess-comparison" style={{ display: 'flex', alignItems: 'center', gap: '20px', justifyContent: 'center', flexWrap: 'nowrap', width: '100%' }}>
+                                        <div className="gw-done-guess-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', minWidth: 'auto', flex: '0 1 auto' }}>
+                                            <div className="gw-done-guess-col-label" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#8888aa', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>{isMe ? 'Tebakan kamu' : `Tebakan ${getPlayerName(p)}`}</div>
+                                            {guessedMember ? (
+                                                <div className="gw-done-reveal-card" style={{ boxShadow: wasCorrect ? '0 0 0 4px #34d399, 2px 4px 0 rgba(0,0,0,0.45)' : '0 0 0 4px #f87171, 2px 4px 0 rgba(0,0,0,0.45)' }}>
+                                                    <img src={guessedMember.src} alt={guessedMember.name} className="gw-done-photo"
+                                                        onError={e => { e.target.style.display = 'none'; }} />
+                                                    <div className="gw-done-name">{guessedMember.name}</div>
+                                                    <div className="gw-done-meta" style={{ fontSize: '0.6rem', color: '#666', textAlign: 'center', paddingBottom: '6px', background: '#fff', width: '100%' }}>{guessedMember.generation}{guessedMember.team ? ` • ${guessedMember.team}` : ''}</div>
+                                                </div>
+                                            ) : (
+                                                <div className="gw-done-reveal-card gw-done-reveal-hidden" style={{ minHeight: 140, justifyContent: 'center', background: '#2a2a3e', width: '90px' }}>
+                                                    <div className="gw-done-name" style={{ color: '#aaa', background: 'transparent', fontSize: '0.7rem' }}>{guessedText || '(No guess)'}</div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="gw-done-guess-arrow">vs</div>
-                                        <div className="gw-done-guess-col">
-                                            <div className="gw-done-guess-col-label">Jawaban yang benar</div>
+                                        <div className="gw-done-guess-arrow" style={{ fontSize: '0.9rem', color: '#444466', fontWeight: 800, flexShrink: 0 }}>VS</div>
+                                        <div className="gw-done-guess-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', minWidth: 'auto', flex: '0 1 auto' }}>
+                                            <div className="gw-done-guess-col-label" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#8888aa', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Jawaban yang benar</div>
                                             {correctMember ? (
                                                 <div className="gw-done-reveal-card">
                                                     <img src={correctMember.src} alt={correctMember.name} className="gw-done-photo"
                                                         onError={e => { e.target.style.display = 'none'; }} />
                                                     <div className="gw-done-name">{correctMember.name}</div>
-                                                    <div className="gw-done-meta">{correctMember.generation}{correctMember.team ? ` • ${correctMember.team}` : ''}</div>
+                                                    <div className="gw-done-meta" style={{ fontSize: '0.6rem', color: '#666', textAlign: 'center', paddingBottom: '6px', background: '#fff', width: '100%' }}>{correctMember.generation}{correctMember.team ? ` • ${correctMember.team}` : ''}</div>
                                                 </div>
                                             ) : (
-                                                <div className="gw-done-reveal-card gw-done-reveal-hidden">
-                                                    <div className="gw-done-name">Unknown</div>
+                                                <div className="gw-done-reveal-card gw-done-reveal-hidden" style={{ minHeight: 140, justifyContent: 'center', background: '#2a2a3e', width: '90px' }}>
+                                                    <div className="gw-done-name" style={{ color: '#aaa', background: 'transparent' }}>Unknown</div>
                                                 </div>
                                             )}
                                         </div>
