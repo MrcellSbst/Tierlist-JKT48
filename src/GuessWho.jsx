@@ -1060,7 +1060,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                     <div className="gw-done-chat-log">
                         <div className="gw-guide-title">Game Chat</div>
                         <div className="gw-done-messages">
-                            {messages.slice(-12).map(msg => (
+                            {messages.map(msg => (
                                 <div key={msg.id} className={`gw-msg gw-msg-${msg.type}`}>
                                     {msg.type !== 'system' && <span className="gw-msg-player" style={{ color: msg.color }}>{msg.player}: </span>}
                                     <span className="gw-msg-text">{msg.text}</span>
@@ -1222,11 +1222,12 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             </div>
                             <form className="gw-chat-input-wrap"
                                 onSubmit={e => { e.preventDefault(); handleSendChat(); }}>
-                                <input className="gw-chat-input" placeholder="Ask or type a message…"
+                                <input className="gw-chat-input" placeholder={iHaveGuessed ? "Chat disabled after guessing" : "Ask or type a message…"}
                                     value={chatInput} onChange={e => setChatInput(e.target.value)}
                                     enterKeyHint="send"
-                                    autoComplete="off" />
-                                <button type="submit" className="gw-send-btn">→</button>
+                                    autoComplete="off"
+                                    disabled={iHaveGuessed} />
+                                <button type="submit" className="gw-send-btn" disabled={iHaveGuessed}>→</button>
                             </form>
                         </div>
 

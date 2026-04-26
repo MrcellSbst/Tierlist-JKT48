@@ -1217,6 +1217,12 @@
     flex-direction: column;
 }
 
+.gw-chat-input:disabled,
+.gw-send-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .gw-chat-header {
     padding: 12px 16px;
     font-size: 0.82rem;
@@ -2354,8 +2360,9 @@
         left: 10px;
         right: 10px;
         z-index: 100;
-        background: #1a1a2e; /* solid background so board doesn't show through */
-        box-shadow: 0 -5px 30px rgba(0,0,0,0.9);
+        background: #1a1a2e;
+        /* solid background so board doesn't show through */
+        box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.9);
         border: 2px solid rgba(245, 197, 24, 0.5);
     }
 
