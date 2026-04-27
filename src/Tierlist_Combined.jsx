@@ -221,7 +221,7 @@ const SortableMemberCard = React.memo(({ image, isDragging, onImageClick, onCont
 const getSetlistImageInfo = (name) => {
     if (!name) name = 'Aturan Anti Cinta';
     const specialCases = { 'BELIEVE': 'BELIEVE', 'Fly! Team T': 'Fly!_Team_T', 'Ingin Bertemu': 'Ingin_Bertemu' };
-    const extensionMap  = { 'Ingin Bertemu': 'webp', 'Dream Bakudan': 'png' };
+    const extensionMap  = { 'Ingin Bertemu': 'webp', 'Dream Bakudan': 'png', 'Itadaki Love!': 'png' };
     const filename  = specialCases[name] || name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
     const extension = extensionMap[name] ?? 'jpg';
     return { filename, extension };
@@ -876,7 +876,7 @@ const TierlistCombined = () => {
 
                     <DragOverlay>{activeId && isDragMode && activeItem ? (
                         mode === 'song'
-                            ? <SongCard song={activeItem} dragOverlay isDragMode={isDragMode} setlistImageInfo={setlistImageInfo} />
+                            ? <SongCard song={activeItem} dragOverlay isDragMode={isDragMode} />
                             : <MemberCard image={activeItem} dragOverlay isDragMode={isDragMode} />
                     ) : null}</DragOverlay>
                 </div>
