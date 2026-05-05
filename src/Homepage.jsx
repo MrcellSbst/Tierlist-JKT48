@@ -8,6 +8,32 @@ import { formatDistanceToNow } from 'date-fns';
 const homepageLogo = '/asset/icon/HomepageLogo.png';
 const tierlistLogo = '/asset/icon/TierlistIcon.png';
 
+// ─── Running banner ──────────────────────────────────────────────────────────────
+const TICKER_TEXT = 'Suka dengan Website ini? Dukung Saya dengan cara berdonasi untuk Hosting dan Domain di';
+const TICKER_URL = 'https://tako.id/MrcellSbst';
+
+function RunningBanner() {
+    const item = (
+        <span className="hp2-ticker-item">
+            <span className="hp2-ticker-dot" />
+            {TICKER_TEXT}&nbsp;:&nbsp;<a href={TICKER_URL} target="_blank" rel="noopener noreferrer">{TICKER_URL}</a>
+        </span>
+    );
+    // Duplicate to fill the track for seamless loop
+    return (
+        <div className="hp2-ticker" role="marquee" aria-label="Pengumuman">
+            <div className="hp2-ticker-track">
+                {Array.from({ length: 8 }).map((_, i) => (
+                    <span key={i} className="hp2-ticker-item">
+                        <span className="hp2-ticker-dot" />
+                        {TICKER_TEXT}&nbsp;:&nbsp;<a href={TICKER_URL} target="_blank" rel="noopener noreferrer">{TICKER_URL}</a>
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 const STANDARD_GEN_COUNT = 14;
 const V_GEN_COUNT = 2;
 
@@ -125,7 +151,7 @@ function TierlistConfig({ onBack }) {
                                 value={setlist}
                                 onChange={handleSetlistChange}
                                 renderValue={(selected) => {
-                                    if (selected.length === 0) return <span style={{color: '#666888'}}>— Pilih setlist —</span>;
+                                    if (selected.length === 0) return <span style={{ color: '#666888' }}>— Pilih setlist —</span>;
                                     return selected.join(', ');
                                 }}
                                 sx={{
@@ -238,6 +264,7 @@ export function HomepageTools() {
 
     return (
         <div className="hp2-root">
+            <RunningBanner />
             <div className="hp2-bg"><div className="hp2-bg-grad" /><div className="hp2-bg-grid" /></div>
             <div className="hp2-content">
 
@@ -299,6 +326,7 @@ export function HomepageGames() {
 
     return (
         <div className="hp2-root">
+            <RunningBanner />
             <div className="hp2-bg"><div className="hp2-bg-grad" /><div className="hp2-bg-grid" /></div>
             <div className="hp2-content">
 
@@ -363,6 +391,7 @@ export function HomepageTierlist() {
     const navigate = useNavigate();
     return (
         <div className="hp2-root">
+            <RunningBanner />
             <div className="hp2-bg"><div className="hp2-bg-grad" /><div className="hp2-bg-grid" /></div>
             <div className="hp2-content">
                 <div style={{ width: '100%', maxWidth: 700, marginBottom: 28 }}>
@@ -405,6 +434,7 @@ export default function Homepage() {
 
     return (
         <div className="hp2-root">
+            <RunningBanner />
             {/* Animated BG */}
             <div className="hp2-bg">
                 <div className="hp2-bg-grad" />

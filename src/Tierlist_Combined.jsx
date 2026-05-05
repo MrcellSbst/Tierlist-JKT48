@@ -81,16 +81,16 @@ const parseNameForSearch = (filename) => {
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 const activeMemberFiles = memberData.activeMemberFiles || [];
-const exMemberFiles     = memberData.exMemberFiles     || [];
-const timLoveList       = memberData.tim_love          || [];
-const timDreamList      = memberData.tim_dream         || [];
-const timPassionList    = memberData.tim_passion       || [];
-const timTraineeList    = memberData.tim_trainee       || [];
+const exMemberFiles = memberData.exMemberFiles || [];
+const timLoveList = memberData.tim_love || [];
+const timDreamList = memberData.tim_dream || [];
+const timPassionList = memberData.tim_passion || [];
+const timTraineeList = memberData.tim_trainee || [];
 
-const timLoveSet        = new Set(timLoveList.map(f => f.toLowerCase()));
-const timDreamSet       = new Set(timDreamList.map(f => f.toLowerCase()));
-const timPassionSet     = new Set(timPassionList.map(f => f.toLowerCase()));
-const timTraineeSet     = new Set(timTraineeList.map(f => f.toLowerCase()));
+const timLoveSet = new Set(timLoveList.map(f => f.toLowerCase()));
+const timDreamSet = new Set(timDreamList.map(f => f.toLowerCase()));
+const timPassionSet = new Set(timPassionList.map(f => f.toLowerCase()));
+const timTraineeSet = new Set(timTraineeList.map(f => f.toLowerCase()));
 
 const getTeamIndex = (filename) => {
     const fn = filename.toLowerCase();
@@ -117,7 +117,7 @@ const buildImageList = (tierlistTypeParam, memberType, generation, videoType) =>
     } else if (tierlistTypeParam === 'video') {
         let videoFiles = [];
         if (videoType === 'all') videoFiles = [...spvFiles, ...mvFiles];
-        else if (videoType === 'mv')  videoFiles = mvFiles;
+        else if (videoType === 'mv') videoFiles = mvFiles;
         else if (videoType === 'spv') videoFiles = spvFiles;
         imageList = videoFiles.map((filename, index) => ({
             id: `video-${filename}`, src: `/asset/SPV_MV/${filename}`,
@@ -221,8 +221,8 @@ const SortableMemberCard = React.memo(({ image, isDragging, onImageClick, onCont
 const getSetlistImageInfo = (name) => {
     if (!name) name = 'Aturan Anti Cinta';
     const specialCases = { 'BELIEVE': 'BELIEVE', 'Fly! Team T': 'Fly!_Team_T', 'Ingin Bertemu': 'Ingin_Bertemu' };
-    const extensionMap  = { 'Ingin Bertemu': 'webp', 'Dream Bakudan': 'png', 'Itadaki Love!': 'png' };
-    const filename  = specialCases[name] || name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
+    const extensionMap = { 'Ingin Bertemu': 'webp', 'Dream Bakudan': 'png', 'Itadaki Love!': 'png' };
+    const filename = specialCases[name] || name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
     const extension = extensionMap[name] ?? 'jpg';
     return { filename, extension };
 };
@@ -275,36 +275,36 @@ const SortableSongCard = React.memo(({ image, isDragging, onImageClick, onContex
 // ═══════════════════════════════════════════════════════════════════════════
 const TierlistCombined = () => {
     const navigate = useNavigate();
-    const tierlistRef  = useRef(null);
+    const tierlistRef = useRef(null);
     const titleInputRef = useRef(null);
-    const measureRef   = useRef(null);
+    const measureRef = useRef(null);
 
     // ── Mode: 'image' (members/setlist/video) vs 'song' ──
     const [mode, setMode] = useState('image'); // 'image' | 'song'
 
     // ── Shared state ──
-    const [rows, setRows]               = useState(initialRows);
-    const [dialogOpen, setDialogOpen]   = useState(false);
-    const [editingRow, setEditingRow]   = useState({ name: '', color: '' });
-    const [activeId, setActiveId]       = useState(null);
-    const [isDragMode, setIsDragMode]   = useState(true);
+    const [rows, setRows] = useState(initialRows);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingRow, setEditingRow] = useState({ name: '', color: '' });
+    const [activeId, setActiveId] = useState(null);
+    const [isDragMode, setIsDragMode] = useState(true);
     const [selectedImages, setSelectedImages] = useState(new Set());
     const [showWelcomeDialog, setShowWelcomeDialog] = useState(true);
-    const [searchTerm, setSearchTerm]   = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
     const [tierlistTitle, setTierlistTitle] = useState('');
     const [titlePosition, setTitlePosition] = useState({ left: 0, width: 0 });
-    const [inputWidth, setInputWidth]   = useState(300);
-    const [isSaving, setIsSaving]       = useState(false);
+    const [inputWidth, setInputWidth] = useState(300);
+    const [isSaving, setIsSaving] = useState(false);
     const [showAutoSave, setShowAutoSave] = useState(false);
     const [changeCounter, setChangeCounter] = useState(0);
     const [availableCount, setAvailableCount] = useState(0);
 
     // ── Image-mode state ──
     const [tierlistType, setTierlistType] = useState('member');
-    const [images, setImages]           = useState([]);
+    const [images, setImages] = useState([]);
 
     // ── Song-mode state ──
-    const [songs, setSongs]             = useState([]);
+    const [songs, setSongs] = useState([]);
     const [selectedSetlist, setSelectedSetlist] = useState('');
 
     // ── sensors ──
@@ -328,9 +328,9 @@ const TierlistCombined = () => {
                 setlistNames = [localStorage.getItem('selectedSetlist') || 'Aturan Anti Cinta'];
             }
             if (setlistNames.length === 0) setlistNames = ['Aturan Anti Cinta'];
-            
+
             setSelectedSetlist(setlistNames.join(', '));
-            
+
             const songList = [];
             let songIdx = 0;
             setlistNames.forEach(name => {
@@ -362,7 +362,7 @@ const TierlistCombined = () => {
             setMode('image');
             const memberType = localStorage.getItem('memberType') || 'active';
             const generation = localStorage.getItem('generation') || 'all';
-            const videoType  = localStorage.getItem('videoType')  || 'all';
+            const videoType = localStorage.getItem('videoType') || 'all';
             let imageList = buildImageList(storedType, memberType, generation, videoType);
             const draftId = localStorage.getItem('currentDraftId');
             if (draftId) {
@@ -571,9 +571,9 @@ const TierlistCombined = () => {
     };
 
     // ── Row CRUD ──
-    const handleRowEdit   = useCallback((row) => { setEditingRow(row); setDialogOpen(true); }, []);
-    const handleRowSave   = useCallback(() => { setRows(r => r.map(x => x.id === editingRow.id ? { ...x, ...editingRow } : x)); setDialogOpen(false); }, [editingRow]);
-    const handleRowMove   = useCallback((rowId, dir) => {
+    const handleRowEdit = useCallback((row) => { setEditingRow(row); setDialogOpen(true); }, []);
+    const handleRowSave = useCallback(() => { setRows(r => r.map(x => x.id === editingRow.id ? { ...x, ...editingRow } : x)); setDialogOpen(false); }, [editingRow]);
+    const handleRowMove = useCallback((rowId, dir) => {
         setRows(prev => {
             const idx = prev.findIndex(r => r.id === rowId);
             if ((dir === 'up' && idx === 0) || (dir === 'down' && idx === prev.length - 1)) return prev;
@@ -581,9 +581,9 @@ const TierlistCombined = () => {
             [nr[idx], nr[ni]] = [nr[ni], nr[idx]]; return nr;
         });
     }, []);
-    const handleRowClear  = (rowId) => setCurrentItems(prev => prev.map(x => x.containerId === rowId ? { ...x, containerId: 'image-pool' } : x));
+    const handleRowClear = (rowId) => setCurrentItems(prev => prev.map(x => x.containerId === rowId ? { ...x, containerId: 'image-pool' } : x));
     const handleRowDelete = (rowId) => { handleRowClear(rowId); setRows(p => p.filter(r => r.id !== rowId)); };
-    const handleAddRow    = useCallback(() => setRows(p => [...p, { id: `row-${Date.now()}`, name: `New Tier ${p.length + 1}`, color: '#808080' }]), []);
+    const handleAddRow = useCallback(() => setRows(p => [...p, { id: `row-${Date.now()}`, name: `New Tier ${p.length + 1}`, color: '#808080' }]), []);
 
     // ── Reset ──
     const handleReset = () => {
@@ -610,10 +610,10 @@ const TierlistCombined = () => {
             setSongs(songList);
         } else {
             setImages(buildImageList(
-                localStorage.getItem('tierlistType')  || 'member',
-                localStorage.getItem('memberType')    || 'active',
-                localStorage.getItem('generation')    || 'all',
-                localStorage.getItem('videoType')     || 'all',
+                localStorage.getItem('tierlistType') || 'member',
+                localStorage.getItem('memberType') || 'active',
+                localStorage.getItem('generation') || 'all',
+                localStorage.getItem('videoType') || 'all',
             ));
         }
     };
@@ -692,7 +692,7 @@ const TierlistCombined = () => {
         try {
             const rowsContainer = tierlistRef.current.querySelector('.tier-rows-container');
             if (!rowsContainer) return;
-            if (document.fonts?.ready) await document.fonts.ready.catch(() => {});
+            if (document.fonts?.ready) await document.fonts.ready.catch(() => { });
             await Promise.all(Array.from(rowsContainer.querySelectorAll('img')).map(img =>
                 img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })
             ));
@@ -707,7 +707,7 @@ const TierlistCombined = () => {
                 if (bar) Object.assign(bar.style, { border: 'none', boxShadow: 'none', padding: '0', marginBottom: '8px', background: 'transparent' });
                 if (inp) Object.assign(inp.style, { width: '100%', whiteSpace: 'normal', height: 'auto', overflow: 'visible', display: 'block', border: 'none', boxShadow: 'none', background: 'transparent', outline: 'none', padding: '4px 0' });
             }
-            const strip = (el) => { if (!el?.style) return; el.style.animation = 'none'; el.style.transition = 'none'; if (el.style.opacity) el.style.opacity = '1'; [...(el.children || [])].forEach(strip); };
+            const strip = (el) => { if (!el?.style) return; el.style.animation = 'none'; el.style.transition = 'none'; if (el.style.opacity) el.style.opacity = '1';[...(el.children || [])].forEach(strip); };
             strip(clone);
             document.body.appendChild(clone);
             const W = clone.scrollWidth, H = clone.scrollHeight;
@@ -774,7 +774,7 @@ const TierlistCombined = () => {
                             <strong>Disclaimer:</strong> Pembuat tidak bertanggung jawab atas akibat dari membagikan tierlist ini.
                         </Typography>
                         <Typography sx={{ mt: 2, color: '#ff69b4', textAlign: 'center' }}>
-                            <span style={{ fontSize: '1.2rem' }}>˚˖𓍢ִ໋🌷͙֒✧˚.🎀༘⋆ HIDUP TIM LOVE ˚˖𓍢ִ໋🌷͙֒✧˚.🎀༘⋆</span>
+                            <span style={{ fontSize: '1.2rem' }}>Suka dengan Website ini? Dukung Saya dengan cara berdonasi untuk Hosting dan Domain di : <a href="https://tako.id/MrcellSbst" target="_blank" rel="noopener noreferrer" style={{ color: '#f5c518', fontWeight: 700 }}>https://tako.id/MrcellSbst</a></span>
                         </Typography>
                     </Box>
                 </DialogContent>
@@ -831,11 +831,11 @@ const TierlistCombined = () => {
                                 </div>
                             }
                         />
-                        <Button variant="contained" color="primary"   startIcon={<Add />}     onClick={handleAddRow}    className="action-button">Add New Tier</Button>
-                        <Button variant="contained" color="secondary"  startIcon={<Refresh />} onClick={handleReset}     className="action-button">Reset</Button>
-                        <Button variant="contained" color="success"    startIcon={isSaving ? <span className="save-spinner" /> : <Save />} onClick={handleSave} disabled={isSaving} className="action-button">{isSaving ? 'Saving…' : 'Save as Image'}</Button>
-                        <Button variant="contained" color="info"       startIcon={<Save />}   onClick={handleSaveDraft}  className="action-button">Save Draft</Button>
-                        <Button variant="contained" color="error"      startIcon={<Delete />} onClick={handleClearDraft} className="action-button">Clear Draft</Button>
+                        <Button variant="contained" color="primary" startIcon={<Add />} onClick={handleAddRow} className="action-button">Add New Tier</Button>
+                        <Button variant="contained" color="secondary" startIcon={<Refresh />} onClick={handleReset} className="action-button">Reset</Button>
+                        <Button variant="contained" color="success" startIcon={isSaving ? <span className="save-spinner" /> : <Save />} onClick={handleSave} disabled={isSaving} className="action-button">{isSaving ? 'Saving…' : 'Save as Image'}</Button>
+                        <Button variant="contained" color="info" startIcon={<Save />} onClick={handleSaveDraft} className="action-button">Save Draft</Button>
+                        <Button variant="contained" color="error" startIcon={<Delete />} onClick={handleClearDraft} className="action-button">Clear Draft</Button>
                     </div>
 
                     {/* Item pool */}
