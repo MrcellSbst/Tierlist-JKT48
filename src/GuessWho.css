@@ -2265,7 +2265,7 @@
 
 /* ─── ONLINE GAME SIDEBAR ────────────────────────────────────────────────────── */
 .gw-online-game .gw-game-layout {
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: 1fr 270px;
 }
 
 .gw-online-game .gw-sidebar {
@@ -2347,35 +2347,6 @@
         overflow-y: visible;
         display: flex;
         flex-direction: column;
-    }
-
-    /* Chat box on mobile: fixed to bottom to hover over board */
-    .gw-online-game .gw-chat-box {
-        display: flex;
-        flex-direction: column;
-        flex: none;
-        height: 220px;
-        position: fixed;
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
-        z-index: 100;
-        background: #1a1a2e;
-        /* solid background so board doesn't show through */
-        box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.9);
-        border: 2px solid rgba(245, 197, 24, 0.5);
-    }
-
-    .gw-online-game .gw-chat-messages {
-        max-height: none;
-        flex: 1;
-        min-height: 0;
-    }
-
-    /* Chat input row: always visible, bigger tap targets */
-    .gw-chat-input-wrap {
-        flex-shrink: 0;
-        padding: 10px;
     }
 
     .gw-chat-input {
@@ -2768,4 +2739,130 @@
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+/* ─── CHAT FLOATING BUTTON (FAB) ─────────────────────────────────────────────── */
+.gw-chat-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1100;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #e53e2d, #f5c518);
+    box-shadow: 0 4px 20px rgba(229, 62, 45, 0.45), 0 2px 8px rgba(0,0,0,0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s, background 0.2s;
+}
+
+.gw-chat-fab:hover {
+    transform: scale(1.12);
+    box-shadow: 0 6px 28px rgba(229, 62, 45, 0.6), 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.gw-chat-fab-open {
+    background: linear-gradient(135deg, #444466, #1a1a2e);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    transform: rotate(90deg) scale(1.05);
+}
+
+.gw-chat-fab-open:hover {
+    transform: rotate(90deg) scale(1.13);
+}
+
+.gw-chat-fab-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.gw-chat-fab-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #fff;
+    color: #e53e2d;
+    font-size: 0.68rem;
+    font-weight: 900;
+    font-family: 'Outfit', sans-serif;
+    border-radius: 100px;
+    padding: 2px 6px;
+    min-width: 20px;
+    text-align: center;
+    line-height: 1.4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    animation: gwBadgePop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+}
+
+@keyframes gwBadgePop {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+/* ─── CHAT POPUP PANEL ───────────────────────────────────────────────────────── */
+.gw-chat-popup {
+    position: fixed;
+    bottom: 92px;
+    right: 16px;
+    z-index: 1090;
+    width: min(380px, calc(100vw - 32px));
+    pointer-events: none;
+    transform: translateY(24px) scale(0.96);
+    transform-origin: bottom right;
+    opacity: 0;
+    transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease;
+}
+
+.gw-chat-popup-open {
+    pointer-events: all;
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+.gw-chat-popup-inner {
+    background: rgba(20, 20, 38, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(229,62,45,0.18);
+    backdrop-filter: blur(16px);
+}
+
+.gw-chat-popup-inner .gw-chat-header {
+    background: linear-gradient(135deg, rgba(229,62,45,0.15), rgba(245,197,24,0.08));
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 12px 16px;
+}
+
+.gw-chat-popup-inner .gw-chat-messages {
+    max-height: 300px;
+    min-height: 120px;
+}
+
+.gw-chat-popup-inner .gw-chat-input-wrap {
+    background: rgba(255,255,255,0.03);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+    .gw-chat-fab {
+        bottom: 16px;
+        right: 16px;
+        width: 50px;
+        height: 50px;
+    }
+
+    .gw-chat-popup {
+        bottom: 80px;
+        right: 8px;
+        width: calc(100vw - 16px);
+    }
 }

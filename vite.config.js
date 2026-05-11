@@ -8,7 +8,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
     preview: {
-        allowedHosts: ['www.tierlistjkt48.my.id', 'tierlistjkt48.my.id']
+        allowedHosts: ['www.tierlistjkt48.my.id', 'tierlistjkt48.my.id', 'v1.tierlistjkt48.my.id', 'v2.tierlistjkt48.my.id' ]
     },
 
 
@@ -112,7 +112,38 @@ export default defineConfig({
         }),
     ],
     build: {
-        outDir: 'dist'
+        outDir: 'dist',
+        rollupOptions: {
+            output: {
+                manualChunks: (id) => {
+                    // React core — smallest, most cached chunk
+                    if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router')) {
+                        return 'vendor-react'
+                    }
+                    // MUI + Emotion — large but stable
+                    if (id.includes('node_modules/@mui/') || id.includes('node_modules/@emotion/')) {
+                        return 'vendor-mui'
+                    }
+                    // DnD-kit
+                    if (id.includes('node_modules/@dnd-kit/')) {
+                        return 'vendor-dndkit'
+                    }
+                    // Recharts, xlsx, date-fns, playroomkit, dom-to-image-more, vercel
+                    if (
+                        id.includes('node_modules/recharts') ||
+                        id.includes('node_modules/xlsx') ||
+                        id.includes('node_modules/date-fns') ||
+                        id.includes('node_modules/playroomkit') ||
+                        id.includes('node_modules/dom-to-image-more') ||
+                        id.includes('node_modules/@vercel/')
+                    ) {
+                        return 'vendor-misc'
+                    }
+                },
+            },
+        },
+        // Raise warning threshold since per-chunk sizes are now meaningful
+        chunkSizeWarningLimit: 600,
     },
     optimizeDeps: {
         include: ['playroomkit'],

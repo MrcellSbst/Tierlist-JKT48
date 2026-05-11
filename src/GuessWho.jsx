@@ -121,7 +121,14 @@ export default function GuessWho() {
     const [screen, setScreen] = useState('menu');
     const [filters, setFilters] = useState({ memberStatus: 'active', generation: 'all', team: 'all', chatAfterGuess: false });
     const [joinCode, setJoinCode] = useState('');
-    const [nickname, setNickname] = useState('');
+    const [nickname, setNickname] = useState(() => {
+        try { return localStorage.getItem('gw_nickname') || ''; } catch { return ''; }
+    });
+
+    const handleNicknameChange = (val) => {
+        setNickname(val);
+        try { localStorage.setItem('gw_nickname', val); } catch { /* ignore */ }
+    };
 
     return (
         <div className="gw-root">
@@ -142,7 +149,7 @@ export default function GuessWho() {
                     onCreateRoom={() => setScreen('setup-multi')}
                     onJoinRoom={() => setScreen('join-room')}
                     nickname={nickname}
-                    onNicknameChange={setNickname}
+                    onNicknameChange={handleNicknameChange}
                 />
             )}
             {screen === 'join-room' && (
@@ -747,6 +754,8 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
     const [iHaveSentGuess, setIHaveSentGuess] = useState(false); // true immediately after locking in
     const [roomCode, setRoomCode] = useState('');
     const [copied, setCopied] = useState(false);
+    const [chatOpen, setChatOpen] = useState(false);
+    const [seenCount, setSeenCount] = useState(0); // # messages user has "seen" (chat was open)
     const chatEndRef = useRef(null);
     const processedGuessIds = useRef(new Set()); // tracks auto-confirmed guess message ids
     const mySecretRef = useRef(null);
@@ -830,6 +839,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
             setSecretRevealed(false);
             setEliminated(new Set());
             setMessages([]);
+            setSeenCount(0);
             setIHaveSentGuess(false);
             setChatInput('');
             setGuessInput('');
@@ -869,6 +879,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
         });
     }, [messages, me]); // eslint-disable-line react-hooks/exhaustive-deps
 
+
     // Scroll chat to bottom without scrolling the whole page
     useEffect(() => {
         if (chatEndRef.current) {
@@ -877,7 +888,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                 parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' });
             }
         }
-    }, [messages]);
+    }, [messages, chatOpen]);
 
     // Register RPC listener for chat messages
     useEffect(() => {
@@ -912,6 +923,8 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
             if (prev.some(m => m.id === msg.id)) return prev;
             return [...prev, msg];
         });
+        // This is a locally-sent message — count it as "seen" so badge doesn't fire for the sender
+        setSeenCount(c => c + 1);
         RPC.call('newMsg', msg, RPC.Mode.OTHERS);
     }, [me, hostNick, guestNick, myNickname]);
 
@@ -1209,7 +1222,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                                 <div className="gw-guide-title"> Member Rahasiamu</div>
                                 <div className="gw-host-secret-card" onClick={() => setSecretRevealed(r => !r)} style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
                                     {!secretRevealed && (
-                                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(26, 26, 46, 0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10, backdropFilter: 'blur(4px)' }}>
+                                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(14, 14, 28, 0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10, backdropFilter: 'blur(20px) brightness(0.3)' }}>
                                             <span style={{ fontSize: '2rem', marginBottom: '8px' }}>👁️</span>
                                             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#aaa' }}>Tap to Peek</span>
                                         </div>
@@ -1235,36 +1248,7 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             </div>
                         )}
 
-                        {/* Chat */}
-                        <div className="gw-chat-box">
-                            <div className="gw-chat-header">
-                                Obrolan
-                                <span className="gw-chat-hint" style={{ marginLeft: '12px' }}>Ajukan pertanyaan • Jawaban tentang member rahasia</span>
-                            </div>
-                            <div className="gw-chat-messages">
-                                {messages.length === 0 && (
-                                    <div className="gw-chat-empty">Tanyakan pertanyaan ya/tidak tentang rahasia Lawan!</div>
-                                )}
-                                {messages.map(msg => (
-                                    <div key={msg.id} className={`gw-msg gw-msg-${msg.type}`}>
-                                        {msg.type !== 'system' && (
-                                            <span className="gw-msg-player" style={{ color: msg.color }}>{msg.player}:</span>
-                                        )}
-                                        <span className="gw-msg-text">{msg.text}</span>
-                                    </div>
-                                ))}
-                                <div ref={chatEndRef} />
-                            </div>
-                            <form className="gw-chat-input-wrap"
-                                onSubmit={e => { e.preventDefault(); handleSendChat(); }}>
-                                <input className="gw-chat-input" placeholder={(iHaveGuessed && !allowChatAfterGuess) ? "Chat disabled after guessing" : "Ask or type a message…"}
-                                    value={chatInput} onChange={e => setChatInput(e.target.value)}
-                                    enterKeyHint="send"
-                                    autoComplete="off"
-                                    disabled={iHaveGuessed && !allowChatAfterGuess} />
-                                <button type="submit" className="gw-send-btn" disabled={iHaveGuessed && !allowChatAfterGuess}>→</button>
-                            </form>
-                        </div>
+                        {/* Chat toggle button (floating) rendered below, outside sidebar */}
 
                         {/* Final guess — both players guess the opponent's secret */}
                         {iHaveGuessed ? (
@@ -1301,6 +1285,64 @@ function OnlineGame({ allPool, filters, onBack, myNickname }) {
                             </ul>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* ── Floating Chat Button ─────────────────────────────────── */}
+            {(() => {
+                const unread = messages.length - seenCount;
+                return (
+                    <button
+                        className={`gw-chat-fab ${chatOpen ? 'gw-chat-fab-open' : ''}`}
+                        onClick={() => {
+                            const opening = !chatOpen;
+                            setChatOpen(opening);
+                            if (opening) setSeenCount(messages.length);
+                        }}
+                        aria-label="Toggle chat"
+                    >
+                        <span className="gw-chat-fab-icon">{chatOpen ? '✕' : '💬'}</span>
+                        {!chatOpen && unread > 0 && (
+                            <span className="gw-chat-fab-badge">{unread > 9 ? '9+' : unread}</span>
+                        )}
+                    </button>
+                );
+            })()}
+
+            {/* ── Chat Popup ───────────────────────────────────────────── */}
+            <div className={`gw-chat-popup ${chatOpen ? 'gw-chat-popup-open' : ''}`}>
+                <div className="gw-chat-popup-inner">
+                    <div className="gw-chat-header">
+                        <span>💬 Obrolan</span>
+                        <span className="gw-chat-hint">Ajukan pertanyaan • Jawaban member rahasia</span>
+                    </div>
+                    <div className="gw-chat-messages">
+                        {messages.length === 0 && (
+                            <div className="gw-chat-empty">Tanyakan pertanyaan ya/tidak tentang rahasia Lawan!</div>
+                        )}
+                        {messages.map(msg => (
+                            <div key={msg.id} className={`gw-msg gw-msg-${msg.type}`}>
+                                {msg.type !== 'system' && (
+                                    <span className="gw-msg-player" style={{ color: msg.color }}>{msg.player}:</span>
+                                )}
+                                <span className="gw-msg-text">{msg.text}</span>
+                            </div>
+                        ))}
+                        <div ref={chatEndRef} />
+                    </div>
+                    <form className="gw-chat-input-wrap"
+                        onSubmit={e => { e.preventDefault(); handleSendChat(); }}>
+                        <input
+                            className="gw-chat-input"
+                            placeholder={(iHaveGuessed && !allowChatAfterGuess) ? 'Chat disabled after guessing' : 'Ask or type a message…'}
+                            value={chatInput}
+                            onChange={e => setChatInput(e.target.value)}
+                            enterKeyHint="send"
+                            autoComplete="off"
+                            disabled={iHaveGuessed && !allowChatAfterGuess}
+                        />
+                        <button type="submit" className="gw-send-btn" disabled={iHaveGuessed && !allowChatAfterGuess}>→</button>
+                    </form>
                 </div>
             </div>
 
