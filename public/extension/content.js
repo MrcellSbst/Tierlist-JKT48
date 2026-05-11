@@ -14,11 +14,35 @@ const syncDataToLocalStorage = async () => {
   }
 };
 
+const syncTicketsToLocalStorage = async () => {
+  try {
+    const result = await chrome.storage.local.get('jkt48_tickets_history');
+    if (result.jkt48_tickets_history) {
+      localStorage.setItem('jkt48_tickets_history', JSON.stringify(result.jkt48_tickets_history));
+      window.dispatchEvent(new CustomEvent('JKT48_TICKETS_HISTORY_UPDATED', {
+        detail: result.jkt48_tickets_history
+      }));
+    }
+  } catch (e) {
+    console.error('[JKT48 Ext] Tickets sync error:', e);
+  }
+};
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'POINTS_HISTORY_UPDATED' && message.data) {
     try {
       localStorage.setItem('jkt48_points_history', JSON.stringify(message.data));
       window.dispatchEvent(new CustomEvent('JKT48_POINTS_HISTORY_UPDATED', { detail: message.data }));
+      sendResponse({ success: true });
+    } catch (e) {
+      sendResponse({ success: false, error: e.message });
+    }
+  }
+
+  if (message.type === 'TICKETS_HISTORY_UPDATED' && message.data) {
+    try {
+      localStorage.setItem('jkt48_tickets_history', JSON.stringify(message.data));
+      window.dispatchEvent(new CustomEvent('JKT48_TICKETS_HISTORY_UPDATED', { detail: message.data }));
       sendResponse({ success: true });
     } catch (e) {
       sendResponse({ success: false, error: e.message });
@@ -34,12 +58,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'local' && changes.jkt48_points_history) {
-    syncDataToLocalStorage();
+  if (namespace === 'local') {
+    if (changes.jkt48_points_history)  syncDataToLocalStorage();
+    if (changes.jkt48_tickets_history) syncTicketsToLocalStorage();
   }
 });
 
 syncDataToLocalStorage();
+syncTicketsToLocalStorage();
 
 // ─── Floating Panel (only on jkt48.com) ──────────────────────────────────────
 
@@ -290,6 +316,22 @@ function injectFloatingPanel() {
   shadow.getElementById('btnTierlist').addEventListener('click', () => {
     window.open('https://tierlistjkt48.my.id/point-history', '_blank');
   });
+
+  // Ticket history shortcut (added alongside the existing buttons)
+  const btnTickets = document.createElement('button');
+  btnTickets.className = 'ext-btn btn-tierlist';
+  btnTickets.id = 'btnTickets';
+  btnTickets.innerHTML = `
+    <span class="btn-icon">🎟️</span>
+    <span class="btn-content">
+      <span class="btn-label">View Ticket Stats</span>
+      <span class="btn-sub">Open tierlistjkt48.my.id/ticket-history</span>
+    </span>
+  `;
+  btnTickets.addEventListener('click', () => {
+    window.open('https://tierlistjkt48.my.id/ticket-history', '_blank');
+  });
+  shadow.getElementById('btnTierlist').insertAdjacentElement('afterend', btnTickets);
 
   // ── Helpers
   function setStatus(text, state = 'idle') {

@@ -21,6 +21,7 @@ const RoulettePage    = lazy(() => import('./roulette'))
 const GachaPage       = lazy(() => import('./Gacha'))
 const MobileTierlist  = lazy(() => import('./Mobile_Tierlist'))
 const GuessWho        = lazy(() => import('./GuessWho'))
+const TicketHistory   = lazy(() => import('./TicketHistory'))
 
 const PageLoader = () => (
   <Box sx={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -75,6 +76,7 @@ function App() {
               <Route path="/mobile-tierlist" element={<MobileTierlist />} />
               <Route path="/gacha" element={<GachaPage />} />
               <Route path="/guess-who" element={<GuessWho />} />
+              <Route path="/ticket-history" element={<TicketHistory />} />
               <Route path="/this-or-that/*" element={<DisabledFeature />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

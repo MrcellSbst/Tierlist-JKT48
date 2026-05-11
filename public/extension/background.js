@@ -182,9 +182,134 @@ async function handleApiExport(tabId) {
     await chrome.tabs.sendMessage(tabId, { type: 'POINTS_HISTORY_UPDATED', data: pointsData });
     await broadcastToTierlistTabs(pointsData);
 
-    sendProgress(tabId, `✓ Done! ${mappedData.length} records saved.`);
+    sendProgress(tabId, `✓ ${mappedData.length} point records saved. Now fetching tickets…`);
+
+    // Find the oldest date from the raw records to use as the tickets API 'from' param
+    const oldestDate = findOldestDate(allRawData);
+    await handleTicketsExport(tabId, oldestDate);
   } catch (e) {
     sendProgress(tabId, '✗ Error: ' + e.message, true);
+  }
+}
+
+// ─── Date Helper ──────────────────────────────────────────────────────────────
+
+function findOldestDate(records) {
+  let oldest = null;
+  for (const item of records) {
+    let raw = String(item.date || item.created_date || item.created_at || item.tanggal || '');
+    if (raw.includes('T')) raw = raw.split('T')[0];
+    if (!raw || !/^\d{4}-\d{2}-\d{2}/.test(raw)) continue;
+    if (!oldest || raw < oldest) oldest = raw;
+  }
+  if (!oldest) {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 5);
+    oldest = d.toISOString().split('T')[0];
+  }
+  return oldest;
+}
+
+// ─── Tickets Broadcast ────────────────────────────────────────────────────────
+
+async function broadcastTicketsToTierlistTabs(data) {
+  const allTabs = await chrome.tabs.query({});
+  for (const t of allTabs) {
+    if (t.url && (
+      t.url.includes('tierlistjkt48.my.id') ||
+      t.url.includes('localhost') ||
+      t.url.includes('vercel.app')
+    )) {
+      chrome.tabs.sendMessage(t.id, { type: 'TICKETS_HISTORY_UPDATED', data }).catch(() => { });
+    }
+  }
+}
+
+// ─── Tickets Fetch ────────────────────────────────────────────────────────────
+
+async function handleTicketsExport(tabId, oldestDate) {
+  try {
+    const storageRes = await chrome.storage.local.get('jkt48_auth_headers');
+    const authHeaders = storageRes.jkt48_auth_headers || {};
+
+    if (Object.keys(authHeaders).length === 0) {
+      sendProgress(tabId, '✓ All done! (No auth token available for tickets fetch)');
+      return;
+    }
+
+    const toDate = `${new Date().getFullYear()}-12-31`;
+    sendProgress(tabId, `Fetching tickets from ${oldestDate} → ${toDate}…`);
+
+    let allTickets = [];
+    let page = 1;
+    const MAX_PAGES = 500;
+
+    while (page <= MAX_PAGES) {
+      sendProgress(tabId, `Fetching tickets page ${page}… (${allTickets.length} so far)`);
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+
+      let json;
+      try {
+        const res = await fetch(
+          `https://jkt48.com/api/v1/accounts/my-tickets?lang=id&limit=10&page=${page}&from=${oldestDate}&to=${toDate}`,
+          { headers: authHeaders, signal: controller.signal }
+        );
+        clearTimeout(timer);
+
+        if (res.status === 401 || res.status === 403) {
+          sendProgress(tabId, '⚠ Session expired while fetching tickets.', true);
+          return;
+        }
+        if (!res.ok) {
+          if (res.status === 404) break;
+          throw new Error(`Tickets API error ${res.status}`);
+        }
+
+        json = await res.json();
+      } catch (fetchErr) {
+        clearTimeout(timer);
+        if (fetchErr.name === 'AbortError') {
+          sendProgress(tabId, `✗ Tickets request timed out on page ${page}.`, true);
+          return;
+        }
+        throw fetchErr;
+      }
+
+      // Normalise response shape — API wraps data in json.data[], with _meta for pagination
+      let items = [];
+      if (Array.isArray(json))                                  items = json;
+      else if (json.data?.data && Array.isArray(json.data.data)) items = json.data.data;
+      else if (json.data && Array.isArray(json.data))           items = json.data;
+      else if (json.items && Array.isArray(json.items))         items = json.items;
+      else if (json.tickets && Array.isArray(json.tickets))     items = json.tickets;
+
+      if (!items.length) break;
+
+      allTickets = allTickets.concat(items);
+
+      // _meta pagination (as seen in the API response)
+      const totalPages = json._meta?.total_page ?? json.data?.last_page ?? json.meta?.last_page ?? null;
+      if (totalPages !== null && page >= totalPages) break;
+
+      page++;
+    }
+
+    if (!allTickets.length) {
+      sendProgress(tabId, '✓ All done! No ticket records found.');
+      return;
+    }
+
+    const ticketsData = { data: allTickets, timestamp: new Date().toISOString() };
+    await chrome.storage.local.set({ jkt48_tickets_history: ticketsData });
+
+    chrome.tabs.sendMessage(tabId, { type: 'TICKETS_HISTORY_UPDATED', data: ticketsData }).catch(() => { });
+    await broadcastTicketsToTierlistTabs(ticketsData);
+
+    sendProgress(tabId, `✓ All done! ${allTickets.length} ticket records saved.`);
+  } catch (e) {
+    sendProgress(tabId, '✗ Tickets Error: ' + e.message, true);
   }
 }
 
