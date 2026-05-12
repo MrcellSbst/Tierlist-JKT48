@@ -214,6 +214,7 @@ const TicketHistory = () => {
   const [viewMode, setViewMode] = useState('full');
   const [exporting, setExporting] = useState(false);
   const [userProfile, setUserProfile] = useState({ full_name: '', nickname: '', created_date: '', oshimen_name: '' });
+  const [topupRevealed, setTopupRevealed] = useState(false);
   const wrappedRef = useRef(null);
   const navigate = useNavigate();
 
@@ -852,9 +853,11 @@ const TicketHistory = () => {
                         ))}
                         {wrappedStats.top2Shot.length === 0 && <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>—</Typography>}
                       </Box>
-                      <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 1, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
+                      <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 1, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2, cursor: 'pointer' }} onClick={() => setTopupRevealed(v => !v)}>
                         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Total Top-Up</Typography>
-                        <Typography variant="body1" sx={{ color: '#fff', fontWeight: 700 }}>{wrappedStats.totalTopup.toLocaleString()} P</Typography>
+                        <Typography variant="body1" sx={{ color: '#fff', fontWeight: 700, filter: topupRevealed ? 'none' : 'blur(8px)', userSelect: 'none', transition: 'filter 0.3s ease' }}>
+                          {topupRevealed ? `${wrappedStats.totalTopup.toLocaleString()} P` : '🔒 Click to reveal'}
+                        </Typography>
                       </Box>
                     </Box>
 
@@ -907,7 +910,7 @@ const TicketHistory = () => {
                       <MenuItem key={y} value={y}>{y}</MenuItem>
                     ))}
                   </Select>
-                  <Button startIcon={<AutoAwesome />} onClick={() => setShowWrapped(true)}
+                  <Button startIcon={<AutoAwesome />} onClick={() => { setShowWrapped(true); setTopupRevealed(false); }}
                     sx={{ color: '#fff', border: '1px solid rgba(229,0,20,0.4)', borderRadius: 2, px: 2, height: 32, fontSize: 13, '&:hover': { bgcolor: 'rgba(229,0,20,0.12)', borderColor: '#E50014' } }}>
                     Wrapped
                   </Button>
