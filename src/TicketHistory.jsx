@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Container, Typography, Box, Paper, Alert, Button, Chip, Link,
   Tabs, Tab, Avatar, Divider, Accordion, AccordionSummary, AccordionDetails,
@@ -6,9 +6,11 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { ArrowBack, Refresh, ConfirmationNumber, TheaterComedy, Person, VideoCameraFront, Download, PieChart as PieChartIcon, TrendingUp, CalendarToday } from '@mui/icons-material';
+import { ArrowBack, ArrowForward, ConfirmationNumber, TheaterComedy, Person, VideoCameraFront, Download, PieChart as PieChartIcon, TrendingUp, CalendarToday, AutoAwesome } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { format, startOfMonth } from 'date-fns';
+import domtoimage from 'dom-to-image-more';
+import { activeMemberFiles, exMemberFiles } from './data/memberdata.js';
 
 // Use date-only (YYYY-MM-DD) for dedup — ignore time to avoid timezone issues.
 function dateOnly(isoStr) {
@@ -173,30 +175,122 @@ function StatCard({ label, value, color = '#E50014', icon }) {
   );
 }
 
+function getInitials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function getMemberPhotoUrl(memberName) {
+  if (!memberName) return null;
+  const parts = memberName.trim().split(/\s+/);
+  const searchName = parts.map(p => p.toLowerCase()).join('_');
+
+  const allFiles = [...activeMemberFiles, ...exMemberFiles];
+  for (const file of allFiles) {
+    const base = file.replace(/^.*\//, '').replace(/\.(jpg|jpeg|png|webp|gif)$/i, '').toLowerCase();
+    const cleanBase = base.replace(/^(gen\d+|jkt48vgen\d+)_/, '');
+    if (cleanBase === searchName || cleanBase.includes(searchName) || searchName.includes(cleanBase)) {
+      const isEx = exMemberFiles.includes(file);
+      return `/asset/${isEx ? 'exmember' : 'member_active'}/${file}`;
+    }
+  }
+  const first = parts[0] || '';
+  const last = parts.slice(1).join('_') || first;
+  return `https://jkt48.com/api/v1/storages/media/jkt48-member/${first.toLowerCase()}_${last.toLowerCase()}.jpg`;
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const TicketHistory = () => {
   const [ticketsData, setTicketsData] = useState([]);
-  const [lastUpdate, setLastUpdate] = useState(null);
   const [error, setError] = useState('');
   const [tab, setTab] = useState(0);
   const [pointsData, setPointsData] = useState([]);
-  const [pointsLastUpdate, setPointsLastUpdate] = useState(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [txPage, setTxPage] = useState(0);
   const [txRowsPerPage, setTxRowsPerPage] = useState(25);
+  const [txCategoryFilter, setTxCategoryFilter] = useState('all');
+  const [ticketYear, setTicketYear] = useState('all');
+  const [showWrapped, setShowWrapped] = useState(false);
+  const [viewMode, setViewMode] = useState('full');
+  const [exporting, setExporting] = useState(false);
+  const [userProfile, setUserProfile] = useState({ full_name: '', nickname: '', created_date: '', oshimen_name: '' });
+  const wrappedRef = useRef(null);
   const navigate = useNavigate();
 
-  const handleExportTxt = () => {
-    if (!ticketsData.length) return;
-    const payload = { data: ticketsData, timestamp: lastUpdate, exportedAt: new Date().toISOString() };
-    const content = JSON.stringify(payload, null, 2);
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `jkt48_tickets_raw_${new Date().toISOString().split('T')[0]}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleWrappedExport = async () => {
+    if (!wrappedRef.current || exporting) return;
+    setExporting(true);
+    try {
+      const btn = wrappedRef.current.querySelector('.screenshot-btn');
+      if (btn) btn.style.display = 'none';
+
+      if (document.fonts?.ready) await document.fonts.ready.catch(() => {});
+      await Promise.all(Array.from(wrappedRef.current.querySelectorAll('img')).map(img =>
+        img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })
+      ));
+
+      const clone = wrappedRef.current.cloneNode(true);
+      const CONTENT_W = 480;
+      Object.assign(clone.style, {
+        backgroundColor: '#1a1a2e',
+        width: `${CONTENT_W}px`,
+        maxWidth: 'none',
+        margin: '0 auto',
+        padding: '32px',
+        boxSizing: 'border-box',
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        top: '0',
+        opacity: '1',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      });
+      const strip = (el) => {
+        if (!el?.style) return;
+        el.style.animation = 'none'; el.style.transition = 'none';
+        if (el.style.opacity) el.style.opacity = '1';
+        if (el.tagName === 'SPAN' || el.tagName === 'P' || el.tagName === 'DIV' || el.tagName === 'H1' || el.tagName === 'H2' || el.tagName === 'H3' || el.tagName === 'H4' || el.tagName === 'H5' || el.tagName === 'H6') {
+          el.style.textAlign = 'center';
+        }
+        [...(el.children || [])].forEach(strip);
+      };
+      strip(clone);
+      document.body.appendChild(clone);
+
+      const W = CONTENT_W, H = clone.scrollHeight;
+      clone.style.width = `${W}px`;
+      clone.style.height = `${H}px`;
+      const SCALE = Math.max(2, window.devicePixelRatio || 1);
+      const opts = {
+        quality: 1.0, bgcolor: '#1a1a2e', width: W, height: H, scale: SCALE,
+        style: { 'background-color': '#1a1a2e', width: `${W}px`, height: `${H}px`, transform: 'none' },
+        cacheBust: true,
+      };
+
+      let url;
+      try {
+        url = await domtoimage.toPng(clone, opts);
+      } catch {
+        const blob = await domtoimage.toBlob(clone, opts);
+        url = URL.createObjectURL(blob);
+      }
+
+      const a = document.createElement('a');
+      a.download = `jkt48-wrapped-${ticketYear}.png`;
+      a.href = url;
+      a.click();
+      if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+
+      document.body.removeChild(clone);
+      if (btn) btn.style.display = '';
+    } catch (e) {
+      console.error('Export failed:', e);
+      const btn = wrappedRef.current?.querySelector('.screenshot-btn');
+      if (btn) btn.style.display = '';
+    }
+    setExporting(false);
   };
 
   const loadTickets = () => {
@@ -212,7 +306,6 @@ const TicketHistory = () => {
         return;
       }
       setTicketsData(parsed.data);
-      setLastUpdate(parsed.timestamp);
       setError('');
     } catch (e) {
       setError('Error loading ticket data: ' + e.message);
@@ -226,7 +319,6 @@ const TicketHistory = () => {
         const parsed = JSON.parse(raw);
         if (parsed.data && Array.isArray(parsed.data)) {
           setPointsData(parsed.data);
-          setPointsLastUpdate(parsed.timestamp);
         }
       }
     } catch (e) {
@@ -234,38 +326,82 @@ const TicketHistory = () => {
     }
   };
 
+  const loadUserProfile = () => {
+    try {
+      const raw = localStorage.getItem('jkt48_user_profile');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setUserProfile(parsed);
+      }
+    } catch (e) {
+      console.error('Error loading user profile:', e);
+    }
+  };
+
   useEffect(() => {
     loadTickets();
     loadPointsHistory();
+    loadUserProfile();
     const onTicketUpdate = () => loadTickets();
     const onPointsUpdate = () => loadPointsHistory();
+    const onProfileUpdate = () => loadUserProfile();
     const onStorage = (e) => {
       if (e.key === 'jkt48_tickets_history' || e.key === null) loadTickets();
       if (e.key === 'jkt48_points_history' || e.key === null) loadPointsHistory();
+      if (e.key === 'jkt48_user_profile' || e.key === null) loadUserProfile();
     };
     window.addEventListener('JKT48_TICKETS_HISTORY_UPDATED', onTicketUpdate);
     window.addEventListener('JKT48_POINTS_HISTORY_UPDATED', onPointsUpdate);
+    window.addEventListener('JKT48_USER_PROFILE_UPDATED', onProfileUpdate);
     window.addEventListener('storage', onStorage);
     return () => {
       window.removeEventListener('JKT48_TICKETS_HISTORY_UPDATED', onTicketUpdate);
       window.removeEventListener('JKT48_POINTS_HISTORY_UPDATED', onPointsUpdate);
+      window.removeEventListener('JKT48_USER_PROFILE_UPDATED', onProfileUpdate);
       window.removeEventListener('storage', onStorage);
     };
   }, []);
 
+  const getPointDelta = (row) => {
+    const bp = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+    if (bp !== 0) return bp;
+    const op = (row.operation || row.category || '').toUpperCase();
+    if (op === 'POINT_REFUND') {
+      const qty = parseInt(String(row.quantity || '0').replace(/[P,]/g, '').trim()) || 0;
+      return qty;
+    }
+    return 0;
+  };
+
   // ─── Stats computation ──────────────────────────────────────────────────────
   const stats = useMemo(() => {
-    const vcByMember    = {};
+    const availableYears = new Set();
+    ticketsData.forEach(t => {
+      if (t.date) availableYears.add(t.date.slice(0, 4));
+    });
+
+    const filtered = ticketYear === 'all'
+      ? ticketsData
+      : ticketsData.filter(t => t.date && t.date.slice(0, 4) === ticketYear);
+
+    const txToPoints = {};
+    pointsData.forEach(row => {
+      if (row.status === 'PENDING') return;
+      const id = (row.id || '').trim();
+      const bp = getPointDelta(row);
+      if (id && bp !== 0) txToPoints[id] = bp;
+    });
+
+    const vcMngByMember = {};
     const twoShotByMember = {};
-    const mngByMember   = {};
     const showWinByLabel = {};
     const showLoseByLabel = {};
     const theaterApplyByLabel = {};
     const theaterApplyDetails = {};
 
-    let totalVC = 0, total2Shot = 0, totalMnG = 0, totalShowWin = 0, totalShowLose = 0;
+    let totalVcMng = 0, total2Shot = 0, totalShowWin = 0, totalShowLose = 0;
 
-    for (const ticket of ticketsData) {
+    for (const ticket of filtered) {
       const { ticket_type, ticket_label, name, member_name, raffle_status, used_count } = ticket;
       const label = ticket_label || name;
       const bought = parseInt(ticket.bought_count || '1') || 1;
@@ -296,28 +432,28 @@ const TicketHistory = () => {
         }
       } else if (ticket_type === 'EXCLUSIVE' || ticket_type === 'EVENT') {
         if (raffle_status !== 'LOSE') {
-          const t = ticket;
-          const n = t.name || '';
-          let eventType;
+          const mem = ticket.member_name;
+          const refCode = (ticket.reference_code || '').trim();
+          const txIds = ticket.transaction_numbers || [];
+          let isTwoShot = false;
 
-          if (t.ticket_type === 'EXCLUSIVE') {
-            if (n.includes('Meet & Greet')) eventType = 'Meet and Greet';
-            else if (n.includes('2Shot'))   eventType = '2Shot';
-            else                               eventType = 'Video Call';
+          if (refCode && txToPoints[refCode] === -180000) {
+            isTwoShot = true;
           } else {
-            eventType = n.toLowerCase().includes('video call') ? 'Video Call (Event)' : 'Event';
+            for (const txId of txIds) {
+              if (txToPoints[txId] === -180000) {
+                isTwoShot = true;
+                break;
+              }
+            }
           }
 
-          const mem = t.member_name;
-          if (eventType === 'Video Call' && mem) {
-            vcByMember[mem] = (vcByMember[mem] || 0) + bought;
-            totalVC += bought;
-          } else if (eventType === '2Shot' && mem) {
+          if (isTwoShot && mem) {
             twoShotByMember[mem] = (twoShotByMember[mem] || 0) + bought;
             total2Shot += bought;
-          } else if (eventType === 'Meet and Greet' && mem) {
-            mngByMember[mem] = (mngByMember[mem] || 0) + bought;
-            totalMnG += bought;
+          } else if (mem) {
+            vcMngByMember[mem] = (vcMngByMember[mem] || 0) + bought;
+            totalVcMng += bought;
           }
         }
       }
@@ -329,37 +465,112 @@ const TicketHistory = () => {
         .sort((a, b) => b.value - a.value);
 
     return {
-      vcByMember:      toSorted(vcByMember),
+      vcMngByMember:   toSorted(vcMngByMember),
       twoShotByMember: toSorted(twoShotByMember),
-      mngByMember:     toSorted(mngByMember),
       showWinNull:     toSorted(showWinByLabel),
       showLose:        toSorted(showLoseByLabel),
       theaterApply:    toSorted(theaterApplyByLabel),
       theaterApplyDetails,
-      totalVC, total2Shot, totalMnG, totalShowWin, totalShowLose,
+      totalVcMng, total2Shot, totalShowWin, totalShowLose,
       totalApply: totalShowWin + totalShowLose,
-      totalTickets: totalShowWin + totalShowLose + totalVC + total2Shot + totalMnG,
+      totalTickets: totalShowWin + totalShowLose + totalVcMng + total2Shot,
+      availableYears: Array.from(availableYears).sort().reverse(),
     };
-  }, [ticketsData]);
+  }, [ticketsData, ticketYear, pointsData]);
+
+  // ─── Wrapped Stats ──────────────────────────────────────────────────────────
+  const wrappedStats = useMemo(() => {
+    const yearFiltered = ticketYear === 'all'
+      ? ticketsData
+      : ticketsData.filter(t => t.date && t.date.slice(0, 4) === ticketYear);
+
+    const txToPoints = {};
+    pointsData.forEach(row => {
+      if (row.status === 'PENDING') return;
+      const id = (row.id || '').trim();
+      const bp = getPointDelta(row);
+      if (id && bp !== 0) txToPoints[id] = bp;
+    });
+
+    const vcMngByMember = {};
+    const twoShotByMember = {};
+    const showWinByLabel = {};
+    const showLoseByLabel = {};
+    const theaterApplyByLabel = {};
+
+    let totalVcMng = 0, total2Shot = 0, totalShowWin = 0, totalShowLose = 0;
+
+    for (const ticket of yearFiltered) {
+      const { ticket_type, ticket_label, name, member_name, raffle_status, used_count } = ticket;
+      const label = ticket_label || name;
+      const bought = parseInt(ticket.bought_count || '1') || 1;
+
+      if (ticket_type === 'SHOW') {
+        const isLose = raffle_status === 'LOSE';
+        const isWin = used_count === '1' || parseInt(used_count || '0') > 0;
+        if (isLose) { showLoseByLabel[label] = (showLoseByLabel[label] || 0) + bought; totalShowLose += bought; }
+        if (isWin) { showWinByLabel[label] = (showWinByLabel[label] || 0) + bought; totalShowWin += bought; }
+        if (isLose || isWin) theaterApplyByLabel[label] = (theaterApplyByLabel[label] || 0) + bought;
+      } else if (ticket_type === 'EXCLUSIVE' || ticket_type === 'EVENT') {
+        if (raffle_status !== 'LOSE') {
+          const mem = ticket.member_name;
+          const refCode = (ticket.reference_code || '').trim();
+          const txIds = ticket.transaction_numbers || [];
+          let isTwoShot = false;
+          if (refCode && txToPoints[refCode] === -180000) isTwoShot = true;
+          else { for (const txId of txIds) { if (txToPoints[txId] === -180000) { isTwoShot = true; break; } } }
+          if (isTwoShot && mem) { twoShotByMember[mem] = (twoShotByMember[mem] || 0) + bought; total2Shot += bought; }
+          else if (mem) { vcMngByMember[mem] = (vcMngByMember[mem] || 0) + bought; totalVcMng += bought; }
+        }
+      }
+    }
+
+    const toSorted = (obj) => Object.entries(obj).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+
+    const topSetlists = toSorted(showWinByLabel).slice(0, 3);
+    const mostApplied = toSorted(theaterApplyByLabel).slice(0, 3);
+    const topVC = toSorted(vcMngByMember).slice(0, 3);
+    const top2Shot = toSorted(twoShotByMember).slice(0, 3);
+    const totalApply = totalShowWin + totalShowLose;
+    const winrate = totalApply > 0 ? ((totalShowWin / totalApply) * 100).toFixed(1) : 0;
+    const username = userProfile.full_name || ticketsData[0]?.member_name || 'Fan';
+    const yearLabel = ticketYear === 'all'
+      ? (stats.availableYears.length > 1 ? `${stats.availableYears[stats.availableYears.length - 1]} - ${stats.availableYears[0]}` : stats.availableYears[0] || '')
+      : ticketYear;
+    const totalTopup = pointsData.reduce((sum, row) => {
+      const purpose = (row.purpose || '').trim().toUpperCase();
+      const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+      return purpose === 'PEMBELIAN POIN JKT48' && points > 0 ? sum + points : sum;
+    }, 0);
+
+    const createdDate = userProfile.created_date || '';
+    const oshimenName = userProfile.oshimen_name || '';
+    let daysSince = 0;
+    if (createdDate) {
+      const created = new Date(createdDate);
+      if (!isNaN(created.getTime())) {
+        daysSince = Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24));
+      }
+    }
+
+    return { topSetlists, mostApplied, topVC, top2Shot, winrate, username, yearLabel, totalTopup, totalShowWin, totalShowLose, createdDate, daysSince, oshimenName };
+  }, [ticketsData, ticketYear, pointsData, stats.availableYears]);
 
   // ─── Points History Stats ──────────────────────────────────────────────────
   const pointsStats = useMemo(() => {
     const calculateCurrentPoints = () => {
       return pointsData.reduce((total, row) => {
-        const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
-        const method = String(row.paymentMethod || '').toUpperCase();
-        const purpose = (row.purpose || '').trim().toUpperCase();
-        if (purpose === 'PEMBELIAN POIN JKT48' || method.includes('POINT') || method.includes('POIN') || !row.paymentMethod) {
-          return total + points;
-        }
-        return total;
+        if (row.status === 'PENDING') return total;
+        const bonus = parseInt(String(row.bonusPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+        return total + getPointDelta(row) + bonus;
       }, 0);
     };
 
     const calculateTotalSpend = () => {
       return pointsData.reduce((total, row) => {
         if ((row.purpose || '').trim() === 'Masa Berlaku Habis') return total;
-        const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+        if (row.status === 'PENDING') return total;
+        const points = getPointDelta(row);
         return total + (points < 0 ? Math.abs(points) : 0);
       }, 0);
     };
@@ -377,6 +588,7 @@ const TicketHistory = () => {
 
     const calculateTotalExpired = () => {
       return pointsData.reduce((total, row) => {
+        if (row.status === 'PENDING') return total;
         const purpose = (row.purpose || '').trim().toUpperCase();
         const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
         if (purpose === 'MASA BERLAKU HABIS') {
@@ -393,14 +605,25 @@ const TicketHistory = () => {
       }, 0);
     };
 
-    const TYPE_LABELS = {
-      'EXCLUSIVE': 'VC/MnG',
-      'OFC_REGISTER': 'Membership Official',
+    const calculateTotalBonus = () => {
+      return pointsData.reduce((total, row) => {
+        if (row.status === 'PENDING') return total;
+        const method = String(row.paymentMethod || '').toUpperCase();
+        const bonus = parseInt(String(row.bonusPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+        if (method === 'BONUS_POINT') {
+          const bp = getPointDelta(row);
+          return total + bp;
+        }
+        return total + bonus;
+      }, 0);
     };
 
     const mapCategoryLabel = (raw) => {
       if (!raw || raw === '-') return 'Others';
-      return TYPE_LABELS[raw.toUpperCase().trim()] || raw;
+      const upper = raw.toUpperCase().trim();
+      if (upper === 'VC/MNG' || upper === 'EXCLUSIVE') return 'VC/MnG';
+      if (upper === 'OFC_REGISTER') return 'Membership Official';
+      return raw;
     };
 
     const categoryData = {};
@@ -415,10 +638,11 @@ const TicketHistory = () => {
     });
 
     pointsData.forEach(row => {
+      if (row.status === 'PENDING') return;
       const purp = (row.purpose || '').trim();
       if (purp === 'Pembelian Poin JKT48' || purp === 'Masa Berlaku Habis') return;
 
-      const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+      const points = getPointDelta(row);
       if (points >= 0) return;
 
       let categoryRaw = (row.category || '').trim();
@@ -483,6 +707,7 @@ const TicketHistory = () => {
       totalTopup: calculateTotalTopup(),
       totalExpired: calculateTotalExpired(),
       totalServiceCharged: calculateTotalServiceCharged(),
+      totalBonus: calculateTotalBonus(),
       categories,
       monthly: sortedMonthly,
       yearly: sortedYearly,
@@ -511,30 +736,6 @@ const TicketHistory = () => {
             JKT48 Ticket History
           </Typography>
         </Box>
-        {lastUpdate && (
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
-            Updated: {new Date(lastUpdate).toLocaleString('id-ID')}
-          </Typography>
-        )}
-        <Button startIcon={<Refresh />} onClick={loadTickets}
-          sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
-          Refresh
-        </Button>
-        <Button
-          startIcon={<Download />}
-          onClick={handleExportTxt}
-          disabled={!ticketsData.length}
-          sx={{
-            color: 'white',
-            border: '1px solid rgba(229,0,20,0.4)',
-            borderRadius: 2,
-            px: 2,
-            '&:hover': { bgcolor: 'rgba(229,0,20,0.12)', borderColor: '#E50014' },
-            '&.Mui-disabled': { color: 'rgba(255,255,255,0.25)', borderColor: 'rgba(255,255,255,0.1)' },
-          }}
-        >
-          Export Raw
-        </Button>
       </Box>
 
       <Box sx={{ minHeight: '100vh', bgcolor: '#0d0d1a', pt: '72px', pb: 6 }}>
@@ -565,25 +766,169 @@ const TicketHistory = () => {
 
           {ticketsData.length > 0 && (
             <>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, mt: 3 }}>
-                <ConfirmationNumber sx={{ color: '#E50014', fontSize: 28 }} />
-                <Typography variant="h4" sx={{ color: '#fff', fontWeight: 800 }}>
-                  Ticket Stats
-                </Typography>
+              {showWrapped && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4, px: 2 }}>
+                  {/* Wrapped Card */}
+                  <Box ref={wrappedRef} sx={{ width: '100%', maxWidth: 480, bgcolor: '#1a1a2e', borderRadius: 4, p: 4, position: 'relative', overflow: 'hidden' }}>
+                    {/* Background decoration */}
+                    <Box sx={{ position: 'absolute', top: -80, right: -80, width: 240, height: 240, borderRadius: '50%', bgcolor: 'rgba(229,0,20,0.06)', pointerEvents: 'none' }} />
+                    <Box sx={{ position: 'absolute', bottom: -60, left: -60, width: 200, height: 200, borderRadius: '50%', bgcolor: 'rgba(229,0,20,0.04)', pointerEvents: 'none' }} />
+
+                    {/* Title */}
+                    <Typography variant="h4" sx={{ color: '#fff', fontWeight: 900, textAlign: 'center', mb: 0.5, position: 'relative' }}>
+                      {wrappedStats.username ? `${wrappedStats.username}'s` : ''} JKT48 Wrapped
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2, position: 'relative' }}>
+                      <Typography variant="h5" sx={{ color: '#fff', fontWeight: 700 }}>{wrappedStats.yearLabel || 'All'}</Typography>
+                    </Box>
+
+                    {/* Profile */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3, position: 'relative' }}>
+                      {wrappedStats.oshimenName && (
+                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,1)', fontWeight: 600, mb: 1 }}>
+                          Oshimen:
+                        </Typography>
+                      )}
+                      {(() => {
+                        const photoName = wrappedStats.oshimenName || wrappedStats.username;
+                        const photoUrl = getMemberPhotoUrl(photoName);
+                        return photoUrl ? (
+                          <Box sx={{ width: 120, height: 120, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(255,255,255,0.2)' }}>
+                            <img src={photoUrl} alt={photoName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;background:#E50014;display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-weight:800;font-size:40px;">${getInitials(photoName)}</span></div>`; }} />
+                          </Box>
+                        ) : (
+                          <Box sx={{ width: 120, height: 120, borderRadius: '50%', bgcolor: '#E50014', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid rgba(255,255,255,0.2)' }}>
+                            <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 40 }}>{getInitials(photoName)}</Typography>
+                          </Box>
+                        );
+                      })()}
+                      <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, mt: 1.5 }}>{wrappedStats.oshimenName || wrappedStats.username}</Typography>
+                      {wrappedStats.createdDate && (
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', mt: 0.5 }}>
+                          Member since {wrappedStats.createdDate.split('T')[0]} ({wrappedStats.daysSince} days)
+                        </Typography>
+                      )}
+                    </Box>
+
+                    {/* Stats Grid */}
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, position: 'relative' }}>
+                      <Box>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, display: 'block', mb: 0.5 }}>Top Setlists (Win)</Typography>
+                        {wrappedStats.topSetlists.map((s, i) => (
+                          <Typography key={i} variant="body2" sx={{ color: '#fff', fontSize: 12, lineHeight: 1.5 }}>
+                            <Box component="span" sx={{ color: '#E50014', mr: 0.5 }}>●</Box>{s.name} — {s.value}x
+                          </Typography>
+                        ))}
+                        {wrappedStats.topSetlists.length === 0 && <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>—</Typography>}
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, display: 'block', mb: 0.5 }}>Most Applied</Typography>
+                        {wrappedStats.mostApplied.map((s, i) => (
+                          <Typography key={i} variant="body2" sx={{ color: '#fff', fontSize: 12, lineHeight: 1.5 }}>
+                            <Box component="span" sx={{ color: '#a29bfe', mr: 0.5 }}>●</Box>{s.name} — {s.value}x
+                          </Typography>
+                        ))}
+                        {wrappedStats.mostApplied.length === 0 && <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>—</Typography>}
+                      </Box>
+                      <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 1.5, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
+                        <Typography variant="body1" sx={{ color: '#fff', fontWeight: 700 }}>Winrate: {wrappedStats.winrate}%</Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>(Win: {wrappedStats.totalShowWin}x, Lose: {wrappedStats.totalShowLose}x)</Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, display: 'block', mb: 0.5 }}>Video Call / MnG</Typography>
+                        {wrappedStats.topVC.map((s, i) => (
+                          <Typography key={i} variant="body2" sx={{ color: '#fff', fontSize: 12, lineHeight: 1.5 }}>
+                            <Box component="span" sx={{ color: '#0abde3', mr: 0.5 }}>●</Box>{s.name} — {s.value}
+                          </Typography>
+                        ))}
+                        {wrappedStats.topVC.length === 0 && <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>—</Typography>}
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, display: 'block', mb: 0.5 }}>2Shot</Typography>
+                        {wrappedStats.top2Shot.map((s, i) => (
+                          <Typography key={i} variant="body2" sx={{ color: '#fff', fontSize: 12, lineHeight: 1.5 }}>
+                            <Box component="span" sx={{ color: '#ff6b8a', mr: 0.5 }}>●</Box>{s.name} — {s.value}
+                          </Typography>
+                        ))}
+                        {wrappedStats.top2Shot.length === 0 && <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>—</Typography>}
+                      </Box>
+                      <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 1, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Total Top-Up</Typography>
+                        <Typography variant="body1" sx={{ color: '#fff', fontWeight: 700 }}>{wrappedStats.totalTopup.toLocaleString()} P</Typography>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, position: 'relative' }}>
+                      <Button className="screenshot-btn" variant="outlined" size="small" startIcon={<Download />} onClick={handleWrappedExport} disabled={exporting}
+                        sx={{ color: '#fff', borderColor: 'rgba(229,0,20,0.4)', borderRadius: 2, fontSize: 12, '&:hover': { bgcolor: 'rgba(229,0,20,0.12)', borderColor: '#E50014' } }}>
+                        {exporting ? 'Exporting...' : 'Screenshot'}
+                      </Button>
+                    </Box>
+                  </Box>
+
+                  {/* Back Button */}
+                  <Button variant="outlined" size="large" startIcon={<ArrowBack />} onClick={() => setShowWrapped(false)}
+                    sx={{ mt: 3, color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.2)', px: 4, py: 1.5, fontSize: 14, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.4)' } }}>
+                    Back to Stats
+                  </Button>
+                </Box>
+              )}
+
+              {viewMode === 'full' && !showWrapped && (
+                <>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, mt: 3, flexWrap: 'wrap', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <ConfirmationNumber sx={{ color: '#E50014', fontSize: 28 }} />
+                      <Typography variant="h4" sx={{ color: '#fff', fontWeight: 800 }}>
+                        Ticket Stats
+                      </Typography>
+                    </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Year:</Typography>
+                  <Select
+                    value={ticketYear}
+                    onChange={(e) => setTicketYear(e.target.value)}
+                    size="small"
+                    sx={{
+                      color: '#fff',
+                      height: 32,
+                      '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(229,0,20,0.3)' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#E50014' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#E50014' },
+                      '.MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
+                      fontSize: 13,
+                    }}
+                    MenuProps={{
+                      PaperProps: { sx: { bgcolor: '#1a1a2e', '& .MuiMenuItem-root': { color: '#fff', fontSize: 13 } } }
+                    }}
+                  >
+                    <MenuItem value="all">All Time</MenuItem>
+                    {stats.availableYears.map((y) => (
+                      <MenuItem key={y} value={y}>{y}</MenuItem>
+                    ))}
+                  </Select>
+                  <Button startIcon={<AutoAwesome />} onClick={() => setShowWrapped(true)}
+                    sx={{ color: '#fff', border: '1px solid rgba(229,0,20,0.4)', borderRadius: 2, px: 2, height: 32, fontSize: 13, '&:hover': { bgcolor: 'rgba(229,0,20,0.12)', borderColor: '#E50014' } }}>
+                    Wrapped
+                  </Button>
+                </Box>
               </Box>
 
               {/* Summary stat cards */}
-              <Box sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: 'repeat(2,1fr)', sm: 'repeat(3,1fr)', md: 'repeat(6,1fr)' },
-                gap: 2, mb: 4,
-              }}>
-                <StatCard label="Total Tickets" value={stats.totalTickets} color="#a29bfe" icon={<ConfirmationNumber />} />
-                <StatCard label="Total VC" value={stats.totalVC} color="#0abde3" icon={<VideoCameraFront />} />
-                <StatCard label="Total 2Shot" value={stats.total2Shot} color="#ff6b8a" icon={<Person />} />
-                <StatCard label="Total MnG" value={stats.totalMnG} color="#ffd32a" icon={<Person />} />
-                <StatCard label="Total Menang Verif" value={`${stats.totalShowWin} (${stats.totalApply > 0 ? ((stats.totalShowWin / stats.totalApply) * 100).toFixed(1) : 0}%)`} color="#1dd1a1" icon={<TheaterComedy />} />
-                <StatCard label="Kalah Verif" value={stats.totalShowLose} color="#E50014" icon={<TheaterComedy />} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+                <Box sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: 'repeat(2,1fr)', sm: 'repeat(3,1fr)', md: 'repeat(5,1fr)' },
+                  gap: 2,
+                  width: '100%',
+                  maxWidth: 900,
+                }}>
+                  <StatCard label="Total Tickets" value={stats.totalTickets} color="#a29bfe" icon={<ConfirmationNumber />} />
+                  <StatCard label="Total VC/MnG" value={stats.totalVcMng} color="#0abde3" icon={<VideoCameraFront />} />
+                  <StatCard label="Total 2Shot" value={stats.total2Shot} color="#ff6b8a" icon={<Person />} />
+                  <StatCard label="Total Menang Verif" value={`${stats.totalShowWin} (${stats.totalApply > 0 ? ((stats.totalShowWin / stats.totalApply) * 100).toFixed(1) : 0}%)`} color="#1dd1a1" icon={<TheaterComedy />} />
+                  <StatCard label="Kalah Verif" value={stats.totalShowLose} color="#E50014" icon={<TheaterComedy />} />
+                </Box>
               </Box>
 
               {/* Tabs */}
@@ -597,9 +942,8 @@ const TicketHistory = () => {
                   '& .MuiTabs-indicator': { bgcolor: '#E50014' },
                 }}
               >
-                <Tab label="Video Call" />
+                <Tab label="Video Call / MnG" />
                 <Tab label="2Shot" />
-                <Tab label="Meet & Greet" />
                 <Tab label="Show Wins" />
                 <Tab label="Show Losses" />
                 <Tab label="Most Applied" />
@@ -609,20 +953,20 @@ const TicketHistory = () => {
               {tab === 0 && (
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
                   <RankedList
-                    title="Video Call — by Member"
+                    title="Video Call / MnG — by Member"
                     icon={<VideoCameraFront sx={{ color: '#0abde3' }} />}
-                    data={stats.vcByMember}
+                    data={stats.vcMngByMember}
                     valueLabel=" tickets"
                     colorKey="#0abde3"
                   />
-                  <ResponsiveContainer width="100%" height={Math.max(300, stats.vcByMember.length * 40)}>
-                    <BarChart data={stats.vcByMember} layout="vertical" margin={{ left: 60, right: 20 }}>
+                  <ResponsiveContainer width="100%" height={Math.max(300, stats.vcMngByMember.length * 40)}>
+                    <BarChart data={stats.vcMngByMember} layout="vertical" margin={{ left: 60, right: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                       <XAxis type="number" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }} />
                       <YAxis type="category" dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{ fill: '#fff', fontSize: 12 }} width={100} />
                       <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #0abde3', borderRadius: 8 }} labelStyle={{ color: '#fff' }} itemStyle={{ color: '#fff' }} />
                       <Bar dataKey="value" name="Tickets" radius={[0, 4, 4, 0]}>
-                        {stats.vcByMember.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        {stats.vcMngByMember.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -653,29 +997,6 @@ const TicketHistory = () => {
               )}
 
               {tab === 2 && (
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
-                  <RankedList
-                    title="Meet & Greet — by Member"
-                    icon={<Person sx={{ color: '#ffd32a' }} />}
-                    data={stats.mngByMember}
-                    valueLabel=" tickets"
-                    colorKey="#ffd32a"
-                  />
-                  <ResponsiveContainer width="100%" height={Math.max(300, stats.mngByMember.length * 40)}>
-                    <BarChart data={stats.mngByMember} layout="vertical" margin={{ left: 60, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                      <XAxis type="number" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }} />
-                      <YAxis type="category" dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{ fill: '#fff', fontSize: 12 }} width={100} />
-                      <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #ffd32a', borderRadius: 8 }} labelStyle={{ color: '#fff' }} itemStyle={{ color: '#fff' }} />
-                      <Bar dataKey="value" name="Tickets" radius={[0, 4, 4, 0]}>
-                        {stats.mngByMember.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Box>
-              )}
-
-              {tab === 3 && (
                 <RankedList
                   title="Menang Verif"
                   icon={<TheaterComedy sx={{ color: '#1dd1a1' }} />}
@@ -685,7 +1006,7 @@ const TicketHistory = () => {
                 />
               )}
 
-              {tab === 4 && (
+              {tab === 3 && (
                 <RankedList
                   title="Kalah Verif"
                   icon={<TheaterComedy sx={{ color: '#E50014' }} />}
@@ -695,7 +1016,7 @@ const TicketHistory = () => {
                 />
               )}
 
-              {tab === 5 && (
+              {tab === 4 && (
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
                   {/* Expandable list with transaction details */}
                   <Paper sx={{ p: 3, bgcolor: '#1a1a2e', borderRadius: 3, height: '100%' }}>
@@ -797,7 +1118,7 @@ const TicketHistory = () => {
               {/* Points Summary Cards */}
               <Box sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: 'repeat(2,1fr)', sm: 'repeat(3,1fr)', md: 'repeat(5,1fr)' },
+                gridTemplateColumns: { xs: 'repeat(2,1fr)', sm: 'repeat(3,1fr)', md: 'repeat(6,1fr)' },
                 gap: 2, mb: 4,
               }}>
                 <Paper sx={{ p: 2, bgcolor: '#1a1a2e', borderRadius: 3, border: '1px solid #ff69b433', display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -843,6 +1164,15 @@ const TicketHistory = () => {
                   <Box>
                     <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Service Charged</Typography>
                     <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>Rp {pointsStats.totalServiceCharged.toLocaleString()}</Typography>
+                  </Box>
+                </Paper>
+                <Paper sx={{ p: 2, bgcolor: '#1a1a2e', borderRadius: 3, border: '1px solid #FFD70033', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#FFD70022', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <TrendingUp sx={{ color: '#FFD700', fontSize: 20 }} />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Total Bonus</Typography>
+                    <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{pointsStats.totalBonus.toLocaleString()} P</Typography>
                   </Box>
                 </Paper>
               </Box>
@@ -958,9 +1288,33 @@ const TicketHistory = () => {
 
               {/* Transaction History Table */}
               <Paper sx={{ p: 2.5, bgcolor: '#1a1a2e', borderRadius: 3, mb: 3 }}>
-                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, mb: 2 }}>
-                  Transaction History
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                  <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700 }}>
+                    Transaction History
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Category:</Typography>
+                    <Select
+                      value={txCategoryFilter}
+                      onChange={(e) => { setTxCategoryFilter(e.target.value); setTxPage(0); }}
+                      size="small"
+                      sx={{
+                        color: '#fff',
+                        height: 28,
+                        '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(229,0,20,0.3)' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#E50014' },
+                        '.MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
+                        fontSize: 12,
+                      }}
+                      MenuProps={{ PaperProps: { sx: { bgcolor: '#1a1a2e', '& .MuiMenuItem-root': { color: '#fff', fontSize: 12 } } } }}
+                    >
+                      <MenuItem value="all">All</MenuItem>
+                      {Array.from(new Set(pointsData.map(r => r.category || 'Unknown'))).sort().map((cat) => (
+                        <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                      ))}
+                    </Select>
+                  </Box>
+                </Box>
                 <Box sx={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                     <thead>
@@ -975,47 +1329,55 @@ const TicketHistory = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {pointsData
-                        .slice(txPage * txRowsPerPage, txPage * txRowsPerPage + txRowsPerPage)
-                        .map((row, i) => {
-                          const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
-                          const sc = parseFloat(row.serviceCharge) || 0;
-                          const isPositive = points > 0;
-                          const isExpired = (row.purpose || '').trim() === 'Masa Berlaku Habis';
-                          return (
-                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                              <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.6)' }}>{row.date || '-'}</td>
-                              <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace', fontSize: 11 }}>{row.id || '-'}</td>
-                              <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.7)' }}>{row.purpose || row.title || '-'}</td>
-                              <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.6)' }}>{row.category || '-'}</td>
-                              <td style={{ padding: '8px 12px', textAlign: 'right', color: isPositive ? '#4CAF50' : isExpired ? '#F44336' : 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
-                                {points > 0 ? '+' : ''}{points.toLocaleString()} P
-                              </td>
-                              <td style={{ padding: '8px 12px', textAlign: 'right', color: 'rgba(255,255,255,0.5)' }}>
-                                {sc > 0 ? `Rp ${sc.toLocaleString()}` : '-'}
-                              </td>
-                              <td style={{ padding: '8px 12px' }}>
-                                <span style={{
-                                  display: 'inline-block',
-                                  padding: '2px 8px',
-                                  borderRadius: 4,
-                                  fontSize: 10,
-                                  fontWeight: 600,
-                                  bgcolor: isPositive ? 'rgba(76,175,80,0.15)' : isExpired ? 'rgba(244,67,54,0.15)' : 'rgba(255,255,255,0.08)',
-                                  color: isPositive ? '#4CAF50' : isExpired ? '#F44336' : 'rgba(255,255,255,0.5)',
-                                }}>
-                                  {row.status || '-'}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                      {(() => {
+                        const filtered = txCategoryFilter === 'all' ? pointsData : pointsData.filter(r => (r.category || 'Unknown') === txCategoryFilter);
+                        return filtered
+                          .slice(txPage * txRowsPerPage, txPage * txRowsPerPage + txRowsPerPage)
+                          .map((row, i) => {
+                            const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+                            const sc = parseFloat(row.serviceCharge) || 0;
+                            const isPositive = points > 0;
+                            const isExpired = (row.purpose || '').trim() === 'Masa Berlaku Habis';
+                            return (
+                              <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.6)' }}>{row.date || '-'}</td>
+                                <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace', fontSize: 11 }}>{row.id || '-'}</td>
+                                <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.7)' }}>{row.purpose || row.title || '-'}</td>
+                                <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.6)' }}>{row.category || '-'}</td>
+                                <td style={{ padding: '8px 12px', textAlign: 'right', color: isPositive ? '#4CAF50' : isExpired ? '#F44336' : 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+                                  {points > 0 ? '+' : ''}{points.toLocaleString()} P
+                                </td>
+                                <td style={{ padding: '8px 12px', textAlign: 'right', color: 'rgba(255,255,255,0.5)' }}>
+                                  {sc > 0 ? `Rp ${sc.toLocaleString()}` : '-'}
+                                </td>
+                                <td style={{ padding: '8px 12px' }}>
+                                  <span style={{
+                                    display: 'inline-block',
+                                    padding: '2px 8px',
+                                    borderRadius: 4,
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                    bgcolor: isPositive ? 'rgba(76,175,80,0.15)' : isExpired ? 'rgba(244,67,54,0.15)' : 'rgba(255,255,255,0.08)',
+                                    color: isPositive ? '#4CAF50' : isExpired ? '#F44336' : 'rgba(255,255,255,0.5)',
+                                  }}>
+                                    {row.status || '-'}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          });
+                      })()}
                     </tbody>
                   </table>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, pt: 2, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                   <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
-                    {txPage * txRowsPerPage + 1}–{Math.min((txPage + 1) * txRowsPerPage, pointsData.length)} of {pointsData.length}
+                    {(() => {
+                      const filtered = txCategoryFilter === 'all' ? pointsData : pointsData.filter(r => (r.category || 'Unknown') === txCategoryFilter);
+                      const start = txPage * txRowsPerPage + 1;
+                      const end = Math.min((txPage + 1) * txRowsPerPage, filtered.length);
+                      return filtered.length > 0 ? `${start}–${end} of ${filtered.length}` : 'No records';
+                    })()}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Rows:</Typography>
@@ -1040,13 +1402,21 @@ const TicketHistory = () => {
                     <Button size="small" disabled={txPage === 0} onClick={() => setTxPage(p => p - 1)}
                       sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 28, px: 1, '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' } }}>‹</Button>
                     <Typography sx={{ color: '#fff', fontSize: 12, minWidth: 40, textAlign: 'center' }}>
-                      {txPage + 1} / {Math.ceil(pointsData.length / txRowsPerPage) || 1}
+                      {(() => {
+                        const filtered = txCategoryFilter === 'all' ? pointsData : pointsData.filter(r => (r.category || 'Unknown') === txCategoryFilter);
+                        return `${txPage + 1} / ${Math.ceil(filtered.length / txRowsPerPage) || 1}`;
+                      })()}
                     </Typography>
-                    <Button size="small" disabled={(txPage + 1) * txRowsPerPage >= pointsData.length} onClick={() => setTxPage(p => p + 1)}
+                    <Button size="small" disabled={(() => {
+                      const filtered = txCategoryFilter === 'all' ? pointsData : pointsData.filter(r => (r.category || 'Unknown') === txCategoryFilter);
+                      return (txPage + 1) * txRowsPerPage >= filtered.length;
+                    })()} onClick={() => setTxPage(p => p + 1)}
                       sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 28, px: 1, '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' } }}>›</Button>
                   </Box>
                 </Box>
               </Paper>
+                </>
+              )}
             </>
           )}
 

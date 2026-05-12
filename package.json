@@ -20,6 +20,7 @@
         "@vercel/analytics": "^1.5.0",
         "@vercel/speed-insights": "^2.0.0",
         "date-fns": "^4.1.0",
+        "dom-to-image": "^2.6.0",
         "dom-to-image-more": "^3.6.0",
         "playroomkit": "^0.0.96",
         "react": "^19.2.6",

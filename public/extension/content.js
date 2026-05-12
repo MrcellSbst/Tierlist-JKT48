@@ -28,6 +28,20 @@ const syncTicketsToLocalStorage = async () => {
   }
 };
 
+const syncProfileToLocalStorage = async () => {
+  try {
+    const result = await chrome.storage.local.get('jkt48_user_profile');
+    if (result.jkt48_user_profile) {
+      localStorage.setItem('jkt48_user_profile', JSON.stringify(result.jkt48_user_profile));
+      window.dispatchEvent(new CustomEvent('JKT48_USER_PROFILE_UPDATED', {
+        detail: result.jkt48_user_profile
+      }));
+    }
+  } catch (e) {
+    console.error('[JKT48 Ext] Profile sync error:', e);
+  }
+};
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'POINTS_HISTORY_UPDATED' && message.data) {
     try {
@@ -49,6 +63,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
   }
 
+  if (message.type === 'USER_PROFILE_UPDATED' && message.data) {
+    try {
+      localStorage.setItem('jkt48_user_profile', JSON.stringify(message.data));
+      window.dispatchEvent(new CustomEvent('JKT48_USER_PROFILE_UPDATED', { detail: message.data }));
+      sendResponse({ success: true });
+    } catch (e) {
+      sendResponse({ success: false, error: e.message });
+    }
+  }
+
   // Progress updates from background → update floating panel status
   if (message.type === 'EXPORT_PROGRESS') {
     updateStatus(message.text, message.isError || false);
@@ -61,11 +85,13 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local') {
     if (changes.jkt48_points_history)  syncDataToLocalStorage();
     if (changes.jkt48_tickets_history) syncTicketsToLocalStorage();
+    if (changes.jkt48_user_profile)    syncProfileToLocalStorage();
   }
 });
 
 syncDataToLocalStorage();
 syncTicketsToLocalStorage();
+syncProfileToLocalStorage();
 
 // ─── Floating Panel (only on jkt48.com) ──────────────────────────────────────
 
@@ -274,7 +300,7 @@ function injectFloatingPanel() {
           </span>
         </button>
         <button class="ext-btn btn-tierlist" id="btnTierlist">
-          <span class="btn-icon">🎟️</span>
+          <span class="btn-icon">️</span>
           <span class="btn-content">
             <span class="btn-label">View Ticket Stats</span>
             <span class="btn-sub">Open tierlistjkt48.my.id/ticket-history</span>

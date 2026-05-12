@@ -69,6 +69,41 @@ async function handleApiExport(tabId) {
 
     sendProgress(tabId, 'Connecting to API…');
 
+    // ── Fetch user profile ───────────────────────────────────────────────────
+    try {
+      const profileRes = await fetch('https://jkt48.com/api/v1/accounts/user?lang=id', {
+        headers: authHeaders,
+        signal: AbortSignal.timeout(10000)
+      });
+      if (profileRes.ok) {
+        const profileJson = await profileRes.json();
+        const data = profileJson.data || profileJson;
+        const profile = {
+          full_name: data.full_name || data.fullName || data.name || '',
+          nickname: data.nickname || data.nick_name || '',
+          created_date: data.created_date || data.created_at || data.registered_date || '',
+          oshimen_name: data.oshimen_name || data.oshimen || data.favorite_member || ''
+        };
+        await chrome.storage.local.set({ jkt48_user_profile: profile });
+
+        const allTabs = await chrome.tabs.query({});
+        for (const t of allTabs) {
+          if (t.url && (
+            t.url.includes('tierlistjkt48.my.id') ||
+            t.url.includes('localhost') ||
+            t.url.includes('vercel.app')
+          )) {
+            chrome.tabs.sendMessage(t.id, { type: 'USER_PROFILE_UPDATED', data: profile }).catch(() => {});
+          }
+        }
+        sendProgress(tabId, `Profile loaded: ${profile.full_name}`);
+      }
+    } catch (e) {
+      console.warn('Profile fetch skipped:', e);
+    }
+
+    // ── Fetch points history ──────────────────────────────────────────────────
+
     let allRawData = [];
     let page = 1;
     const MAX_PAGES = 100;
@@ -131,6 +166,41 @@ async function handleApiExport(tabId) {
       return;
     }
 
+    // ── Fetch bonus points for large top-ups ─────────────────────────────────
+    const bonusMap = {};
+    const toFetch = allRawData.filter(item => {
+      const type = (item.type || item.operation || '').toUpperCase();
+      const title = (item.title || item.description || '').toLowerCase();
+      const qty = parseInt(item.total_quantity ?? item.quantity ?? item.qty ?? 0) || 0;
+      return type === 'JKT48POINT' && title.includes('pembelian poin jkt48') && qty > 999999;
+    });
+
+    if (toFetch.length > 0) {
+      sendProgress(tabId, `Fetching bonus details for ${toFetch.length} large top-ups…`);
+      for (const item of toFetch) {
+        const txNo = item.transaction_no || item.id;
+        if (!txNo) continue;
+        try {
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 10000);
+          const res = await fetch(`https://jkt48.com/api/v1/accounts/purchase-history/${txNo}?lang=id`, {
+            headers: authHeaders,
+            signal: ctrl.signal
+          });
+          clearTimeout(t);
+          if (res.ok) {
+            const json = await res.json();
+            if (json?.data?.detail) {
+              const bonusItem = json.data.detail.find(d => d.item_code === 'BONUS_POINT');
+              if (bonusItem) bonusMap[txNo] = bonusItem.quantity || 0;
+            }
+          }
+        } catch (e) {
+          console.warn(`Bonus fetch failed for ${txNo}:`, e);
+        }
+      }
+    }
+
     // ── Map raw API data to the internal format ──────────────────────────────
     const TYPE_LABELS = { EXCLUSIVE: 'VC/MnG', OFC_REGISTER: 'Membership Official' };
 
@@ -148,7 +218,8 @@ async function handleApiExport(tabId) {
       if (isTopup)        purpose = 'Pembelian Poin JKT48';
       else if (isExpired) purpose = 'Masa Berlaku Habis';
 
-      const rawBonus  = item.bonusPoints || item.bonus_points || item.bonus || 0;
+      const fetchedBonus = bonusMap[rawTxNo] ?? 0;
+      const rawBonus  = fetchedBonus || item.bonusPoints || item.bonus_points || item.bonus || 0;
       const totalAmt  = item.total_amount ?? item.buyPoints ?? item.points ?? item.point ?? item.total ?? item.amount ?? 0;
       const payAmt    = item.payment_amount ?? totalAmt;
       const svcCharge = Math.max(0, payAmt - totalAmt);
