@@ -15,7 +15,6 @@ const HomepageTools   = lazy(() => import('./Homepage').then(m => ({ default: m.
 const HomepageGames   = lazy(() => import('./Homepage').then(m => ({ default: m.HomepageGames })))
 const TierlistCombined = lazy(() => import('./Tierlist_Combined'))
 const Calculator      = lazy(() => import('./Calculator'))
-const PointHistory    = lazy(() => import('./PointHistory'))
 const DreamSetlist    = lazy(() => import('./Dream_Setlist'))
 const RoulettePage    = lazy(() => import('./roulette'))
 const GachaPage       = lazy(() => import('./Gacha'))
@@ -71,7 +70,6 @@ function App() {
               <Route path="/tierlist" element={<TierlistCombined />} />
               <Route path="/tierlist_lagu" element={<TierlistCombined />} />
               <Route path="/dream-setlist" element={<DreamSetlist />} />
-              <Route path="/point-history" element={<PointHistory />} />
               <Route path="/roulette" element={<RoulettePage />} />
               <Route path="/mobile-tierlist" element={<MobileTierlist />} />
               <Route path="/gacha" element={<GachaPage />} />

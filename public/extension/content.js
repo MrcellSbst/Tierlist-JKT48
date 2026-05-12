@@ -274,10 +274,10 @@ function injectFloatingPanel() {
           </span>
         </button>
         <button class="ext-btn btn-tierlist" id="btnTierlist">
-          <span class="btn-icon">📊</span>
+          <span class="btn-icon">🎟️</span>
           <span class="btn-content">
-            <span class="btn-label">View in Tierlist</span>
-            <span class="btn-sub">Open tierlistjkt48.my.id/point-history</span>
+            <span class="btn-label">View Ticket Stats</span>
+            <span class="btn-sub">Open tierlistjkt48.my.id/ticket-history</span>
           </span>
         </button>
         <div class="divider"></div>
@@ -314,24 +314,8 @@ function injectFloatingPanel() {
   });
 
   shadow.getElementById('btnTierlist').addEventListener('click', () => {
-    window.open('https://tierlistjkt48.my.id/point-history', '_blank');
-  });
-
-  // Ticket history shortcut (added alongside the existing buttons)
-  const btnTickets = document.createElement('button');
-  btnTickets.className = 'ext-btn btn-tierlist';
-  btnTickets.id = 'btnTickets';
-  btnTickets.innerHTML = `
-    <span class="btn-icon">🎟️</span>
-    <span class="btn-content">
-      <span class="btn-label">View Ticket Stats</span>
-      <span class="btn-sub">Open tierlistjkt48.my.id/ticket-history</span>
-    </span>
-  `;
-  btnTickets.addEventListener('click', () => {
     window.open('https://tierlistjkt48.my.id/ticket-history', '_blank');
   });
-  shadow.getElementById('btnTierlist').insertAdjacentElement('afterend', btnTickets);
 
   // ── Helpers
   function setStatus(text, state = 'idle') {
