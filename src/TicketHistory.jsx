@@ -10,7 +10,7 @@ import { ArrowBack, ArrowForward, ConfirmationNumber, TheaterComedy, Person, Vid
 import { useNavigate } from 'react-router-dom';
 import { format, startOfMonth } from 'date-fns';
 import domtoimage from 'dom-to-image-more';
-import { activeMemberFiles, exMemberFiles } from './data/memberdata.js';
+import { activeMemberFiles, exMemberFiles } from './data/memberData.js';
 
 // Use date-only (YYYY-MM-DD) for dedup — ignore time to avoid timezone issues.
 function dateOnly(isoStr) {
