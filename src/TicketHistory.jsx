@@ -2,12 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Container, Typography, Box, Paper, Alert, Button, Chip, Link,
   Tabs, Tab, Avatar, Divider, Accordion, AccordionSummary, AccordionDetails,
-  IconButton
+  IconButton, Select, MenuItem
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import { ArrowBack, Refresh, ConfirmationNumber, TheaterComedy, Person, VideoCameraFront, Download } from '@mui/icons-material';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { ArrowBack, Refresh, ConfirmationNumber, TheaterComedy, Person, VideoCameraFront, Download, PieChart as PieChartIcon, TrendingUp, CalendarToday } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { format, startOfMonth } from 'date-fns';
 
 // Use date-only (YYYY-MM-DD) for dedup — ignore time to avoid timezone issues.
 function dateOnly(isoStr) {
@@ -19,11 +20,6 @@ function ticketDedupKey(ticket) {
   const ref    = ticket.reference_code || '';
   const status = ticket.raffle_status ?? 'null';
   return `${tx}|${dateOnly(ticket.date)}|${dateOnly(ticket.expired_date)}|${ref}|${status}`;
-}
-
-function applicationKey(ticket) {
-  const tx = ticket.transaction_numbers?.[0] || '';
-  return `${tx}|${dateOnly(ticket.date)}`;
 }
 
 // ─── Ticket processor — deduplicates by exact record key + classifies ─────────
@@ -69,12 +65,34 @@ function processTickets(data) {
   return validTickets;
 }
 
-// ─── Palette ──────────────────────────────────────────────────────────────────
+// ─── Palette ─────────────────────────────────────────────────────────────────
 const COLORS = [
   '#E50014', '#ff6b8a', '#ff9f43', '#ffd32a',
   '#0abde3', '#48dbfb', '#1dd1a1', '#10ac84',
   '#5f27cd', '#a29bfe', '#fd79a8', '#fdcb6e',
 ];
+
+// ─── Custom Bar Chart Tooltip with Total ──────────────────────────────────────
+function BarTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  const total = payload.reduce((s, p) => s + (p.value || 0), 0);
+  return (
+    <Box sx={{ bgcolor: '#0d0d1a', border: '1px solid rgba(229,0,20,0.3)', borderRadius: 2, p: 1.5, minWidth: 140 }}>
+      <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, mb: 0.5 }}>{label}</Typography>
+      {payload.map((p, i) => (
+        <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: 1, bgcolor: p.color, flexShrink: 0 }} />
+          <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, flex: 1 }}>{p.name}</Typography>
+          <Typography sx={{ color: '#fff', fontSize: 11, fontWeight: 600 }}>{p.value.toLocaleString()} P</Typography>
+        </Box>
+      ))}
+      <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.1)', mt: 0.5, pt: 0.5, display: 'flex', justifyContent: 'space-between' }}>
+        <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600 }}>Total</Typography>
+        <Typography sx={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>{total.toLocaleString()} P</Typography>
+      </Box>
+    </Box>
+  );
+}
 
 // ─── Reusable ranked list card ────────────────────────────────────────────────
 function RankedList({ title, icon, data, valueLabel = '', colorKey }) {
@@ -148,8 +166,8 @@ function StatCard({ label, value, color = '#E50014', icon }) {
         {React.cloneElement(icon, { sx: { color, fontSize: 24 } })}
       </Box>
       <Box>
-        <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{label}</Typography>
-        <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 22, lineHeight: 1.2 }}>{value}</Typography>
+        <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>{label}</Typography>
+        <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 18, lineHeight: 1.2, whiteSpace: 'nowrap' }}>{value}</Typography>
       </Box>
     </Paper>
   );
@@ -161,6 +179,11 @@ const TicketHistory = () => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [error, setError] = useState('');
   const [tab, setTab] = useState(0);
+  const [pointsData, setPointsData] = useState([]);
+  const [pointsLastUpdate, setPointsLastUpdate] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+  const [txPage, setTxPage] = useState(0);
+  const [txRowsPerPage, setTxRowsPerPage] = useState(25);
   const navigate = useNavigate();
 
   const handleExportTxt = () => {
@@ -196,165 +219,108 @@ const TicketHistory = () => {
     }
   };
 
+  const loadPointsHistory = () => {
+    try {
+      const raw = localStorage.getItem('jkt48_points_history');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.data && Array.isArray(parsed.data)) {
+          setPointsData(parsed.data);
+          setPointsLastUpdate(parsed.timestamp);
+        }
+      }
+    } catch (e) {
+      console.error('Error loading points history:', e);
+    }
+  };
+
   useEffect(() => {
     loadTickets();
-    const onUpdate = () => loadTickets();
+    loadPointsHistory();
+    const onTicketUpdate = () => loadTickets();
+    const onPointsUpdate = () => loadPointsHistory();
     const onStorage = (e) => {
       if (e.key === 'jkt48_tickets_history' || e.key === null) loadTickets();
+      if (e.key === 'jkt48_points_history' || e.key === null) loadPointsHistory();
     };
-    window.addEventListener('JKT48_TICKETS_HISTORY_UPDATED', onUpdate);
+    window.addEventListener('JKT48_TICKETS_HISTORY_UPDATED', onTicketUpdate);
+    window.addEventListener('JKT48_POINTS_HISTORY_UPDATED', onPointsUpdate);
     window.addEventListener('storage', onStorage);
     return () => {
-      window.removeEventListener('JKT48_TICKETS_HISTORY_UPDATED', onUpdate);
+      window.removeEventListener('JKT48_TICKETS_HISTORY_UPDATED', onTicketUpdate);
+      window.removeEventListener('JKT48_POINTS_HISTORY_UPDATED', onPointsUpdate);
       window.removeEventListener('storage', onStorage);
     };
   }, []);
 
   // ─── Stats computation ──────────────────────────────────────────────────────
   const stats = useMemo(() => {
-    // loseTransactions: ticketDedupKeys of all LOSE entries.
-    // Used to block phantom nulls that are the exact same record as a LOSE entry.
-    // For 2026+ format: null and LOSE of the same application have DIFFERENT expired_dates
-    // → different ticketDedupKeys → null is NOT in loseTransactions → counted in Step B.
-    // This is intentional: Step A counts LOSE, Step B counts the null, but seenApplyNull
-    // deduplication ensures each unique (txKey|date|expired) is only counted once.
-    const loseTransactions = new Set(); // ticketDedupKey
-    const loseAppKeys = new Set();      // applicationKey — used for win check only
-    for (const ticket of ticketsData) {
-      if (ticket.raffle_status === 'LOSE') {
-        loseTransactions.add(ticketDedupKey(ticket));
-        loseAppKeys.add(applicationKey(ticket));
-      }
-    }
-
-    // ── Won tickets: deduplicated, no LOSE ──────────────────────────────────
-    const validTickets = processTickets(ticketsData);
-
     const vcByMember    = {};
     const twoShotByMember = {};
     const mngByMember   = {};
     const showWinByLabel = {};
+    const showLoseByLabel = {};
+    const theaterApplyByLabel = {};
+    const theaterApplyDetails = {};
 
-    let totalVC = 0, total2Shot = 0, totalMnG = 0, totalShowWin = 0;
+    let totalVC = 0, total2Shot = 0, totalMnG = 0, totalShowWin = 0, totalShowLose = 0;
 
-    for (const ticket of validTickets) {
-      const { eventType, member_name, ticket_label, name } = ticket;
-      const label  = ticket_label || name;
+    for (const ticket of ticketsData) {
+      const { ticket_type, ticket_label, name, member_name, raffle_status, used_count } = ticket;
+      const label = ticket_label || name;
       const bought = parseInt(ticket.bought_count || '1') || 1;
-      const dedupKey = ticketDedupKey(ticket);
 
-      if (eventType === 'Video Call' && member_name) {
-        vcByMember[member_name] = (vcByMember[member_name] || 0) + bought;
-        totalVC += bought;
-      } else if (eventType === '2Shot' && member_name) {
-        twoShotByMember[member_name] = (twoShotByMember[member_name] || 0) + bought;
-        total2Shot += bought;
-      } else if (eventType === 'Meet and Greet' && member_name) {
-        mngByMember[member_name] = (mngByMember[member_name] || 0) + bought;
-        totalMnG += bought;
-      } else if (eventType && eventType.startsWith('Show')) {
-        const isAttended    = parseInt(ticket.used_count || '0') > 0;
-        const expDate       = new Date(ticket.expired_date || ticket.date || 0);
-        const isPast        = expDate < new Date();
-        // Use applicationKey (txKey|date) for the win check: if ANY LOSE entry exists
-        // for the same show date, this null is not an upcoming win.
-        const isUpcomingWin = !isPast && !loseAppKeys.has(applicationKey(ticket));
+      if (ticket_type === 'SHOW') {
+        const isLose = raffle_status === 'LOSE';
+        const isWin = used_count === '1' || parseInt(used_count || '0') > 0;
 
-        if (isAttended || isUpcomingWin) {
+        if (isLose) {
+          showLoseByLabel[label] = (showLoseByLabel[label] || 0) + bought;
+          totalShowLose += bought;
+        }
+        if (isWin) {
           showWinByLabel[label] = (showWinByLabel[label] || 0) + bought;
           totalShowWin += bought;
         }
+        if (isLose || isWin) {
+          theaterApplyByLabel[label] = (theaterApplyByLabel[label] || 0) + bought;
+          if (!theaterApplyDetails[label]) theaterApplyDetails[label] = [];
+          theaterApplyDetails[label].push({
+            txKey: ticket.transaction_numbers?.[0] || 'N/A',
+            raffle_status,
+            used_count: used_count || '0',
+            date: ticket.date,
+            expired_date: ticket.expired_date,
+            reference_code: ticket.reference_code,
+          });
+        }
+      } else if (ticket_type === 'EXCLUSIVE' || ticket_type === 'EVENT') {
+        if (raffle_status !== 'LOSE') {
+          const t = ticket;
+          const n = t.name || '';
+          let eventType;
+
+          if (t.ticket_type === 'EXCLUSIVE') {
+            if (n.includes('Meet & Greet')) eventType = 'Meet and Greet';
+            else if (n.includes('2Shot'))   eventType = '2Shot';
+            else                               eventType = 'Video Call';
+          } else {
+            eventType = n.toLowerCase().includes('video call') ? 'Video Call (Event)' : 'Event';
+          }
+
+          const mem = t.member_name;
+          if (eventType === 'Video Call' && mem) {
+            vcByMember[mem] = (vcByMember[mem] || 0) + bought;
+            totalVC += bought;
+          } else if (eventType === '2Shot' && mem) {
+            twoShotByMember[mem] = (twoShotByMember[mem] || 0) + bought;
+            total2Shot += bought;
+          } else if (eventType === 'Meet and Greet' && mem) {
+            mngByMember[mem] = (mngByMember[mem] || 0) + bought;
+            totalMnG += bought;
+          }
+        }
       }
-    }
-
-    // ── Show losses ─────────────────────────────────────────────────────────
-    //
-    // Three-pass approach to avoid ordering bugs:
-    //
-    // Pass 1 — explicit LOSE entries (authoritative for 2026+ format).
-    //   Catches losses even when the phantom null entry for the same transaction
-    //   appears first in the data with a still-future expired_date (which would
-    //   cause a single-pass loop to miss the loss entirely).
-    //
-    // Pass 2 — null-only entries with no LOSE counterpart (pre-2026 format).
-    //   Past + not attended + no LOSE sibling = old-style raffle loss.
-    //
-    // Pass 3 — Most Applied: every unique SHOW transaction (wins + losses).
-
-    const showLose     = {};
-    const theaterApply = {};
-    let totalShowLose  = 0;
-
-    // Pass 1: count unique LOSE transactions
-    const seenLose = new Set();
-    for (const ticket of ticketsData) {
-      if (ticket.raffle_status !== 'LOSE' || ticket.ticket_type !== 'SHOW') continue;
-      const dedupKey = ticketDedupKey(ticket);
-      if (seenLose.has(dedupKey)) continue;
-      seenLose.add(dedupKey);
-      const label  = ticket.ticket_label || ticket.name;
-      const bought = parseInt(ticket.bought_count || '1') || 1;
-      showLose[label]  = (showLose[label] || 0) + bought;
-      totalShowLose   += bought;
-    }
-
-    // Pass 2: pre-2026 null-only losses (no LOSE with same ticketDedupKey, past, not attended)
-    const seenNullLose = new Set();
-    for (const ticket of ticketsData) {
-      if (ticket.ticket_type !== 'SHOW' || ticket.raffle_status !== null) continue;
-      const dk = ticketDedupKey(ticket);
-      // Skip if already counted (exact duplicate across pages)
-      if (seenLose.has(dk) || seenNullLose.has(dk)) continue;
-      seenNullLose.add(dk);
-      const isAttended = parseInt(ticket.used_count || '0') > 0;
-      const expDate    = new Date(ticket.expired_date || ticket.date || 0);
-      const isPast     = expDate < new Date();
-      if (isPast && !isAttended) {
-        const label  = ticket.ticket_label || ticket.name;
-        const bought = parseInt(ticket.bought_count || '1') || 1;
-        showLose[label]  = (showLose[label] || 0) + bought;
-        totalShowLose   += bought;
-      }
-    }
-
-    // Pass 3: Most Applied
-    // Strategy:
-    //   Step A — count each unique LOSE entry (ticketDedupKey dedup).
-    //            One LOSE entry = one lost application, regardless of API format.
-    //   Step B — count null entries that have NO LOSE counterpart (applicationKey check).
-    //            These are wins, upcoming wins, or pre-2026 null-only apps.
-    //            Null entries that DO have a LOSE sibling are phantom duplicates → skip.
-    //
-    // Why not applicationKey for everything?
-    //   Pre-2026 lost apps can have SAME txKey + SAME date for two separate
-    //   applications (e.g. OSH606787 applied twice on the same date).
-    //   applicationKey would incorrectly collapse them to 1.
-    // Pass 3: Most Applied
-    // Rule: same (txKey + date + expired_date) = same application/page-duplicate → count once.
-    //        different expired_date = different application → count separately.
-    // One pass, ticketDedupKey dedup only. No null/LOSE pairing needed.
-    const theaterApplyDetails = {};
-    const seenApply = new Set();
-    for (const ticket of ticketsData) {
-      if (ticket.ticket_type !== 'SHOW') continue;
-      const dk = ticketDedupKey(ticket);
-      const tx = ticket.transaction_numbers?.[0] || '';
-      if (tx === 'OSH607708') console.log('[DEBUG OSH607708]', dk, 'seen?', seenApply.has(dk));
-      if (seenApply.has(dk)) continue;
-      seenApply.add(dk);
-      if (tx === 'OSH607708') console.log('[DEBUG OSH607708] COUNTED', dk);
-      const label  = ticket.ticket_label || ticket.name;
-      const bought = parseInt(ticket.bought_count || '1') || 1;
-      theaterApply[label] = (theaterApply[label] || 0) + bought;
-      if (!theaterApplyDetails[label]) theaterApplyDetails[label] = [];
-      theaterApplyDetails[label].push({
-        txKey: ticket.transaction_numbers?.[0] || 'N/A',
-        raffle_status: ticket.raffle_status,
-        used_count: ticket.used_count || '0',
-        date: ticket.date,
-        expired_date: ticket.expired_date,
-        reference_code: ticket.reference_code,
-      });
     }
 
     const toSorted = (obj) =>
@@ -367,13 +333,163 @@ const TicketHistory = () => {
       twoShotByMember: toSorted(twoShotByMember),
       mngByMember:     toSorted(mngByMember),
       showWinNull:     toSorted(showWinByLabel),
-      showLose:        toSorted(showLose),
-      theaterApply:    toSorted(theaterApply),
+      showLose:        toSorted(showLoseByLabel),
+      theaterApply:    toSorted(theaterApplyByLabel),
       theaterApplyDetails,
       totalVC, total2Shot, totalMnG, totalShowWin, totalShowLose,
-      totalTickets: validTickets.length,
+      totalApply: totalShowWin + totalShowLose,
+      totalTickets: totalShowWin + totalShowLose + totalVC + total2Shot + totalMnG,
     };
   }, [ticketsData]);
+
+  // ─── Points History Stats ──────────────────────────────────────────────────
+  const pointsStats = useMemo(() => {
+    const calculateCurrentPoints = () => {
+      return pointsData.reduce((total, row) => {
+        const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+        const method = String(row.paymentMethod || '').toUpperCase();
+        const purpose = (row.purpose || '').trim().toUpperCase();
+        if (purpose === 'PEMBELIAN POIN JKT48' || method.includes('POINT') || method.includes('POIN') || !row.paymentMethod) {
+          return total + points;
+        }
+        return total;
+      }, 0);
+    };
+
+    const calculateTotalSpend = () => {
+      return pointsData.reduce((total, row) => {
+        if ((row.purpose || '').trim() === 'Masa Berlaku Habis') return total;
+        const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+        return total + (points < 0 ? Math.abs(points) : 0);
+      }, 0);
+    };
+
+    const calculateTotalTopup = () => {
+      return pointsData.reduce((total, row) => {
+        const purpose = (row.purpose || '').trim().toUpperCase();
+        const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+        if (purpose === 'PEMBELIAN POIN JKT48' && points > 0) {
+          return total + points;
+        }
+        return total;
+      }, 0);
+    };
+
+    const calculateTotalExpired = () => {
+      return pointsData.reduce((total, row) => {
+        const purpose = (row.purpose || '').trim().toUpperCase();
+        const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+        if (purpose === 'MASA BERLAKU HABIS') {
+          return total + Math.abs(points);
+        }
+        return total;
+      }, 0);
+    };
+
+    const calculateTotalServiceCharged = () => {
+      return pointsData.reduce((total, row) => {
+        const sc = parseFloat(row.serviceCharge) || 0;
+        return total + sc;
+      }, 0);
+    };
+
+    const TYPE_LABELS = {
+      'EXCLUSIVE': 'VC/MnG',
+      'OFC_REGISTER': 'Membership Official',
+    };
+
+    const mapCategoryLabel = (raw) => {
+      if (!raw || raw === '-') return 'Others';
+      return TYPE_LABELS[raw.toUpperCase().trim()] || raw;
+    };
+
+    const categoryData = {};
+    const monthlyData = {};
+    const yearlyData = {};
+    const availableYears = new Set();
+    const uniqueCategories = new Set();
+    const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    allMonths.forEach(month => {
+      monthlyData[`${month} ${selectedYear}`] = { month };
+    });
+
+    pointsData.forEach(row => {
+      const purp = (row.purpose || '').trim();
+      if (purp === 'Pembelian Poin JKT48' || purp === 'Masa Berlaku Habis') return;
+
+      const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+      if (points >= 0) return;
+
+      let categoryRaw = (row.category || '').trim();
+      if (categoryRaw === '-' || categoryRaw === '') categoryRaw = 'Others';
+      const category = mapCategoryLabel(categoryRaw);
+      uniqueCategories.add(category);
+
+      const spendingAmount = Math.abs(points);
+      categoryData[category] = (categoryData[category] || 0) + spendingAmount;
+
+      try {
+        let date;
+        if (row.date && String(row.date).match(/^\d{4}-\d{2}-\d{2}/)) {
+          date = new Date(row.date);
+        } else {
+          const parts = String(row.date || '').split(' ');
+          const day = parts[0] || '1';
+          const month = parts[1] || 'Januari';
+          const year = parts[2] || '2020';
+          const monthMap = {
+            'Januari': 'January', 'Februari': 'February', 'Maret': 'March',
+            'April': 'April', 'Mei': 'May', 'Juni': 'June',
+            'Juli': 'July', 'Agustus': 'August', 'September': 'September',
+            'Oktober': 'October', 'November': 'November', 'Desember': 'December'
+          };
+          const englishMonth = monthMap[month] || month;
+          date = new Date(`${year}-${englishMonth}-${day}`);
+        }
+
+        if (isNaN(date.getTime())) date = new Date();
+
+        const monthKey = format(startOfMonth(date), 'MMM yyyy');
+        const yearKey = format(date, 'yyyy');
+        availableYears.add(yearKey);
+
+        if (yearKey === selectedYear) {
+          if (!monthlyData[monthKey]) monthlyData[monthKey] = { month: monthKey.split(' ')[0] };
+          monthlyData[monthKey][category] = (monthlyData[monthKey][category] || 0) + spendingAmount;
+        }
+
+        if (!yearlyData[yearKey]) yearlyData[yearKey] = { year: yearKey };
+        yearlyData[yearKey][category] = (yearlyData[yearKey][category] || 0) + spendingAmount;
+      } catch (e) {
+        console.error('Error parsing date:', e);
+      }
+    });
+
+    const sortedMonthly = allMonths.map(month => {
+      const mKey = `${month} ${selectedYear}`;
+      return monthlyData[mKey] || { month };
+    });
+
+    const sortedYearly = Object.values(yearlyData).sort((a, b) => a.year.localeCompare(b.year));
+    const categories = Object.entries(categoryData)
+      .filter(([_, value]) => value > 0)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+
+    return {
+      currentPoints: calculateCurrentPoints(),
+      totalSpend: calculateTotalSpend(),
+      totalTopup: calculateTotalTopup(),
+      totalExpired: calculateTotalExpired(),
+      totalServiceCharged: calculateTotalServiceCharged(),
+      categories,
+      monthly: sortedMonthly,
+      yearly: sortedYearly,
+      availableYears: Array.from(availableYears).sort().reverse(),
+      uniqueCategoryNames: Array.from(uniqueCategories)
+    };
+  }, [pointsData, selectedYear]);
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -449,18 +565,25 @@ const TicketHistory = () => {
 
           {ticketsData.length > 0 && (
             <>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, mt: 3 }}>
+                <ConfirmationNumber sx={{ color: '#E50014', fontSize: 28 }} />
+                <Typography variant="h4" sx={{ color: '#fff', fontWeight: 800 }}>
+                  Ticket Stats
+                </Typography>
+              </Box>
+
               {/* Summary stat cards */}
               <Box sx={{
                 display: 'grid',
                 gridTemplateColumns: { xs: 'repeat(2,1fr)', sm: 'repeat(3,1fr)', md: 'repeat(6,1fr)' },
-                gap: 2, mt: 3, mb: 4,
+                gap: 2, mb: 4,
               }}>
                 <StatCard label="Total Tickets" value={stats.totalTickets} color="#a29bfe" icon={<ConfirmationNumber />} />
-                <StatCard label="Video Calls Won" value={stats.totalVC} color="#0abde3" icon={<VideoCameraFront />} />
-                <StatCard label="2Shot Won" value={stats.total2Shot} color="#ff6b8a" icon={<Person />} />
-                <StatCard label="MnG Won" value={stats.totalMnG} color="#ffd32a" icon={<Person />} />
-                <StatCard label="Show Wins" value={stats.totalShowWin} color="#1dd1a1" icon={<TheaterComedy />} />
-                <StatCard label="Show Losses" value={stats.totalShowLose} color="#E50014" icon={<TheaterComedy />} />
+                <StatCard label="Total VC" value={stats.totalVC} color="#0abde3" icon={<VideoCameraFront />} />
+                <StatCard label="Total 2Shot" value={stats.total2Shot} color="#ff6b8a" icon={<Person />} />
+                <StatCard label="Total MnG" value={stats.totalMnG} color="#ffd32a" icon={<Person />} />
+                <StatCard label="Total Menang Verif" value={`${stats.totalShowWin} (${stats.totalApply > 0 ? ((stats.totalShowWin / stats.totalApply) * 100).toFixed(1) : 0}%)`} color="#1dd1a1" icon={<TheaterComedy />} />
+                <StatCard label="Kalah Verif" value={stats.totalShowLose} color="#E50014" icon={<TheaterComedy />} />
               </Box>
 
               {/* Tabs */}
@@ -474,12 +597,12 @@ const TicketHistory = () => {
                   '& .MuiTabs-indicator': { bgcolor: '#E50014' },
                 }}
               >
-                <Tab label="📹 Video Call" />
-                <Tab label="📸 2Shot" />
-                <Tab label="🤝 Meet & Greet" />
-                <Tab label="🎭 Show Wins" />
-                <Tab label="🎰 Show Losses" />
-                <Tab label="📋 Most Applied" />
+                <Tab label="Video Call" />
+                <Tab label="2Shot" />
+                <Tab label="Meet & Greet" />
+                <Tab label="Show Wins" />
+                <Tab label="Show Losses" />
+                <Tab label="Most Applied" />
               </Tabs>
 
               {/* Tab panels */}
@@ -497,7 +620,7 @@ const TicketHistory = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                       <XAxis type="number" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }} />
                       <YAxis type="category" dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{ fill: '#fff', fontSize: 12 }} width={100} />
-                      <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #0abde3', color: '#fff' }} />
+                      <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #0abde3', borderRadius: 8 }} labelStyle={{ color: '#fff' }} itemStyle={{ color: '#fff' }} />
                       <Bar dataKey="value" name="Tickets" radius={[0, 4, 4, 0]}>
                         {stats.vcByMember.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Bar>
@@ -520,7 +643,7 @@ const TicketHistory = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                       <XAxis type="number" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }} />
                       <YAxis type="category" dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{ fill: '#fff', fontSize: 12 }} width={100} />
-                      <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #ff6b8a', color: '#fff' }} />
+                      <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #ff6b8a', borderRadius: 8 }} labelStyle={{ color: '#fff' }} itemStyle={{ color: '#fff' }} />
                       <Bar dataKey="value" name="Tickets" radius={[0, 4, 4, 0]}>
                         {stats.twoShotByMember.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Bar>
@@ -543,7 +666,7 @@ const TicketHistory = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                       <XAxis type="number" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }} />
                       <YAxis type="category" dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{ fill: '#fff', fontSize: 12 }} width={100} />
-                      <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #ffd32a', color: '#fff' }} />
+                      <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #ffd32a', borderRadius: 8 }} labelStyle={{ color: '#fff' }} itemStyle={{ color: '#fff' }} />
                       <Bar dataKey="value" name="Tickets" radius={[0, 4, 4, 0]}>
                         {stats.mngByMember.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Bar>
@@ -554,7 +677,7 @@ const TicketHistory = () => {
 
               {tab === 3 && (
                 <RankedList
-                  title="Show Wins (raffle_status = null)"
+                  title="Menang Verif"
                   icon={<TheaterComedy sx={{ color: '#1dd1a1' }} />}
                   data={stats.showWinNull}
                   valueLabel=" tickets"
@@ -564,7 +687,7 @@ const TicketHistory = () => {
 
               {tab === 4 && (
                 <RankedList
-                  title="Show Losses (raffle_status = LOSE)"
+                  title="Kalah Verif"
                   icon={<TheaterComedy sx={{ color: '#E50014' }} />}
                   data={stats.showLose}
                   valueLabel=" attempts"
@@ -657,6 +780,273 @@ const TicketHistory = () => {
                   </ResponsiveContainer>
                 </Box>
               )}
+            </>
+          )}
+
+          {/* Points History Section */}
+          {pointsData.length > 0 && (
+            <>
+              <Divider sx={{ my: 5, borderColor: 'rgba(229,0,20,0.3)' }} />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4 }}>
+                <PieChartIcon sx={{ color: '#E50014', fontSize: 32 }} />
+                <Typography variant="h4" sx={{ color: '#fff', fontWeight: 800 }}>
+                  Points History Analytics
+                </Typography>
+              </Box>
+
+              {/* Points Summary Cards */}
+              <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: 'repeat(2,1fr)', sm: 'repeat(3,1fr)', md: 'repeat(5,1fr)' },
+                gap: 2, mb: 4,
+              }}>
+                <Paper sx={{ p: 2, bgcolor: '#1a1a2e', borderRadius: 3, border: '1px solid #ff69b433', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#ff69b422', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <ConfirmationNumber sx={{ color: '#ff69b4', fontSize: 20 }} />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Current Points</Typography>
+                    <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{pointsStats.currentPoints.toLocaleString()} P</Typography>
+                  </Box>
+                </Paper>
+                <Paper sx={{ p: 2, bgcolor: '#1a1a2e', borderRadius: 3, border: '1px solid #2196F333', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#2196F322', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <TrendingUp sx={{ color: '#2196F3', fontSize: 20 }} />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Total Topup</Typography>
+                    <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{pointsStats.totalTopup.toLocaleString()} P</Typography>
+                  </Box>
+                </Paper>
+                <Paper sx={{ p: 2, bgcolor: '#1a1a2e', borderRadius: 3, border: '1px solid #4CAF5033', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#4CAF5022', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Download sx={{ color: '#4CAF50', fontSize: 20 }} />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Total Spend</Typography>
+                    <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{pointsStats.totalSpend.toLocaleString()} P</Typography>
+                  </Box>
+                </Paper>
+                <Paper sx={{ p: 2, bgcolor: '#1a1a2e', borderRadius: 3, border: '1px solid #F4433633', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#F4433622', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <CalendarToday sx={{ color: '#F44336', fontSize: 20 }} />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Total Expired</Typography>
+                    <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{pointsStats.totalExpired.toLocaleString()} P</Typography>
+                  </Box>
+                </Paper>
+                <Paper sx={{ p: 2, bgcolor: '#1a1a2e', borderRadius: 3, border: '1px solid #9C27B033', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#9C27B022', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <ConfirmationNumber sx={{ color: '#9C27B0', fontSize: 20 }} />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Service Charged</Typography>
+                    <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>Rp {pointsStats.totalServiceCharged.toLocaleString()}</Typography>
+                  </Box>
+                </Paper>
+              </Box>
+
+              {/* Charts - 3 Column Layout */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 4 }}>
+                {/* Pie Chart */}
+                <Paper sx={{ p: 2.5, bgcolor: '#1a1a2e', borderRadius: 3, height: 380, display: 'flex', flexDirection: 'column' }}>
+                  <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, mb: 1 }}>
+                    Spending by Category
+                  </Typography>
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ flex: 1, minHeight: 0 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={pointsStats.categories}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={70}
+                            label={false}
+                          >
+                            {pointsStats.categories.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{ background: '#0d0d1a', border: '1px solid rgba(229,0,20,0.3)', borderRadius: 8, color: '#fff' }}
+                            formatter={(value) => [`${value.toLocaleString()} P`, 'Spent']}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, maxHeight: 120, overflowY: 'auto' }}>
+                      {pointsStats.categories.map((entry, index) => (
+                        <Box key={entry.name} sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.75, borderRadius: 1.5, bgcolor: 'rgba(255,255,255,0.03)' }}>
+                          <Box sx={{ width: 10, height: 10, borderRadius: 1, bgcolor: COLORS[index % COLORS.length], flexShrink: 0 }} />
+                          <Typography sx={{ color: '#fff', fontSize: 12, fontWeight: 600, flex: 1 }}>{entry.name}</Typography>
+                          <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{entry.value.toLocaleString()} P</Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                </Paper>
+
+                {/* Yearly Spending */}
+                <Paper sx={{ p: 2.5, bgcolor: '#1a1a2e', borderRadius: 3, height: 380, display: 'flex', flexDirection: 'column' }}>
+                  <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, mb: 1 }}>
+                    Yearly Spending
+                  </Typography>
+                  <Box sx={{ flex: 1 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={pointsStats.yearly} margin={{ top: 10, right: 10, left: 0, bottom: 40 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                        <XAxis dataKey="year" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} />
+                        <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} width={40} />
+                        <Tooltip content={BarTooltip} />
+                        <Legend wrapperStyle={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }} verticalAlign="bottom" height={36} />
+                        {pointsStats.uniqueCategoryNames.map((catName, index) => (
+                          <Bar key={catName} dataKey={catName} stackId="a" fill={COLORS[index % COLORS.length]} radius={[2, 2, 0, 0]} />
+                        ))}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </Paper>
+
+                {/* Monthly Spending */}
+                <Paper sx={{ p: 2.5, bgcolor: '#1a1a2e', borderRadius: 3, height: 380, display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, flex: 1 }}>
+                      Monthly Spending
+                    </Typography>
+                    <Select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                      size="small"
+                      sx={{
+                        color: '#fff',
+                        height: 28,
+                        '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(229,0,20,0.3)' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#E50014' },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#E50014' },
+                        '.MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
+                        fontSize: 12,
+                      }}
+                      MenuProps={{
+                        PaperProps: { sx: { bgcolor: '#1a1a2e', '& .MuiMenuItem-root': { color: '#fff', fontSize: 12 } } }
+                      }}
+                    >
+                      {pointsStats.availableYears.map((year) => (
+                        <MenuItem key={year} value={year}>{year}</MenuItem>
+                      ))}
+                    </Select>
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={pointsStats.monthly} margin={{ top: 10, right: 10, left: 0, bottom: 40 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                        <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} />
+                        <YAxis stroke="rgba(255,255,255,0.3)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} width={40} />
+                        <Tooltip content={BarTooltip} />
+                        <Legend wrapperStyle={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }} verticalAlign="bottom" height={36} />
+                        {pointsStats.uniqueCategoryNames.map((catName, index) => (
+                          <Bar key={catName} dataKey={catName} stackId="a" fill={COLORS[index % COLORS.length]} radius={[2, 2, 0, 0]} />
+                        ))}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </Paper>
+              </Box>
+
+              {/* Transaction History Table */}
+              <Paper sx={{ p: 2.5, bgcolor: '#1a1a2e', borderRadius: 3, mb: 3 }}>
+                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, mb: 2 }}>
+                  Transaction History
+                </Typography>
+                <Box sx={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Date</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>ID</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Purpose</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Category</th>
+                        <th style={{ textAlign: 'right', padding: '8px 12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Points Changed</th>
+                        <th style={{ textAlign: 'right', padding: '8px 12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Service Charge</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pointsData
+                        .slice(txPage * txRowsPerPage, txPage * txRowsPerPage + txRowsPerPage)
+                        .map((row, i) => {
+                          const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+                          const sc = parseFloat(row.serviceCharge) || 0;
+                          const isPositive = points > 0;
+                          const isExpired = (row.purpose || '').trim() === 'Masa Berlaku Habis';
+                          return (
+                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.6)' }}>{row.date || '-'}</td>
+                              <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace', fontSize: 11 }}>{row.id || '-'}</td>
+                              <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.7)' }}>{row.purpose || row.title || '-'}</td>
+                              <td style={{ padding: '8px 12px', color: 'rgba(255,255,255,0.6)' }}>{row.category || '-'}</td>
+                              <td style={{ padding: '8px 12px', textAlign: 'right', color: isPositive ? '#4CAF50' : isExpired ? '#F44336' : 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+                                {points > 0 ? '+' : ''}{points.toLocaleString()} P
+                              </td>
+                              <td style={{ padding: '8px 12px', textAlign: 'right', color: 'rgba(255,255,255,0.5)' }}>
+                                {sc > 0 ? `Rp ${sc.toLocaleString()}` : '-'}
+                              </td>
+                              <td style={{ padding: '8px 12px' }}>
+                                <span style={{
+                                  display: 'inline-block',
+                                  padding: '2px 8px',
+                                  borderRadius: 4,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  bgcolor: isPositive ? 'rgba(76,175,80,0.15)' : isExpired ? 'rgba(244,67,54,0.15)' : 'rgba(255,255,255,0.08)',
+                                  color: isPositive ? '#4CAF50' : isExpired ? '#F44336' : 'rgba(255,255,255,0.5)',
+                                }}>
+                                  {row.status || '-'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, pt: 2, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                  <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+                    {txPage * txRowsPerPage + 1}–{Math.min((txPage + 1) * txRowsPerPage, pointsData.length)} of {pointsData.length}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Rows:</Typography>
+                    <Select
+                      value={txRowsPerPage}
+                      onChange={(e) => { setTxRowsPerPage(e.target.value); setTxPage(0); }}
+                      size="small"
+                      sx={{
+                        color: '#fff',
+                        height: 28,
+                        '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(229,0,20,0.3)' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#E50014' },
+                        '.MuiSvgIcon-root': { color: 'rgba(255,255,255,0.5)' },
+                        fontSize: 12,
+                      }}
+                      MenuProps={{ PaperProps: { sx: { bgcolor: '#1a1a2e', '& .MuiMenuItem-root': { color: '#fff', fontSize: 12 } } } }}
+                    >
+                      {[10, 25, 50, 100].map((n) => (
+                        <MenuItem key={n} value={n}>{n}</MenuItem>
+                      ))}
+                    </Select>
+                    <Button size="small" disabled={txPage === 0} onClick={() => setTxPage(p => p - 1)}
+                      sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 28, px: 1, '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' } }}>‹</Button>
+                    <Typography sx={{ color: '#fff', fontSize: 12, minWidth: 40, textAlign: 'center' }}>
+                      {txPage + 1} / {Math.ceil(pointsData.length / txRowsPerPage) || 1}
+                    </Typography>
+                    <Button size="small" disabled={(txPage + 1) * txRowsPerPage >= pointsData.length} onClick={() => setTxPage(p => p + 1)}
+                      sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 28, px: 1, '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' } }}>›</Button>
+                  </Box>
+                </Box>
+              </Paper>
             </>
           )}
 
