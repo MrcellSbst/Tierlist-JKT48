@@ -580,8 +580,9 @@ const TicketHistory = () => {
       return pointsData.reduce((total, row) => {
         const purpose = (row.purpose || '').trim().toUpperCase();
         const points = parseInt(String(row.buyPoints || '0').replace(/[P,]/g, '').trim()) || 0;
+        const bonus = parseInt(String(row.bonusPoints || '0').replace(/[P,]/g, '').trim()) || 0;
         if (purpose === 'PEMBELIAN POIN JKT48' && points > 0) {
-          return total + points;
+          return total + points + bonus;
         }
         return total;
       }, 0);
@@ -609,12 +610,7 @@ const TicketHistory = () => {
     const calculateTotalBonus = () => {
       return pointsData.reduce((total, row) => {
         if (row.status === 'PENDING') return total;
-        const method = String(row.paymentMethod || '').toUpperCase();
         const bonus = parseInt(String(row.bonusPoints || '0').replace(/[P,]/g, '').trim()) || 0;
-        if (method === 'BONUS_POINT') {
-          const bp = getPointDelta(row);
-          return total + bp;
-        }
         return total + bonus;
       }, 0);
     };
