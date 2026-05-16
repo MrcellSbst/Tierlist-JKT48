@@ -409,17 +409,29 @@ const TicketHistory = () => {
 
       if (ticket_type === 'SHOW') {
         const isLose = raffle_status === 'LOSE';
-        const isWin = used_count === '1' || parseInt(used_count || '0') > 0;
+        const rawUsed = parseInt(used_count || '0');
+        const isWin = used_count === '1' || rawUsed > 0;
+
+        // Phantom check: win ticket but 0 P actually spent → fake record
+        let isPhantom = false;
+        if (isWin) {
+          const txIds = ticket.transaction_numbers || [];
+          let totalSpent = 0;
+          for (const txId of txIds) {
+            totalSpent += txToPoints[txId] || 0;
+          }
+          if (totalSpent === 0) isPhantom = true;
+        }
 
         if (isLose) {
           showLoseByLabel[label] = (showLoseByLabel[label] || 0) + bought;
           totalShowLose += bought;
         }
-        if (isWin) {
+        if (isWin && !isPhantom) {
           showWinByLabel[label] = (showWinByLabel[label] || 0) + bought;
           totalShowWin += bought;
         }
-        if (isLose || isWin) {
+        if ((isLose || (isWin && !isPhantom))) {
           theaterApplyByLabel[label] = (theaterApplyByLabel[label] || 0) + bought;
           if (!theaterApplyDetails[label]) theaterApplyDetails[label] = [];
           theaterApplyDetails[label].push({
@@ -429,13 +441,18 @@ const TicketHistory = () => {
             date: ticket.date,
             expired_date: ticket.expired_date,
             reference_code: ticket.reference_code,
+            is_phantom: isPhantom,
           });
         }
       } else if (ticket_type === 'EXCLUSIVE' || ticket_type === 'EVENT') {
         if (raffle_status !== 'LOSE') {
+          const txIds = ticket.transaction_numbers || [];
+          let totalSpent = 0;
+          for (const txId of txIds) { totalSpent += txToPoints[txId] || 0; }
+          if (totalSpent === 0) continue; // phantom record
+
           const mem = ticket.member_name;
           const refCode = (ticket.reference_code || '').trim();
-          const txIds = ticket.transaction_numbers || [];
           let isTwoShot = false;
 
           if (refCode && txToPoints[refCode] === -180000) {
@@ -508,15 +525,29 @@ const TicketHistory = () => {
 
       if (ticket_type === 'SHOW') {
         const isLose = raffle_status === 'LOSE';
-        const isWin = used_count === '1' || parseInt(used_count || '0') > 0;
+        const rawUsed = parseInt(used_count || '0');
+        const isWin = used_count === '1' || rawUsed > 0;
+
+        let isPhantom = false;
+        if (isWin) {
+          const txIds = ticket.transaction_numbers || [];
+          let totalSpent = 0;
+          for (const txId of txIds) { totalSpent += txToPoints[txId] || 0; }
+          if (totalSpent === 0) isPhantom = true;
+        }
+
         if (isLose) { showLoseByLabel[label] = (showLoseByLabel[label] || 0) + bought; totalShowLose += bought; }
-        if (isWin) { showWinByLabel[label] = (showWinByLabel[label] || 0) + bought; totalShowWin += bought; }
-        if (isLose || isWin) theaterApplyByLabel[label] = (theaterApplyByLabel[label] || 0) + bought;
+        if (isWin && !isPhantom) { showWinByLabel[label] = (showWinByLabel[label] || 0) + bought; totalShowWin += bought; }
+        if (isLose || (isWin && !isPhantom)) theaterApplyByLabel[label] = (theaterApplyByLabel[label] || 0) + bought;
       } else if (ticket_type === 'EXCLUSIVE' || ticket_type === 'EVENT') {
         if (raffle_status !== 'LOSE') {
+          const txIds = ticket.transaction_numbers || [];
+          let totalSpent = 0;
+          for (const txId of txIds) { totalSpent += txToPoints[txId] || 0; }
+          if (totalSpent === 0) continue; // phantom record
+
           const mem = ticket.member_name;
           const refCode = (ticket.reference_code || '').trim();
-          const txIds = ticket.transaction_numbers || [];
           let isTwoShot = false;
           if (refCode && txToPoints[refCode] === -180000) isTwoShot = true;
           else { for (const txId of txIds) { if (txToPoints[txId] === -180000) { isTwoShot = true; break; } } }
