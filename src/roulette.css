@@ -978,6 +978,19 @@
     margin-top: -10px;
 }
 
+.roulette-click-hint {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+    margin-top: 12px;
+    animation: pulse-hint 2s ease-in-out infinite;
+}
+
+@keyframes pulse-hint {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
 /* ─── Result Overlay ──────────────────────────────────────────────────────────── */
 .result-overlay {
     position: fixed;

@@ -197,7 +197,7 @@ const ConfettiCanvas = ({ active }) => {
 
 
 // ─── Spinning Wheel ───────────────────────────────────────────────────────────
-const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDuration }) => {
+const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, onSpinStart, targetIndex, spinDuration }) => {
     const canvasRef = useRef(null);
     const animRef = useRef(null);       // spin animation frame
     const idleAnimRef = useRef(null);   // idle animation frame
@@ -205,6 +205,12 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
     const startAngleRef = useRef(0);
     const currentAngleRef = useRef(0);
     const lastIdleTimeRef = useRef(null);
+
+    const handleClick = () => {
+        if (!spinning && entries.length > 0) {
+            onSpinStart();
+        }
+    };
 
     const IDLE_SPEED = 0.09; // radians per second (~5°/s)
 
@@ -397,6 +403,8 @@ const RouletteWheelCanvas = ({ entries, spinning, onSpinEnd, targetIndex, spinDu
             width={680}
             height={680}
             className="roulette-wheel-canvas"
+            onClick={handleClick}
+            style={{ cursor: spinning ? 'default' : 'pointer' }}
         />
     );
 };
@@ -1116,15 +1124,17 @@ const RoulettePage = () => {
                                 targetIndex={targetIndex}
                                 spinDuration={SPIN_DURATION}
                                 onSpinEnd={handleSpinEnd}
+                                onSpinStart={handleSpin}
                             />
                         </div>
                     </div>
 
-                    {/* Spin button */}
+                    {/* Spin button - hidden, wheel is clickable now */}
                     <button
                         className={`roulette-spin-btn ${spinning ? 'spinning' : ''}`}
                         onClick={handleSpin}
                         disabled={spinning || displayEntries.length === 0}
+                        style={{ display: 'none' }}
                     >
                         {spinning ? (
                             <span className="spin-btn-inner">
@@ -1143,6 +1153,10 @@ const RoulettePage = () => {
                                 ? 'No members match the selected filters.'
                                 : 'Add entries in the panel on the left.'}
                         </p>
+                    )}
+
+                    {displayEntries.length > 0 && !spinning && (
+                        <p className="roulette-click-hint">Click the wheel to spin!</p>
                     )}
 
                     {/* ── Mobile-only Results History ── */}
