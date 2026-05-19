@@ -4,10 +4,13 @@ import { CARDS, ALL_CARDS, RARITY_CONFIG } from './data/gachaCards'
 import './styles/Gacha.css'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
-const UR_PITY_LIMIT = 5
+const UR_PITY_LIMIT = 10
 const LS_KEY_PITY       = 'gacha_ur_pity'
 const LS_KEY_OWNED      = 'gacha_owned_urs'
 const LS_KEY_COLLECTION = 'gacha_collection'
+const LS_KEY_PACK_TIMESTAMPS = 'gacha_pack_timestamps'
+const COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
+const MAX_PACKS = 10
 
 // ─── Gacha Engine ──────────────────────────────────────────────────────────
 function pickRandom(pool) {
@@ -16,7 +19,7 @@ function pickRandom(pool) {
 
 function rollNonGuaranteed() {
   const roll = Math.random() * 90
-  if (roll < 2)  return 'ultraRare'
+  if (roll < 0.9) return 'ultraRare'
   if (roll < 12) return 'rare'
   if (roll < 32) return 'uncommon'
   return 'common'
@@ -43,7 +46,7 @@ function buildPack(packsWithoutUR, ownedURs = new Set()) {
     usedIds.add(card.id)
     slots.push(card)
   } else {
-    const rarity = Math.random() < 0.02 ? 'ultraRare' : 'rare'
+    const rarity = Math.random() < 0.01 ? 'ultraRare' : 'rare'
     const card = rarity === 'ultraRare' 
       ? pickUR() 
       : pickRandom(CARDS[rarity].filter(c => !usedIds.has(c.id)))
@@ -194,6 +197,36 @@ export default function Gacha() {
   const [packRotY,     setPackRotY]     = useState(0)
   const [showCollection, setShowCollection] = useState(false)
   const [zoomedCard,     setZoomedCard]     = useState(null)
+  const [packTimestamps, setPackTimestamps] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS_KEY_PACK_TIMESTAMPS) || '[]')
+      const now = Date.now()
+      return stored.filter(ts => now - ts < COOLDOWN_MS)
+    }
+    catch { return [] }
+  })
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    setPackTimestamps(prev => prev.filter(ts => Date.now() - ts < COOLDOWN_MS))
+  }, [])
+
+  const availablePacks = (() => {
+    const active = packTimestamps.filter(ts => now - ts < COOLDOWN_MS)
+    return MAX_PACKS - active.length
+  })()
+
+  const nextPackReady = (() => {
+    const active = packTimestamps.filter(ts => now - ts < COOLDOWN_MS)
+    if (active.length === 0) return null
+    const oldest = Math.min(...active)
+    return new Date(oldest + COOLDOWN_MS)
+  })()
 
   useEffect(() => {
     try { localStorage.setItem(LS_KEY_PITY, String(packsWithoutUR)) }
@@ -210,9 +243,15 @@ export default function Gacha() {
     catch {}
   }, [cardCollection])
 
+  useEffect(() => {
+    try { localStorage.setItem(LS_KEY_PACK_TIMESTAMPS, JSON.stringify(packTimestamps)) }
+    catch {}
+  }, [packTimestamps])
+
   // Click the pack to open it -> trigger cutting phase
   const handlePackClick = useCallback(() => {
     if (phase !== 'idle') return
+    if (availablePacks <= 0) return
 
     const newPack = buildPack(packsWithoutUR, ownedURs)
     const hasUR   = newPack.some(c => c.rarity === 'ultraRare')
@@ -222,6 +261,7 @@ export default function Gacha() {
     setRevealedSet(new Set())
     setGotUR(hasUR)
     setPacksWithoutUR(hasUR ? 0 : packsWithoutUR + 1)
+    setPackTimestamps(prev => [...prev, Date.now()])
     
     if (hasUR) {
       // Record any newly pulled URs so they don't roll again
@@ -244,7 +284,7 @@ export default function Gacha() {
     setTimeout(() => {
       setPhase('opening')
     }, 1200) // Duration of CSS cutting animation
-  }, [packsWithoutUR, phase])
+  }, [packsWithoutUR, phase, availablePacks])
 
   // Mouse move for 3D Pack rotation
   const handlePackHover = useCallback((e) => {
@@ -325,10 +365,25 @@ export default function Gacha() {
                 </div>
               </div>
               <div className="pack-slash" aria-hidden="true" />
-              {phase === 'idle' && <span className="pack-click-hint">Click to open</span>}
+              {phase === 'idle' && availablePacks > 0 && <span className="pack-click-hint">Click to open</span>}
+              {phase === 'idle' && availablePacks <= 0 && <span className="pack-click-hint cooldown-hint">No packs available - wait for cooldown</span>}
             </div>
 
             <PityCounter packsWithoutUR={packsWithoutUR} />
+            <div className="pack-status-panel">
+              <div className="pack-status-item">
+                <span className="pack-status-label">Available Packs</span>
+                <span className="pack-status-value">{availablePacks}/{MAX_PACKS}</span>
+              </div>
+              {nextPackReady && availablePacks < MAX_PACKS && (
+                <div className="pack-status-item">
+                  <span className="pack-status-label">Next pack in</span>
+                  <span className="pack-status-value countdown">
+                    {Math.floor((nextPackReady.getTime() - now) / 60000)}m {Math.floor(((nextPackReady.getTime() - now) % 60000) / 1000)}s
+                  </span>
+                </div>
+              )}
+            </div>
             <RarityOdds />
 
             {history.length > 0 && (

@@ -267,6 +267,49 @@
   }
 }
 
+/* ── Pack Status Panel ── */
+.pack-status-panel {
+  width: 100%;
+  max-width: 380px;
+  background: rgba(33, 109, 148, 0.04);
+  border: 1px solid rgba(33, 109, 148, 0.2);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pack-status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pack-status-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6b7280;
+}
+
+.pack-status-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #216D94;
+}
+
+.pack-status-value.countdown {
+  color: #00A4A5;
+  font-variant-numeric: tabular-nums;
+}
+
+.cooldown-hint {
+  color: #DF0A81 !important;
+  font-weight: 600;
+}
+
 /* ── Pity Counter ── */
 .pity-counter {
   width: 100%;
