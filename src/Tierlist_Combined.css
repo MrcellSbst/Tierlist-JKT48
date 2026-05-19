@@ -248,7 +248,7 @@
 .member-image {
     width: 100%; max-width: 118px; height: 118px;
     border-radius: var(--radius-md);
-    overflow: visible;
+    overflow: visible;  /* keep visible so ::before badge shows above the card */
     background: linear-gradient(135deg, #252540 0%, #1c1c32 100%);
     box-shadow: var(--shadow-sm);
     transition: all 0.22s var(--ease);
@@ -269,11 +269,19 @@
     animation: none;
 }
 .member-image.overlay { animation: dragPulse 0.5s ease-in-out infinite; }
+
+/* Inner clip wrapper — clips the image inside the rounded card without clipping the badge */
+.member-image-img-wrap {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
 .member-image img {
     width: 100%; height: 100%;
     object-fit: cover; object-position: top center;
-    pointer-events: none; border-radius: var(--radius-md);
-    transition: transform 0.22s;
+    pointer-events: none;
+    transition: transform 0.22s var(--ease);
 }
 .member-image:hover img { transform: scale(1.06); }
 
@@ -543,8 +551,8 @@ button:focus-visible, .MuiButton-root:focus-visible {
 @media (pointer: coarse) {
     .member-image, .song-image { transition: none; box-shadow: var(--shadow-sm); animation: none; }
     .member-image:hover, .song-image:hover { transform: none; box-shadow: var(--shadow-sm); border-color: transparent; }
-    .member-image img { transition: none; }
-    .member-image:hover img { transform: none; }
+    .member-image img, .member-image-img-wrap img { transition: none; }
+    .member-image:hover img, .member-image:hover .member-image-img-wrap img { transform: none; }
     .member-image.overlay, .song-image.overlay { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {

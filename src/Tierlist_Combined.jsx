@@ -195,7 +195,9 @@ const MemberCard = React.memo(({ image, isDragging, dragOverlay, onImageClick, o
             onClick={() => !isDragMode && onImageClick && onImageClick(image)}
             onContextMenu={(e) => { e.preventDefault(); if (image.containerId !== 'image-pool') onContextMenu?.(e, image); }}
         >
-            <img src={image.src} alt={image.name} />
+            <div className="member-image-img-wrap">
+                <img src={image.src} alt={image.name} />
+            </div>
             <div className="member-name">{image.name}</div>
         </div>
     );
