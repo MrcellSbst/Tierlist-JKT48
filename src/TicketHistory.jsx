@@ -10,7 +10,17 @@ import { ArrowBack, ArrowForward, ConfirmationNumber, TheaterComedy, Person, Vid
 import { useNavigate } from 'react-router-dom';
 import { format, startOfMonth } from 'date-fns';
 import domtoimage from 'dom-to-image-more';
-import { activeMemberFiles, exMemberFiles } from './data/memberData.js';
+import { memberData } from './data/newmemberdata';
+
+// Derive flat arrays from structured newmemberdata
+const activeMemberFiles = [];
+const exMemberFiles = [];
+for (const members of Object.values(memberData)) {
+    for (const m of members) {
+        if (!m.graduated) activeMemberFiles.push(m.photo);
+        else exMemberFiles.push(m.photo);
+    }
+}
 
 // Use date-only (YYYY-MM-DD) for dedup — ignore time to avoid timezone issues.
 function dateOnly(isoStr) {

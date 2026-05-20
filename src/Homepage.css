@@ -606,6 +606,150 @@
     letter-spacing: 0.1em;
 }
 
+/* ── Custom Multi-Select Dropdown ─────────────────────────────────────────────── */
+.hp2-multi-dd {
+    position: relative;
+    flex: 1;
+    min-width: 160px;
+}
+
+.hp2-multi-dd-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e8e8f0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    outline: none;
+}
+
+.hp2-multi-dd-btn:hover {
+    border-color: rgba(229, 0, 20, 0.5);
+    background: rgba(255, 255, 255, 0.09);
+}
+
+.hp2-multi-dd-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hp2-multi-dd-arrow {
+    font-size: 9px;
+    opacity: 0.5;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.hp2-multi-dd-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #1a1030;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 6px;
+    z-index: 9999;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(229, 0, 20, 0.3) transparent;
+}
+
+.hp2-multi-dd-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.hp2-multi-dd-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.hp2-multi-dd-menu::-webkit-scrollbar-thumb {
+    background: rgba(229, 0, 20, 0.3);
+    border-radius: 4px;
+}
+
+.hp2-multi-dd-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #e8e8f0;
+    transition: background 0.15s;
+    user-select: none;
+}
+
+.hp2-multi-dd-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.hp2-multi-dd-item input[type="checkbox"] {
+    accent-color: #e50014;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.hp2-multi-dd-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px 4px;
+}
+
+.hp2-multi-dd-divider::before,
+.hp2-multi-dd-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.hp2-multi-dd-divider span {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
+}
+
+.hp2-single-dd-item {
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #e8e8f0;
+    transition: background 0.15s;
+    user-select: none;
+}
+
+.hp2-single-dd-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.hp2-single-dd-item.active {
+    background: rgba(229, 0, 20, 0.15);
+    color: #ff8a8a;
+    font-weight: 600;
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
     .hp2-hero-card {

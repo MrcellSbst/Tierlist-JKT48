@@ -7,7 +7,25 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import domtoimage from 'dom-to-image-more';
 import dreamSetlistSongs from './data/DreamSetlist_Songs';
-import { activeMemberFiles, exMemberFiles } from './data/memberData';
+import { memberData } from './data/newmemberdata';
+
+// ─── Derive flat arrays from structured newmemberdata ────────────────────────
+const activeMemberFiles = [];
+const exMemberFiles = [];
+for (const members of Object.values(memberData)) {
+    for (const m of members) {
+        if (!m.graduated) activeMemberFiles.push(m.photo);
+        else exMemberFiles.push(m.photo);
+    }
+}
+
+// Nickname lookup: photo filename → nickname (lowercase) for search
+const nicknameMap = new Map();
+for (const members of Object.values(memberData)) {
+    for (const m of members) {
+        if (m.nickname) nicknameMap.set(m.photo.toLowerCase(), m.nickname.toLowerCase());
+    }
+}
 
 import './Dream_Setlist.css';
 import { useNavigate } from 'react-router-dom';
@@ -376,7 +394,12 @@ const DreamSetlist = () => {
         const pool = imagesByContainer['image-pool'] || [];
         if (!searchTerm) return pool;
         const lower = searchTerm.toLowerCase();
-        return pool.filter(image => parseNameForSearch(image.src).includes(lower));
+        return pool.filter(image => {
+            const searchStr = parseNameForSearch(image.src);
+            const nick = nicknameMap.get((image.src || '').toLowerCase()) || '';
+            const combined = `${searchStr} ${nick}`;
+            return combined.includes(lower);
+        });
     }, [imagesByContainer, searchTerm]);
 
     // ── Sync row-header widths so all rows share the same column width ──

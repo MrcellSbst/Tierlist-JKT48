@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
 import './Homepage.css';
 import { setlistSongs } from './data/setlistSongs';
 import { formatDistanceToNow } from 'date-fns';
@@ -34,8 +33,145 @@ function RunningBanner() {
     );
 }
 
-const STANDARD_GEN_COUNT = 14;
-const V_GEN_COUNT = 2;
+import { memberData } from './data/newmemberdata';
+
+// Derive generation counts from newmemberdata keys
+const STANDARD_GEN_COUNT = Object.keys(memberData).filter(k => /^GEN \d+$/i.test(k)).length;
+const V_GEN_COUNT = Object.keys(memberData).filter(k => /^JKT48V GEN \d+$/i.test(k)).length;
+
+// ─── Custom multi-select dropdown (dark themed) ─────────────────────────────
+function MultiCheckDropdown({ values, onChange, options, placeholder, renderLabel }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const handleToggle = (val) => {
+        if (values.includes(val)) onChange(values.filter(v => v !== val));
+        else onChange([...values, val]);
+    };
+
+    const label = renderLabel ? renderLabel(values) : (values.length === 0 ? placeholder : `${values.length} selected`);
+
+    return (
+        <div className="hp2-multi-dd" ref={ref}>
+            <button className="hp2-multi-dd-btn" type="button" onClick={() => setOpen(o => !o)}>
+                <span className="hp2-multi-dd-label">{label}</span>
+                <span className="hp2-multi-dd-arrow">{open ? '▲' : '▼'}</span>
+            </button>
+            {open && (
+                <div className="hp2-multi-dd-menu">
+                    {options.map(opt => (
+                        <label key={opt.value} className="hp2-multi-dd-item">
+                            <input type="checkbox" checked={values.includes(opt.value)} onChange={() => handleToggle(opt.value)} />
+                            <span>{opt.label}</span>
+                        </label>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Generation multi-select dropdown (dark themed) ─────────────────────────
+function GenerationDropdown({ generation, onChange }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const handleToggle = (value) => {
+        if (value === 'all') { onChange(['all']); return; }
+        const without = generation.filter(g => g !== 'all' && g !== value);
+        if (generation.includes(value)) {
+            onChange(without.length === 0 ? ['all'] : without);
+        } else {
+            onChange([...without, value]);
+        }
+    };
+
+    const allGens = [
+        { value: 'all', label: 'Semua Generasi' },
+        ...Array.from({ length: STANDARD_GEN_COUNT }, (_, i) => ({ value: `gen${i + 1}`, label: `Generasi ${i + 1}` })),
+        { value: 'genvall', label: 'Semua Generasi-V' },
+        ...Array.from({ length: V_GEN_COUNT }, (_, i) => ({ value: `genv${i + 1}`, label: `JKT48V Gen ${i + 1}` })),
+    ];
+
+    const label = generation.includes('all')
+        ? 'Semua Generasi'
+        : generation.length === 1
+            ? allGens.find(g => g.value === generation[0])?.label || generation[0]
+            : `${generation.length} generasi`;
+
+    return (
+        <div className="hp2-multi-dd" ref={ref}>
+            <button className="hp2-multi-dd-btn" type="button" onClick={() => setOpen(o => !o)}>
+                <span className="hp2-multi-dd-label">{label}</span>
+                <span className="hp2-multi-dd-arrow">{open ? '▲' : '▼'}</span>
+            </button>
+            {open && (
+                <div className="hp2-multi-dd-menu">
+                    {allGens.map((gen, idx) => (
+                        <React.Fragment key={gen.value}>
+                            {gen.value === 'genvall' && (
+                                <div className="hp2-multi-dd-divider">
+                                    <span>Virtual</span>
+                                </div>
+                            )}
+                            <label className="hp2-multi-dd-item">
+                                <input type="checkbox" checked={generation.includes(gen.value)} onChange={() => handleToggle(gen.value)} />
+                                <span>{gen.label}</span>
+                            </label>
+                        </React.Fragment>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+// ─── Custom single-select dropdown (dark themed) ────────────────────────────
+function SingleDropdown({ value, onChange, options, placeholder, fullWidth }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const selected = options.find(o => o.value === value);
+    const label = selected ? selected.label : (placeholder || '— Pilih —');
+
+    return (
+        <div className="hp2-multi-dd" ref={ref} style={fullWidth ? { width: '100%' } : undefined}>
+            <button className="hp2-multi-dd-btn" type="button" onClick={() => setOpen(o => !o)}
+                style={!selected ? { color: '#666888' } : undefined}>
+                <span className="hp2-multi-dd-label">{label}</span>
+                <span className="hp2-multi-dd-arrow">{open ? '▲' : '▼'}</span>
+            </button>
+            {open && (
+                <div className="hp2-multi-dd-menu">
+                    {options.map(opt => (
+                        <div key={opt.value}
+                            className={`hp2-single-dd-item${opt.value === value ? ' active' : ''}`}
+                            onClick={() => { onChange(opt.value); setOpen(false); }}>
+                            {opt.label}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
 
 // ─── Sub-page: Tierlist config ──────────────────────────────────────────────────
 function TierlistConfig({ onBack }) {
@@ -82,20 +218,6 @@ function TierlistConfig({ onBack }) {
         }
     };
 
-    const handleGenerationChange = (event) => {
-        const { target: { value } } = event;
-        let newValues = typeof value === 'string' ? value.split(',') : value;
-        if (newValues.includes('all') && !generation.includes('all')) newValues = ['all'];
-        else if (newValues.includes('all') && newValues.length > 1) newValues = newValues.filter(v => v !== 'all');
-        if (newValues.length === 0) newValues = ['all'];
-        setGeneration(newValues);
-    };
-
-    const handleSetlistChange = (event) => {
-        const { target: { value } } = event;
-        setSetlist(typeof value === 'string' ? value.split(',') : value);
-    };
-
     const handleStart = () => {
         if (!tierlistType) { showToast('Silakan pilih jenis tierlist terlebih dahulu!'); return; }
         if (tierlistType === 'setlist_song' && setlist.length === 0) { showToast('Silakan pilih setlist terlebih dahulu!'); return; }
@@ -126,51 +248,39 @@ function TierlistConfig({ onBack }) {
                 <div>
                     <div className="hp2-draft-label" style={{ marginBottom: 8 }}>Jenis Tierlist</div>
                     <div className="hp2-config-row">
-                        <select className="hp2-select" value={tierlistType}
-                            onChange={e => { setTierlistType(e.target.value); }}>
-                            <option value="">— Pilih jenis —</option>
-                            <option value="member">Tierlist Member</option>
-                            <option value="setlist">Tierlist Setlist</option>
-                            <option value="ramadan">Spesial Show Ramadan</option>
-                            <option value="video">SPV & MV</option>
-                            <option value="setlist_song">Lagu Setlist</option>
-                        </select>
+                        <SingleDropdown
+                            value={tierlistType}
+                            onChange={setTierlistType}
+                            placeholder="— Pilih jenis —"
+                            options={[
+                                { value: 'member', label: 'Tierlist Member' },
+                                { value: 'setlist', label: 'Tierlist Setlist' },
+                                { value: 'ramadan', label: 'Spesial Show Ramadan' },
+                                { value: 'video', label: 'SPV & MV' },
+                                { value: 'setlist_song', label: 'Lagu Setlist' },
+                            ]}
+                        />
 
                         {/* Sub-filter */}
                         {tierlistType === 'video' && (
-                            <select className="hp2-select" value={videoType} onChange={e => setVideoType(e.target.value)}>
-                                <option value="all">SPV & MV</option>
-                                <option value="mv">Hanya MV</option>
-                                <option value="spv">Hanya SPV</option>
-                            </select>
+                            <SingleDropdown
+                                value={videoType}
+                                onChange={setVideoType}
+                                options={[
+                                    { value: 'all', label: 'SPV & MV' },
+                                    { value: 'mv', label: 'Hanya MV' },
+                                    { value: 'spv', label: 'Hanya SPV' },
+                                ]}
+                            />
                         )}
                         {tierlistType === 'setlist_song' && (
-                            <Select
-                                multiple
-                                displayEmpty
-                                value={setlist}
-                                onChange={handleSetlistChange}
-                                renderValue={(selected) => {
-                                    if (selected.length === 0) return <span style={{ color: '#666888' }}>— Pilih setlist —</span>;
-                                    return selected.join(', ');
-                                }}
-                                sx={{
-                                    flex: 1, minWidth: 160, color: '#e8e8f0', bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '10px',
-                                    '.MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255,255,255,0.1)' },
-                                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#e50014' },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e50014' },
-                                    '.MuiSvgIcon-root': { color: '#666888' },
-                                    height: '42px', fontFamily: 'Inter, sans-serif', fontSize: '0.88rem'
-                                }}
-                                MenuProps={{ PaperProps: { style: { maxHeight: 300, backgroundColor: '#1a1030', color: '#e8e8f0' } } }}
-                            >
-                                {Object.keys(setlistSongs).map(s => (
-                                    <MenuItem key={s} value={s} sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
-                                        <Checkbox checked={setlist.indexOf(s) > -1} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
-                                        <ListItemText primary={s} />
-                                    </MenuItem>
-                                ))}
-                            </Select>
+                            <MultiCheckDropdown
+                                values={setlist}
+                                onChange={setSetlist}
+                                options={Object.keys(setlistSongs).map(s => ({ value: s, label: s }))}
+                                placeholder="— Pilih setlist —"
+                                renderLabel={(sel) => sel.length === 0 ? '— Pilih setlist —' : sel.join(', ')}
+                            />
                         )}
                     </div>
                 </div>
@@ -178,51 +288,16 @@ function TierlistConfig({ onBack }) {
                 {/* Member sub-filters */}
                 {tierlistType === 'member' && (
                     <div className="hp2-config-row">
-                        <select className="hp2-select" value={memberType} onChange={e => setMemberType(e.target.value)}>
-                            <option value="active">Member Aktif</option>
-                            <option value="ex">Ex-Member</option>
-                            <option value="all">Semua Member</option>
-                        </select>
-                        <Select
-                            multiple
-                            displayEmpty
-                            value={generation}
-                            onChange={handleGenerationChange}
-                            renderValue={(selected) => {
-                                if (selected.includes('all')) return 'Semua Generasi';
-                                return selected.map(g => g.startsWith('genv') ? `JKT48V Gen ${g.replace('genv', '').replace('all', 'Semua')}` : g.startsWith('gen') ? `Gen ${g.slice(3)}` : g).join(', ');
-                            }}
-                            sx={{
-                                flex: 1, minWidth: 160, color: '#e8e8f0', bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '10px',
-                                '.MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255,255,255,0.1)' },
-                                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#e50014' },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e50014' },
-                                '.MuiSvgIcon-root': { color: '#666888' },
-                                height: '42px', fontFamily: 'Inter, sans-serif', fontSize: '0.88rem'
-                            }}
-                            MenuProps={{ PaperProps: { style: { maxHeight: 300, backgroundColor: '#1a1030', color: '#e8e8f0' } } }}
-                        >
-                            <MenuItem value="all" sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
-                                <Checkbox checked={generation.includes('all')} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
-                                <ListItemText primary="Semua Generasi" />
-                            </MenuItem>
-                            {Array.from({ length: STANDARD_GEN_COUNT }, (_, i) => i + 1).map(g => (
-                                <MenuItem key={`gen${g}`} value={`gen${g}`} sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
-                                    <Checkbox checked={generation.indexOf(`gen${g}`) > -1} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
-                                    <ListItemText primary={`Generasi ${g}`} />
-                                </MenuItem>
-                            ))}
-                            <MenuItem value="genvall" sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
-                                <Checkbox checked={generation.includes('genvall')} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
-                                <ListItemText primary="Semua Generasi-V" />
-                            </MenuItem>
-                            {Array.from({ length: V_GEN_COUNT }, (_, i) => i + 1).map(g => (
-                                <MenuItem key={`genv${g}`} value={`genv${g}`} sx={{ '&.Mui-selected': { backgroundColor: 'rgba(229,0,20,0.2)' } }}>
-                                    <Checkbox checked={generation.indexOf(`genv${g}`) > -1} sx={{ color: '#e8e8f0', '&.Mui-checked': { color: '#e50014' }, padding: '4px 8px' }} />
-                                    <ListItemText primary={`JKT48V Gen ${g}`} />
-                                </MenuItem>
-                            ))}
-                        </Select>
+                        <SingleDropdown
+                            value={memberType}
+                            onChange={setMemberType}
+                            options={[
+                                { value: 'active', label: 'Member Aktif' },
+                                { value: 'ex', label: 'Ex-Member' },
+                                { value: 'all', label: 'Semua Member' },
+                            ]}
+                        />
+                        <GenerationDropdown generation={generation} onChange={setGeneration} />
                     </div>
                 )}
 
@@ -230,21 +305,26 @@ function TierlistConfig({ onBack }) {
                 {drafts.length > 0 && (
                     <div>
                         <div className="hp2-draft-label" style={{ marginBottom: 8 }}>Load Draft</div>
-                        <select className="hp2-select" style={{ width: '100%' }} defaultValue="" onChange={handleDraftSelect}>
-                            <option value="">— Pilih draft yang disimpan —</option>
-                            {drafts.map(d => {
+                        <SingleDropdown
+                            value=""
+                            onChange={(draftId) => {
+                                if (!draftId) return;
+                                handleDraftSelect({ target: { value: draftId } });
+                            }}
+                            placeholder="— Pilih draft yang disimpan —"
+                            fullWidth
+                            options={drafts.map(d => {
                                 const ago = formatDistanceToNow(new Date(d.savedAt), { addSuffix: true })
                                     .replace(' minutes', 'm').replace(' minute', 'm')
                                     .replace(' hours', 'h').replace(' hour', 'h')
                                     .replace(' days', 'd').replace(' day', 'd')
                                     .replace(' ago', '').replace('about ', '');
-                                return (
-                                    <option key={d.id} value={d.id}>
-                                        {d.isAutoSave ? `${d.title || 'Tanpa Judul'} (Otomatis)` : d.title || 'Tanpa Judul'} • {d.completion}% • {ago}
-                                    </option>
-                                );
+                                return {
+                                    value: d.id.toString(),
+                                    label: `${d.isAutoSave ? `${d.title || 'Tanpa Judul'} (Otomatis)` : d.title || 'Tanpa Judul'} • ${d.completion}% • ${ago}`
+                                };
                             })}
-                        </select>
+                        />
                     </div>
                 )}
 

@@ -23,7 +23,7 @@ import {
 import domtoimage from 'dom-to-image-more';
 import './Tierlist_Combined.css';
 
-import * as memberData from './data/memberData';
+import { memberData } from './data/newmemberdata';
 import { mvFiles, spvFiles } from './data/spv_mv';
 import { setlistFiles } from './data/SetlistData';
 import { ssRamadanFiles } from './data/specialshowData';
@@ -79,18 +79,36 @@ const parseNameForSearch = (filename) => {
     return [...brandTokens, genPart, ...nameParts].filter(Boolean).join(' ').toLowerCase();
 };
 
-// ─── Data ────────────────────────────────────────────────────────────────────
-const activeMemberFiles = memberData.activeMemberFiles || [];
-const exMemberFiles = memberData.exMemberFiles || [];
-const timLoveList = memberData.tim_love || [];
-const timDreamList = memberData.tim_dream || [];
-const timPassionList = memberData.tim_passion || [];
-const timTraineeList = memberData.tim_trainee || [];
+// ─── Data (derived from newmemberdata.js structured object) ──────────────────
+const activeMemberFiles = [];
+const exMemberFiles = [];
+const timLoveSet = new Set();
+const timDreamSet = new Set();
+const timPassionSet = new Set();
+const timTraineeSet = new Set();
 
-const timLoveSet = new Set(timLoveList.map(f => f.toLowerCase()));
-const timDreamSet = new Set(timDreamList.map(f => f.toLowerCase()));
-const timPassionSet = new Set(timPassionList.map(f => f.toLowerCase()));
-const timTraineeSet = new Set(timTraineeList.map(f => f.toLowerCase()));
+for (const members of Object.values(memberData)) {
+    for (const m of members) {
+        if (!m.graduated) {
+            activeMemberFiles.push(m.photo);
+            const team = (m.team || '').toUpperCase();
+            if (team === 'LOVE') timLoveSet.add(m.photo.toLowerCase());
+            else if (team === 'DREAM') timDreamSet.add(m.photo.toLowerCase());
+            else if (team === 'PASSION') timPassionSet.add(m.photo.toLowerCase());
+            else if (team === 'TRAINEE') timTraineeSet.add(m.photo.toLowerCase());
+        } else {
+            exMemberFiles.push(m.photo);
+        }
+    }
+}
+
+// Nickname lookup: photo filename → nickname (lowercase) for search
+const nicknameMap = new Map();
+for (const members of Object.values(memberData)) {
+    for (const m of members) {
+        if (m.nickname) nicknameMap.set(m.photo.toLowerCase(), m.nickname.toLowerCase());
+    }
+}
 
 const getTeamIndex = (filename) => {
     const fn = filename.toLowerCase();
@@ -676,7 +694,10 @@ const TierlistCombined = () => {
             return container.filter(img => {
                 if (!img.id) return false;
                 const sn = parseNameForSearch(img.id);
-                const sd = `${sn} ${(img.name || '').toLowerCase()}`;
+                // Extract photo filename from the image id for nickname lookup
+                const photoFile = (img.id || '').replace(/^member-/, '');
+                const nick = nicknameMap.get(photoFile.toLowerCase()) || '';
+                const sd = `${sn} ${(img.name || '').toLowerCase()} ${nick}`;
                 return words.every(w => /^genv?\d+$/i.test(w) ? new RegExp(`\\b${w}\\b`, 'i').test(sn) : sd.includes(w));
             }).sort((a, b) => a.originalIndex - b.originalIndex);
         }

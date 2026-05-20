@@ -1,12 +1,36 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { activeMemberFiles, exMemberFiles, tim_love, tim_dream, tim_passion, tim_trainee } from './data/memberData';
+import { memberData } from './data/newmemberdata';
+
+// ─── Derive flat arrays from structured newmemberdata ────────────────────────
+const activeMemberFiles = [];
+const exMemberFiles = [];
+const tim_love = [];
+const tim_dream = [];
+const tim_passion = [];
+const tim_trainee = [];
+
+for (const members of Object.values(memberData)) {
+    for (const m of members) {
+        if (!m.graduated) {
+            activeMemberFiles.push(m.photo);
+            const team = (m.team || '').toUpperCase();
+            if (team === 'LOVE') tim_love.push(m.photo);
+            else if (team === 'DREAM') tim_dream.push(m.photo);
+            else if (team === 'PASSION') tim_passion.push(m.photo);
+            else if (team === 'TRAINEE') tim_trainee.push(m.photo);
+        } else {
+            exMemberFiles.push(m.photo);
+        }
+    }
+}
 import './roulette.css';
 
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const STANDARD_GEN_COUNT = 14;
-const V_GEN_COUNT = 2;
+// Derive generation counts from newmemberdata keys
+const STANDARD_GEN_COUNT = Object.keys(memberData).filter(k => /^GEN \d+$/i.test(k)).length;
+const V_GEN_COUNT = Object.keys(memberData).filter(k => /^JKT48V GEN \d+$/i.test(k)).length;
 
 const SEGMENT_COLORS = [
     '#E50014', '#C8003D', '#FF4D6D', '#FF006E',

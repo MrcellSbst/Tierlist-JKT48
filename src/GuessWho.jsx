@@ -11,8 +11,31 @@ import {
     usePlayersList,
     useIsHost,
 } from 'playroomkit';
-import * as memberData from './data/memberData';
+import { memberData } from './data/newmemberdata';
 import './GuessWho.css';
+
+// ─── Derive flat arrays from structured newmemberdata ────────────────────────
+const _activeMemberFiles = [];
+const _exMemberFiles = [];
+const _timLoveSet = new Set();
+const _timDreamSet = new Set();
+const _timPassionSet = new Set();
+const _timTraineeSet = new Set();
+
+for (const members of Object.values(memberData)) {
+    for (const m of members) {
+        if (!m.graduated) {
+            _activeMemberFiles.push(m.photo);
+            const team = (m.team || '').toUpperCase();
+            if (team === 'LOVE') _timLoveSet.add(m.photo.toLowerCase());
+            else if (team === 'DREAM') _timDreamSet.add(m.photo.toLowerCase());
+            else if (team === 'PASSION') _timPassionSet.add(m.photo.toLowerCase());
+            else if (team === 'TRAINEE') _timTraineeSet.add(m.photo.toLowerCase());
+        } else {
+            _exMemberFiles.push(m.photo);
+        }
+    }
+}
 
 // ─── Name formatter (exact same logic as Tierlist.jsx) ───────────────────────
 const formatMemberName = (filename) => {
@@ -50,10 +73,10 @@ const getGenLabel = (filename) => {
 
 const getTeamForFile = (filename) => {
     const base = filename.split('/').pop().toLowerCase();
-    if ((memberData.tim_love || []).some(f => f.toLowerCase() === base)) return 'Tim Love';
-    if ((memberData.tim_dream || []).some(f => f.toLowerCase() === base)) return 'Tim Dream';
-    if ((memberData.tim_passion || []).some(f => f.toLowerCase() === base)) return 'Tim Passion';
-    if ((memberData.tim_trainee || []).some(f => f.toLowerCase() === base)) return 'Tim Trainee';
+    if (_timLoveSet.has(base)) return 'Tim Love';
+    if (_timDreamSet.has(base)) return 'Tim Dream';
+    if (_timPassionSet.has(base)) return 'Tim Passion';
+    if (_timTraineeSet.has(base)) return 'Tim Trainee';
     return null;
 };
 
@@ -75,10 +98,10 @@ const sortPool = (pool) => [...pool].sort((a, b) => {
 const buildMemberPool = ({ memberStatus, generation, team }) => {
     let pool = [];
     if (memberStatus === 'active' || memberStatus === 'all')
-        (memberData.activeMemberFiles || []).forEach(f =>
+        _activeMemberFiles.forEach(f =>
             pool.push({ filename: f, isActive: true, src: `/asset/member_active/${f}` }));
     if (memberStatus === 'ex' || memberStatus === 'all')
-        (memberData.exMemberFiles || []).forEach(f =>
+        _exMemberFiles.forEach(f =>
             pool.push({ filename: f, isActive: false, src: `/asset/exmember/${f.replace(/\\/g, '/')}` }));
     // Enrich first so genKey is available for filtering
     pool = pool.map(m => ({
