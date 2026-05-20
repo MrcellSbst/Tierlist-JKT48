@@ -9,20 +9,25 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Cache images for 30 days
+# Cache images for 1 day, revalidate in background after that
+# This ensures new/updated images appear within 24h max
 /asset/member_active/*
-  Cache-Control: public, max-age=2592000
+  Cache-Control: public, max-age=86400, stale-while-revalidate=86400
 /asset/exmember/*
-  Cache-Control: public, max-age=2592000
+  Cache-Control: public, max-age=86400, stale-while-revalidate=86400
 /asset/Setlist/*
-  Cache-Control: public, max-age=2592000
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
 /asset/SSRamadan/*
-  Cache-Control: public, max-age=2592000
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
 /asset/SPV_MV/*
-  Cache-Control: public, max-age=2592000
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
 /asset/icon/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=86400, stale-while-revalidate=86400
 
-# No cache for HTML (ensure fresh app shell)
+# No cache for HTML — always serve fresh on deploy
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
 /*.html
   Cache-Control: no-cache, no-store, must-revalidate
