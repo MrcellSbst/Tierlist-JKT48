@@ -775,6 +775,38 @@
   cursor: zoom-in;
 }
 
+/* ── Pokédex-style locked placeholders ── */
+.collection-card-locked {
+  cursor: default;
+}
+
+.collection-card-locked-wrap {
+  background: #0d1117 !important;
+  border: 1.5px dashed #2d3748;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collection-card-locked-wrap:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.collection-card-question {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #2d3748;
+  user-select: none;
+  line-height: 1;
+}
+
+.collection-card-name-locked {
+  color: #2d3748 !important;
+  font-style: italic;
+}
+
 /* ── Card Zoom Lightbox ── */
 .card-zoom-overlay {
   position: absolute;

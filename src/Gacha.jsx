@@ -9,6 +9,7 @@ const LS_KEY_PITY       = 'gacha_ur_pity'
 const LS_KEY_OWNED      = 'gacha_owned_urs'
 const LS_KEY_COLLECTION = 'gacha_collection'
 const LS_KEY_PACK_TIMESTAMPS = 'gacha_pack_timestamps'
+const LS_KEY_HISTORY = 'gacha_history'
 const COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
 const MAX_PACKS = 10
 
@@ -192,7 +193,10 @@ export default function Gacha() {
   const [pack,         setPack]         = useState([])
   const [cardIndex,    setCardIndex]    = useState(0)      // card currently on screen
   const [revealedSet,  setRevealedSet]  = useState(new Set()) // which indices are flipped
-  const [history,      setHistory]      = useState([])
+  const [history,      setHistory]      = useState(() => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY_HISTORY) || '[]') }
+    catch { return [] }
+  })
   const [gotUR,        setGotUR]        = useState(false)
   const [packRotY,     setPackRotY]     = useState(0)
   const [showCollection, setShowCollection] = useState(false)
@@ -247,6 +251,11 @@ export default function Gacha() {
     try { localStorage.setItem(LS_KEY_PACK_TIMESTAMPS, JSON.stringify(packTimestamps)) }
     catch {}
   }, [packTimestamps])
+
+  useEffect(() => {
+    try { localStorage.setItem(LS_KEY_HISTORY, JSON.stringify(history)) }
+    catch {}
+  }, [history])
 
   // Click the pack to open it -> trigger cutting phase
   const handlePackClick = useCallback(() => {
@@ -386,19 +395,17 @@ export default function Gacha() {
             </div>
             <RarityOdds />
 
-            {history.length > 0 && (
-              <div className="history-section">
-                <div className="history-section-header">
-                  <h3 className="history-title">Recent Pulls</h3>
-                  {Object.keys(cardCollection).length > 0 && (
-                    <button
-                      className="btn-collection-open"
-                      onClick={() => setShowCollection(true)}
-                    >
-                      🃏 My Collection
-                    </button>
-                  )}
-                </div>
+            <div className="history-section">
+              <div className="history-section-header">
+                <h3 className="history-title">Recent Pulls</h3>
+                <button
+                  className="btn-collection-open"
+                  onClick={() => setShowCollection(true)}
+                >
+                  OshiDex
+                </button>
+              </div>
+              {history.length > 0 && (
                 <div className="history-list">
                   {history.map((h, hi) => {
                     const stats = getRarityStats(h)
@@ -427,8 +434,8 @@ export default function Gacha() {
                     )
                   })}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -505,38 +512,51 @@ export default function Gacha() {
         <div className="collection-modal-overlay" onClick={() => setShowCollection(false)}>
           <div className="collection-modal" onClick={e => e.stopPropagation()}>
             <div className="collection-modal-header">
-              <h2 className="collection-modal-title">🃏 My Collection</h2>
+              <h2 className="collection-modal-title">OshiDex</h2>
               <button className="collection-modal-close" onClick={() => setShowCollection(false)} aria-label="Close">×</button>
             </div>
             <div className="collection-modal-body">
               {['ultraRare', 'rare', 'uncommon', 'common'].map(rarity => {
                 const cfg = RARITY_CONFIG[rarity]
-                const cards = ALL_CARDS.filter(c => c.rarity === rarity && cardCollection[c.id])
-                if (cards.length === 0) return null
+                const allOfRarity = ALL_CARDS.filter(c => c.rarity === rarity)
+                const collected = allOfRarity.filter(c => cardCollection[c.id])
                 return (
                   <div key={rarity} className="collection-rarity-group">
                     <div className="collection-rarity-label" style={{ color: cfg.color }}>
                       <span className="odds-dot" style={{ background: cfg.color }} />
                       {cfg.label}
-                      <span className="collection-rarity-count">{cards.length} card{cards.length !== 1 ? 's' : ''}</span>
+                      <span className="collection-rarity-count">{collected.length}/{allOfRarity.length} collected</span>
                     </div>
                     <div className="collection-grid">
-                      {cards.map(card => (
-                        <div
-                          key={card.id}
-                          className="collection-card"
-                          onClick={() => setZoomedCard({ card, cfg })}
-                          title="Click to zoom"
-                        >
-                          <div className="collection-card-img-wrap" style={{ '--glow': cfg.glow }}>
-                            <img src={card.img} alt={card.name} className="collection-card-img" />
-                            {cardCollection[card.id] > 1 && (
-                              <span className="collection-count-badge">×{cardCollection[card.id]}</span>
-                            )}
+                      {allOfRarity.map(card => {
+                        const owned = cardCollection[card.id]
+                        if (!owned) {
+                          return (
+                            <div key={card.id} className="collection-card collection-card-locked">
+                              <div className="collection-card-img-wrap collection-card-locked-wrap">
+                                <span className="collection-card-question">?</span>
+                              </div>
+                              <span className="collection-card-name collection-card-name-locked">???</span>
+                            </div>
+                          )
+                        }
+                        return (
+                          <div
+                            key={card.id}
+                            className="collection-card"
+                            onClick={() => setZoomedCard({ card, cfg })}
+                            title="Click to zoom"
+                          >
+                            <div className="collection-card-img-wrap" style={{ '--glow': cfg.glow }}>
+                              <img src={card.img} alt={card.name} className="collection-card-img" />
+                              {owned > 1 && (
+                                <span className="collection-count-badge">×{owned}</span>
+                              )}
+                            </div>
+                            <span className="collection-card-name">{card.name}</span>
                           </div>
-                          <span className="collection-card-name">{card.name}</span>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )
