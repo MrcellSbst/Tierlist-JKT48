@@ -96,8 +96,8 @@ export const memberData = {
     { name: "Putri Farin Kartika", nickname: "", team: "", photo: "Gen3/Gen3_putri_farin_kartika.webp", graduated: true },
     { name: "Rizka Khalila", nickname: "", team: "", photo: "Gen3/Gen3_rizka_khalila.webp", graduated: true },
     { name: "Shaffa Nabila", nickname: "", team: "", photo: "Gen3/Gen3_shaffa_nabila.webp", graduated: true },
-    { name: "Shani Indira Natio", nickname: "", team: "", photo: "Gen3/Gen3_shani_indira_natio.webp", graduated: true },
-    { name: "Shania Gracia", nickname: "", team: "", photo: "Gen3/Gen3_shania_gracia.jpg", graduated: true },
+    { name: "Shani Indira Natio", nickname: "Shani", team: "", photo: "Gen3/Gen3_shani_indira_natio.webp", graduated: true },
+    { name: "Shania Gracia", nickname: "Gracia", team: "", photo: "Gen3/Gen3_shania_gracia.jpg", graduated: true },
     { name: "Sofia Meifaliani", nickname: "", team: "", photo: "Gen3/Gen3_sofia_meifaliani.webp", graduated: true },
     { name: "Stephanie Pricilla Indarto Putri", nickname: "", team: "", photo: "Gen3/Gen3_stephanie_pricilla_indarto_putri.webp", graduated: true },
     { name: "Syahfira Angela Nurhaliza", nickname: "", team: "", photo: "Gen3/Gen3_syahfira_angela_nurhaliza.webp", graduated: true },
@@ -138,7 +138,6 @@ export const memberData = {
     { name: "Sania Julia", nickname: "", team: "", photo: "Gen5/Gen5_sania_julia.webp", graduated: true },
     { name: "Violeta Burhan", nickname: "", team: "", photo: "Gen5/Gen5_violeta_burhan.webp", graduated: true }
   ],
-
   "GEN 6": [
     {
       name: "Gita Sekar Andarini",

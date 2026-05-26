@@ -447,7 +447,6 @@ export function HomepageGames() {
                         </div>
 
 
-                        {/* Gacha - hidden
                         <div className="hp2-card hp2-card-pink" onClick={() => navigate('/gacha')}>
                             <span className="hp2-new-pill">New</span>
                             <div className="hp2-card-title">Gacha</div>
@@ -457,7 +456,6 @@ export function HomepageGames() {
                             <span className="hp2-tag hp2-tag-pink">Collection · Fun</span>
                             <div className="hp2-card-arrow">→</div>
                         </div>
-                        */}
 
                     </div>
                 </div>
@@ -562,7 +560,7 @@ export default function Homepage() {
                             { icon: '', title: 'Guess Who?', desc: 'Play online with friends', path: '/guess-who', accent: 'green', tag: 'NEW · Game', tagClass: 'green', isNew: true },
                             { icon: '', title: 'Dream Setlist', desc: 'Build your dream concert', path: '/dream-setlist', accent: 'purple', tag: 'Tools', tagClass: 'purple' },
                             { icon: '', title: 'Member Roulette', desc: 'Spin to choose a member', path: '/roulette', accent: 'gold', tag: 'Game', tagClass: 'gold' },
-                            // { icon: '', title: 'Gacha', desc: 'Test your luck today', path: '/gacha', accent: 'pink', tag: 'NEW · Game', tagClass: 'pink', isNew: true },
+                            { icon: '', title: 'Gacha', desc: 'Test your luck today', path: '/gacha', accent: 'pink', tag: 'NEW · Game', tagClass: 'pink', isNew: true },
                         ].map(c => (
                             <div key={c.path} className={`hp2-card hp2-card-${c.accent}`} onClick={() => navigate(c.path)} role="button" tabIndex={0}
                                 onKeyDown={e => e.key === 'Enter' && navigate(c.path)}>
