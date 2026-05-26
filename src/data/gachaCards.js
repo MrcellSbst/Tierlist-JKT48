@@ -1,9 +1,9 @@
 // ─── Rarity Configuration ────────────────────────────────────────────────────
 export const RARITY_CONFIG = {
-  common: { label: 'Common', color: '#a0a0b0', glow: '#a0a0b0', weight: 58 },
-  uncommon: { label: 'Uncommon', color: '#4ade80', glow: '#22c55e', weight: 31 },
-  rare: { label: 'Rare', color: '#60a5fa', glow: '#3b82f6', weight: 10 },
-  ultraRare: { label: 'Ultra Rare', color: '#f59e0b', glow: '#f97316', weight: 1 },
+  common:    { label: 'Common',     color: '#a0a0b0', glow: '#a0a0b0', weight: 65 },
+  uncommon:  { label: 'Uncommon',   color: '#4ade80', glow: '#22c55e', weight: 28 },
+  rare:      { label: 'Rare',       color: '#60a5fa', glow: '#3b82f6', weight: 6.5 },
+  ultraRare: { label: 'Ultra Rare', color: '#f59e0b', glow: '#f97316', weight: 0.5 },
 }
 
 // ─── Card Pools ──────────────────────────────────────────────────────────────

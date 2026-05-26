@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CARDS, ALL_CARDS, RARITY_CONFIG } from './data/gachaCards'
+import { simpleEncrypt, simpleDecrypt, lsSetEncrypted, lsGetDecrypted } from './utils/crypto'
 import './styles/Gacha.css'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -10,7 +11,7 @@ const LS_KEY_OWNED      = 'gacha_owned_urs'
 const LS_KEY_COLLECTION = 'gacha_collection'
 const LS_KEY_PACK_TIMESTAMPS = 'gacha_pack_timestamps'
 const LS_KEY_HISTORY = 'gacha_history'
-const COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
+const COOLDOWN_MS = 20 * 60 * 1000 // 20 minutes
 const MAX_PACKS = 10
 
 // ─── Gacha Engine ──────────────────────────────────────────────────────────
@@ -19,11 +20,11 @@ function pickRandom(pool) {
 }
 
 function rollNonGuaranteed() {
-  const roll = Math.random() * 90
-  if (roll < 0.9) return 'ultraRare'
-  if (roll < 9.9) return 'rare'
-  if (roll < 37.8) return 'uncommon'
-  return 'common'
+  const roll = Math.random() * 100
+  if (roll < 0.5)  return 'ultraRare'  // 0.5%
+  if (roll < 7.0)  return 'rare'       // 6.5%  (0.5 → 7.0)
+  if (roll < 35.0) return 'uncommon'   // 28%   (7.0 → 35.0)
+  return 'common'                       // 65%   (35.0 → 100)
 }
 
 function buildPack(packsWithoutUR, ownedURs = new Set()) {
@@ -173,101 +174,146 @@ function PityCounter({ packsWithoutUR }) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function Gacha() {
-  const [packsWithoutUR, setPacksWithoutUR] = useState(() => {
-    try { return parseInt(localStorage.getItem(LS_KEY_PITY) || '0', 10) }
-    catch { return 0 }
-  })
+  const [packsWithoutUR, setPacksWithoutUR] = useState(() =>
+    lsGetDecrypted(LS_KEY_PITY, 0)
+  )
   
-  const [ownedURs, setOwnedURs] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem(LS_KEY_OWNED) || '[]')) }
-    catch { return new Set() }
-  })
+  const [ownedURs, setOwnedURs] = useState(() =>
+    new Set(lsGetDecrypted(LS_KEY_OWNED, []))
+  )
 
   // cardCollection: { [cardId]: count } — all rarities, duplicates counted
-  const [cardCollection, setCardCollection] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS_KEY_COLLECTION) || '{}') }
-    catch { return {} }
-  })
+  const [cardCollection, setCardCollection] = useState(() =>
+    lsGetDecrypted(LS_KEY_COLLECTION, {})
+  )
 
   const [phase,        setPhase]        = useState('idle') // idle | cutting | opening
   const [pack,         setPack]         = useState([])
   const [cardIndex,    setCardIndex]    = useState(0)      // card currently on screen
   const [revealedSet,  setRevealedSet]  = useState(new Set()) // which indices are flipped
-  const [history,      setHistory]      = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS_KEY_HISTORY) || '[]') }
-    catch { return [] }
-  })
+  const [history,      setHistory]      = useState(() =>
+    lsGetDecrypted(LS_KEY_HISTORY, [])
+  )
   const [gotUR,        setGotUR]        = useState(false)
   const [packRotY,     setPackRotY]     = useState(0)
   const [showCollection, setShowCollection] = useState(false)
   const [zoomedCard,     setZoomedCard]     = useState(null)
   const [packTimestamps, setPackTimestamps] = useState(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem(LS_KEY_PACK_TIMESTAMPS) || '[]')
-      const now = Date.now()
-      const oldest = Math.min(...stored)
-      const elapsed = now - oldest
-      const regeneratedPacks = Math.floor(elapsed / COOLDOWN_MS)
-      const sorted = [...stored].sort((a, b) => a - b)
-      return sorted.slice(regeneratedPacks)
+      // packTimestamps now stores future restore times (not open times)
+      // filter out any that have already passed
+      const stored = lsGetDecrypted(LS_KEY_PACK_TIMESTAMPS, [])
+      return stored.filter(t => t > Date.now())
     }
     catch { return [] }
   })
   const [now, setNow] = useState(Date.now())
 
+  // Donation Popup State
+  const [showDonation, setShowDonation] = useState(false)
+
+  // Backup & Restore States
+  const [showBackup, setShowBackup] = useState(false)
+  const [importText, setImportText] = useState('')
+  const [backupAlert, setBackupAlert] = useState({ type: '', message: '' })
+  const [copyStatus, setCopyStatus] = useState('Copy Code')
+
+  const getExportString = useCallback(() => {
+    const data = {
+      pity: packsWithoutUR,
+      ownedURs: Array.from(ownedURs),
+      collection: cardCollection,
+      timestamps: packTimestamps,
+      history: history
+    }
+    return simpleEncrypt(JSON.stringify(data))
+  }, [packsWithoutUR, ownedURs, cardCollection, packTimestamps, history])
+
+  const handleCopyBackup = useCallback(() => {
+    try {
+      navigator.clipboard.writeText(getExportString())
+      setCopyStatus('Copied!')
+      setTimeout(() => setCopyStatus('Copy Code'), 2000)
+    } catch (err) {
+      setBackupAlert({ type: 'error', message: 'Failed to copy to clipboard.' })
+    }
+  }, [getExportString])
+
+  const handleImportBackup = useCallback(() => {
+    if (!importText.trim()) {
+      setBackupAlert({ type: 'error', message: 'Please paste your backup code first.' })
+      return
+    }
+    try {
+      const decrypted = simpleDecrypt(importText.trim())
+      const data = JSON.parse(decrypted)
+      
+      if (typeof data !== 'object' || data === null) {
+        throw new Error("Invalid format.")
+      }
+      if (
+        typeof data.pity !== 'number' || 
+        !Array.isArray(data.ownedURs) || 
+        typeof data.collection !== 'object' || 
+        !Array.isArray(data.timestamps) || 
+        !Array.isArray(data.history)
+      ) {
+        throw new Error("Missing required backup fields.")
+      }
+
+      setPacksWithoutUR(data.pity)
+      setOwnedURs(new Set(data.ownedURs))
+      setCardCollection(data.collection)
+      setPackTimestamps(data.timestamps)
+      setHistory(data.history)
+
+      setBackupAlert({ type: 'success', message: 'Backup restored successfully! All data has been updated.' })
+      setImportText('')
+    } catch (err) {
+      setBackupAlert({ type: 'error', message: err.message || 'Failed to parse save data. Make sure it is unmodified.' })
+    }
+  }, [importText])
+
   useEffect(() => {
     const timer = setInterval(() => {
       setNow(Date.now())
+      // Sequential restore: just remove any restore times that have passed
       setPackTimestamps(prev => {
         if (prev.length === 0) return prev
-        const now = Date.now()
-        const oldest = Math.min(...prev)
-        const elapsed = now - oldest
-        const regeneratedPacks = Math.floor(elapsed / COOLDOWN_MS)
-        
-        if (regeneratedPacks === 0) return prev
-        
-        const sorted = [...prev].sort((a, b) => a - b)
-        const remaining = sorted.slice(regeneratedPacks)
+        const remaining = prev.filter(t => t > Date.now())
         return remaining.length !== prev.length ? remaining : prev
       })
     }, 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const availablePacks = (() => {
-    return MAX_PACKS - packTimestamps.length
-  })()
+  // packTimestamps contains future restore times — pending = those still in the future
+  const pendingTimestamps = packTimestamps.filter(t => t > now)
+  const availablePacks = MAX_PACKS - pendingTimestamps.length
 
   const nextPackReady = (() => {
-    if (packTimestamps.length === 0) return null
-    const oldest = Math.min(...packTimestamps)
-    return new Date(oldest + COOLDOWN_MS)
+    if (pendingTimestamps.length === 0) return null
+    return new Date(Math.min(...pendingTimestamps))
   })()
 
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY_PITY, String(packsWithoutUR)) }
-    catch {}
+    lsSetEncrypted(LS_KEY_PITY, packsWithoutUR)
   }, [packsWithoutUR])
 
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY_OWNED, JSON.stringify([...ownedURs])) }
-    catch {}
+    lsSetEncrypted(LS_KEY_OWNED, [...ownedURs])
   }, [ownedURs])
 
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY_COLLECTION, JSON.stringify(cardCollection)) }
-    catch {}
+    lsSetEncrypted(LS_KEY_COLLECTION, cardCollection)
   }, [cardCollection])
 
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY_PACK_TIMESTAMPS, JSON.stringify(packTimestamps)) }
-    catch {}
+    lsSetEncrypted(LS_KEY_PACK_TIMESTAMPS, packTimestamps)
   }, [packTimestamps])
 
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY_HISTORY, JSON.stringify(history)) }
-    catch {}
+    lsSetEncrypted(LS_KEY_HISTORY, history)
   }, [history])
 
   // Click the pack to open it -> trigger cutting phase
@@ -283,7 +329,12 @@ export default function Gacha() {
     setRevealedSet(new Set())
     setGotUR(hasUR)
     setPacksWithoutUR(hasUR ? 0 : packsWithoutUR + 1)
-    setPackTimestamps(prev => [...prev, Date.now()])
+    // Sequential queue: next pack restores COOLDOWN_MS after the last scheduled restore
+    setPackTimestamps(prev => {
+      const lastRestore = prev.length > 0 ? Math.max(...prev) : Date.now()
+      const nextRestore = Math.max(lastRestore, Date.now()) + COOLDOWN_MS
+      return [...prev, nextRestore]
+    })
     
     if (hasUR) {
       // Record any newly pulled URs so they don't roll again
@@ -336,7 +387,9 @@ export default function Gacha() {
   const handleDone = useCallback(() => {
     setHistory(prev => [{ cards: pack, timestamp: Date.now() }, ...prev].slice(0, 10))
     setPhase('idle')
-  }, [pack])
+    // Show donation popup when user returns to main page after using the last pack
+    if (availablePacks === 0) setShowDonation(true)
+  }, [pack, availablePacks])
 
   const getRarityStats = (p) => {
     const counts = {}
@@ -431,6 +484,16 @@ export default function Gacha() {
                     onClick={() => setShowCollection(true)}
                   >
                     OshiDex
+                  </button>
+                  <button
+                    className="btn-collection-open"
+                    onClick={() => {
+                      setShowBackup(true)
+                      setBackupAlert({ type: 'warning', message: 'WARNING: Importing backup data will completely overwrite your current progress!' })
+                      setImportText('')
+                    }}
+                  >
+                    Backup / Restore
                   </button>
                 </div>
               </div>
@@ -632,6 +695,86 @@ export default function Gacha() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Backup Modal ── */}
+      {showBackup && (
+        <div className="collection-modal-overlay" onClick={() => setShowBackup(false)}>
+          <div className="collection-modal" onClick={e => e.stopPropagation()}>
+            <div className="collection-modal-header">
+              <h2 className="collection-modal-title">Backup & Restore</h2>
+              <button className="collection-modal-close" onClick={() => setShowBackup(false)} aria-label="Close">×</button>
+            </div>
+            
+            <div className="collection-modal-body backup-modal-body">
+              {backupAlert.message && (
+                <div className={`backup-alert backup-alert-${backupAlert.type}`}>
+                  {backupAlert.message}
+                </div>
+              )}
+
+              {/* Export Section */}
+              <div className="backup-section">
+                <h3 className="backup-section-title">Export Save</h3>
+                <p className="backup-desc">Copy this encrypted code to save your current progress or transfer it to another device.</p>
+                <textarea
+                  className="backup-textarea"
+                  readOnly
+                  value={getExportString()}
+                  onClick={(e) => e.target.select()}
+                />
+                <div className="backup-actions">
+                  <button className="btn-backup btn-backup-copy" onClick={handleCopyBackup}>
+                    {copyStatus}
+                  </button>
+                </div>
+              </div>
+
+              {/* Import Section */}
+              <div className="backup-section">
+                <h3 className="backup-section-title">Import Save</h3>
+                <p className="backup-desc">Paste your encrypted backup code below to restore your progress. This will overwrite all current progress.</p>
+                <textarea
+                  className="backup-textarea"
+                  placeholder="Paste your backup code here..."
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                />
+                <div className="backup-actions">
+                  <button className="btn-backup btn-backup-import" onClick={handleImportBackup}>
+                    Restore Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Donation Popup ── */}
+      {showDonation && (
+        <div className="donation-overlay" onClick={() => setShowDonation(false)}>
+          <div className="donation-modal" onClick={e => e.stopPropagation()}>
+            <button className="donation-close" onClick={() => setShowDonation(false)} aria-label="Close">×</button>
+            <div className="donation-icon" aria-hidden="true">💖</div>
+            <h2 className="donation-title">Terima kasih sudah bermain!</h2>
+            <p className="donation-message">
+              Suka dengan Project ini? Dukung kami dengan cara berdonasi untuk Hosting dan Domain di:
+            </p>
+            <a
+              className="donation-link"
+              href="https://tako.id/MrcellSbst"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              tako.id/MrcellSbst
+            </a>
+            <p className="donation-sub">Kamu sudah membuka semua pack yang tersedia. Pack akan regenerate dalam 20 menit! ⏳</p>
+            <button className="donation-btn-close" onClick={() => setShowDonation(false)}>
+              Tutup
+            </button>
           </div>
         </div>
       )}

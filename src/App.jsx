@@ -6,6 +6,7 @@ import { Box, CircularProgress } from '@mui/material'
 import NotFound from './components/NotFound'
 import Footer from './components/Footer'
 import ViewportManager from './components/ViewportManager'
+import HardRefreshButton from './components/HardRefreshButton'
 import './styles/App.css'
 
 // Lazy-loaded page components — each becomes its own JS chunk
@@ -84,6 +85,7 @@ function App() {
         </Box>
         <Footer />
       </Box>
+      <HardRefreshButton />
       <Analytics />
       <SpeedInsights />
     </Router>

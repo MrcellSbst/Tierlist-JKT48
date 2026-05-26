@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CARDS, ALL_CARDS, RARITY_CONFIG } from './data/gachaCards'
+import { simpleEncrypt, simpleDecrypt, lsSetEncrypted, lsGetDecrypted } from './utils/crypto'
 import './styles/Gacha.css'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 const LS_KEY_COLLECTION = 'nuzlocke_collection'
 const LS_KEY_PACK_TIMESTAMPS = 'nuzlocke_pack_timestamps'
 const LS_KEY_HISTORY = 'nuzlocke_history'
-const COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
+const COOLDOWN_MS = 10 * 60 * 1000 // 10 minutes
 const MAX_PACKS = 10
 
 // ─── Gacha Engine (Nuzlocke - Pure Random) ─────────────────────────────────
@@ -17,10 +18,10 @@ function pickRandom(pool) {
 
 function rollRarity() {
   const roll = Math.random() * 100
-  if (roll < 0.5) return 'ultraRare'
-  if (roll < 5) return 'rare'
-  if (roll < 40) return 'uncommon'
-  return 'common'
+  if (roll < 0.01) return 'ultraRare'  // 0.01%
+  if (roll < 3.00) return 'rare'       // 2.99%  (0.01 → 3.00)
+  if (roll < 25.0) return 'uncommon'   // 22%    (3.00 → 25.0)
+  return 'common'                       // 75%    (25.0 → 100)
 }
 
 function buildPack() {
@@ -77,10 +78,10 @@ function RevealCard({ card, isRevealed, onFlip }) {
 
 function RarityOdds() {
   const NUZLOCKE_RATES = {
-    common: { label: 'Common', color: '#a0a0b0', weight: 60 },
-    uncommon: { label: 'Uncommon', color: '#4ade80', weight: 35 },
-    rare: { label: 'Rare', color: '#60a5fa', weight: 4.5 },
-    ultraRare: { label: 'Ultra Rare', color: '#f59e0b', weight: 0.5 },
+    common:    { label: 'Common',     color: '#a0a0b0', weight: 75 },
+    uncommon:  { label: 'Uncommon',   color: '#4ade80', weight: 22 },
+    rare:      { label: 'Rare',       color: '#60a5fa', weight: 2.99 },
+    ultraRare: { label: 'Ultra Rare', color: '#f59e0b', weight: 0.01 },
   }
   
   return (
@@ -112,80 +113,122 @@ function RarityOdds() {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function GachaNuzlocke() {
-  const [cardCollection, setCardCollection] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS_KEY_COLLECTION) || '{}') }
-    catch { return {} }
-  })
+  const [cardCollection, setCardCollection] = useState(() =>
+    lsGetDecrypted(LS_KEY_COLLECTION, {})
+  )
 
   const [phase,        setPhase]        = useState('idle')
   const [pack,         setPack]         = useState([])
   const [cardIndex,    setCardIndex]    = useState(0)
   const [revealedSet,  setRevealedSet]  = useState(new Set())
-  const [history,      setHistory]      = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS_KEY_HISTORY) || '[]') }
-    catch { return [] }
-  })
+  const [history,      setHistory]      = useState(() =>
+    lsGetDecrypted(LS_KEY_HISTORY, [])
+  )
   const [gotUR,        setGotUR]        = useState(false)
   const [packRotY,     setPackRotY]     = useState(0)
   const [showCollection, setShowCollection] = useState(false)
   const [zoomedCard,     setZoomedCard]     = useState(null)
   const [packTimestamps, setPackTimestamps] = useState(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem(LS_KEY_PACK_TIMESTAMPS) || '[]')
-      const now = Date.now()
-      const oldest = Math.min(...stored)
-      const elapsed = now - oldest
-      const regeneratedPacks = Math.floor(elapsed / COOLDOWN_MS)
-      const sorted = [...stored].sort((a, b) => a - b)
-      return sorted.slice(regeneratedPacks)
+      // packTimestamps now stores future restore times (not open times)
+      const stored = lsGetDecrypted(LS_KEY_PACK_TIMESTAMPS, [])
+      return stored.filter(t => t > Date.now())
     }
     catch { return [] }
   })
   const [now, setNow] = useState(Date.now())
 
+  // Donation Popup State
+  const [showDonation, setShowDonation] = useState(false)
+
+  // Backup & Restore States
+  const [showBackup, setShowBackup] = useState(false)
+  const [importText, setImportText] = useState('')
+  const [backupAlert, setBackupAlert] = useState({ type: '', message: '' })
+  const [copyStatus, setCopyStatus] = useState('Copy Code')
+
+  const getExportString = useCallback(() => {
+    const data = {
+      collection: cardCollection,
+      timestamps: packTimestamps,
+      history: history
+    }
+    return simpleEncrypt(JSON.stringify(data))
+  }, [cardCollection, packTimestamps, history])
+
+  const handleCopyBackup = useCallback(() => {
+    try {
+      navigator.clipboard.writeText(getExportString())
+      setCopyStatus('Copied!')
+      setTimeout(() => setCopyStatus('Copy Code'), 2000)
+    } catch (err) {
+      setBackupAlert({ type: 'error', message: 'Failed to copy to clipboard.' })
+    }
+  }, [getExportString])
+
+  const handleImportBackup = useCallback(() => {
+    if (!importText.trim()) {
+      setBackupAlert({ type: 'error', message: 'Please paste your backup code first.' })
+      return
+    }
+    try {
+      const decrypted = simpleDecrypt(importText.trim())
+      const data = JSON.parse(decrypted)
+      
+      if (typeof data !== 'object' || data === null) {
+        throw new Error("Invalid format.")
+      }
+      if (
+        typeof data.collection !== 'object' || 
+        !Array.isArray(data.timestamps) || 
+        !Array.isArray(data.history)
+      ) {
+        throw new Error("Missing required backup fields.")
+      }
+
+      setCardCollection(data.collection)
+      setPackTimestamps(data.timestamps)
+      setHistory(data.history)
+
+      setBackupAlert({ type: 'success', message: 'Backup restored successfully! All data has been updated.' })
+      setImportText('')
+    } catch (err) {
+      setBackupAlert({ type: 'error', message: err.message || 'Failed to parse save data. Make sure it is unmodified.' })
+    }
+  }, [importText])
+
   useEffect(() => {
     const timer = setInterval(() => {
       setNow(Date.now())
+      // Sequential restore: just remove any restore times that have passed
       setPackTimestamps(prev => {
         if (prev.length === 0) return prev
-        const now = Date.now()
-        const oldest = Math.min(...prev)
-        const elapsed = now - oldest
-        const regeneratedPacks = Math.floor(elapsed / COOLDOWN_MS)
-        
-        if (regeneratedPacks === 0) return prev
-        
-        const sorted = [...prev].sort((a, b) => a - b)
-        const remaining = sorted.slice(regeneratedPacks)
+        const remaining = prev.filter(t => t > Date.now())
         return remaining.length !== prev.length ? remaining : prev
       })
     }, 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const availablePacks = (() => {
-    return MAX_PACKS - packTimestamps.length
-  })()
+  // packTimestamps contains future restore times — pending = those still in the future
+  const pendingTimestamps = packTimestamps.filter(t => t > now)
+  const availablePacks = MAX_PACKS - pendingTimestamps.length
 
   const nextPackReady = (() => {
-    if (packTimestamps.length === 0) return null
-    const oldest = Math.min(...packTimestamps)
-    return new Date(oldest + COOLDOWN_MS)
+    if (pendingTimestamps.length === 0) return null
+    return new Date(Math.min(...pendingTimestamps))
   })()
 
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY_COLLECTION, JSON.stringify(cardCollection)) }
-    catch {}
+    lsSetEncrypted(LS_KEY_COLLECTION, cardCollection)
   }, [cardCollection])
 
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY_PACK_TIMESTAMPS, JSON.stringify(packTimestamps)) }
-    catch {}
+    lsSetEncrypted(LS_KEY_PACK_TIMESTAMPS, packTimestamps)
   }, [packTimestamps])
 
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY_HISTORY, JSON.stringify(history)) }
-    catch {}
+    lsSetEncrypted(LS_KEY_HISTORY, history)
   }, [history])
 
   // Click the pack to open it -> trigger cutting phase
@@ -200,7 +243,12 @@ export default function GachaNuzlocke() {
     setCardIndex(0)
     setRevealedSet(new Set())
     setGotUR(hasUR)
-    setPackTimestamps(prev => [...prev, Date.now()])
+    // Sequential queue: next pack restores COOLDOWN_MS after the last scheduled restore
+    setPackTimestamps(prev => {
+      const lastRestore = prev.length > 0 ? Math.max(...prev) : Date.now()
+      const nextRestore = Math.max(lastRestore, Date.now()) + COOLDOWN_MS
+      return [...prev, nextRestore]
+    })
 
     // Track ALL pulled cards in the collection (duplicates counted)
     setCardCollection(prev => {
@@ -247,7 +295,9 @@ export default function GachaNuzlocke() {
   const handleDone = useCallback(() => {
     setHistory(prev => [{ cards: pack, timestamp: Date.now() }, ...prev].slice(0, 10))
     setPhase('idle')
-  }, [pack])
+    // Show donation popup when user returns to main page after using the last pack
+    if (availablePacks === 0) setShowDonation(true)
+  }, [pack, availablePacks])
 
   const getRarityStats = (p) => {
     const counts = {}
@@ -332,12 +382,24 @@ export default function GachaNuzlocke() {
             <div className="history-section">
               <div className="history-section-header">
                 <h3 className="history-title">Recent Pulls</h3>
-                <button
-                  className="btn-collection-open"
-                  onClick={() => setShowCollection(true)}
-                >
-                  OshiDex
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    className="btn-collection-open"
+                    onClick={() => setShowCollection(true)}
+                  >
+                    OshiDex
+                  </button>
+                  <button
+                    className="btn-collection-open"
+                    onClick={() => {
+                      setShowBackup(true)
+                      setBackupAlert({ type: 'warning', message: 'WARNING: Importing backup data will completely overwrite your current progress!' })
+                      setImportText('')
+                    }}
+                  >
+                    Backup / Restore
+                  </button>
+                </div>
               </div>
               {history.length > 0 && (
                 <div className="history-list">
@@ -537,6 +599,86 @@ export default function GachaNuzlocke() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Backup Modal ── */}
+      {showBackup && (
+        <div className="collection-modal-overlay" onClick={() => setShowBackup(false)}>
+          <div className="collection-modal" onClick={e => e.stopPropagation()}>
+            <div className="collection-modal-header">
+              <h2 className="collection-modal-title">Backup & Restore</h2>
+              <button className="collection-modal-close" onClick={() => setShowBackup(false)} aria-label="Close">×</button>
+            </div>
+            
+            <div className="collection-modal-body backup-modal-body">
+              {backupAlert.message && (
+                <div className={`backup-alert backup-alert-${backupAlert.type}`}>
+                  {backupAlert.message}
+                </div>
+              )}
+
+              {/* Export Section */}
+              <div className="backup-section">
+                <h3 className="backup-section-title">Export Save</h3>
+                <p className="backup-desc">Copy this encrypted code to save your current progress or transfer it to another device.</p>
+                <textarea
+                  className="backup-textarea"
+                  readOnly
+                  value={getExportString()}
+                  onClick={(e) => e.target.select()}
+                />
+                <div className="backup-actions">
+                  <button className="btn-backup btn-backup-copy" onClick={handleCopyBackup}>
+                    {copyStatus}
+                  </button>
+                </div>
+              </div>
+
+              {/* Import Section */}
+              <div className="backup-section">
+                <h3 className="backup-section-title">Import Save</h3>
+                <p className="backup-desc">Paste your encrypted backup code below to restore your progress. This will overwrite all current progress.</p>
+                <textarea
+                  className="backup-textarea"
+                  placeholder="Paste your backup code here..."
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                />
+                <div className="backup-actions">
+                  <button className="btn-backup btn-backup-import" onClick={handleImportBackup}>
+                    Restore Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Donation Popup ── */}
+      {showDonation && (
+        <div className="donation-overlay" onClick={() => setShowDonation(false)}>
+          <div className="donation-modal donation-modal--nuzlocke" onClick={e => e.stopPropagation()}>
+            <button className="donation-close" onClick={() => setShowDonation(false)} aria-label="Close">×</button>
+            <div className="donation-icon" aria-hidden="true">💖</div>
+            <h2 className="donation-title">Terima kasih sudah bermain!</h2>
+            <p className="donation-message">
+              Suka dengan Project ini? Dukung kami dengan cara berdonasi untuk Hosting dan Domain di:
+            </p>
+            <a
+              className="donation-link"
+              href="https://tako.id/MrcellSbst"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              tako.id/MrcellSbst
+            </a>
+            <p className="donation-sub">Kamu sudah membuka semua pack yang tersedia. Pack akan regenerate dalam 10 menit! ⏳</p>
+            <button className="donation-btn-close" onClick={() => setShowDonation(false)}>
+              Tutup
+            </button>
           </div>
         </div>
       )}

@@ -1655,3 +1655,354 @@
   border-color: #ef4444;
   box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
 }
+
+/* ── Backup Modal Styles ── */
+.backup-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.backup-section {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.backup-section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #00A4A5;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.backup-desc {
+  font-size: 0.78rem;
+  color: #4b5563;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+}
+
+.backup-textarea {
+  width: 100%;
+  height: 90px;
+  background: #f3f4f6;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #374151;
+  resize: none;
+  box-sizing: border-box;
+  margin-bottom: 0.75rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.backup-textarea:focus {
+  border-color: #00A4A5;
+}
+
+.backup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-backup {
+  padding: 0.45rem 1.2rem;
+  border-radius: 50px;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-backup-copy {
+  background: #00A4A5;
+  color: #ffffff;
+}
+
+.btn-backup-copy:hover {
+  background: #008788;
+  transform: translateY(-1px);
+}
+
+.btn-backup-import {
+  background: #DF0A81;
+  color: #ffffff;
+}
+
+.btn-backup-import:hover {
+  background: #be076b;
+  transform: translateY(-1px);
+}
+
+.backup-alert {
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.backup-alert-warning {
+  background: rgba(247, 147, 33, 0.08);
+  border: 1px solid rgba(247, 147, 33, 0.25);
+  color: #c26900;
+}
+
+.backup-alert-error {
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  color: #b91c1c;
+}
+
+.backup-alert-success {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #047857;
+}
+
+/* Nuzlocke Mode Overrides for Backup Modal */
+.gacha-nuzlocke .backup-section {
+  background: rgba(220, 38, 38, 0.03);
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+.gacha-nuzlocke .backup-section-title {
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .backup-desc {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .backup-textarea {
+  background: #0d0505;
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .backup-textarea:focus {
+  border-color: #ef4444;
+}
+
+.gacha-nuzlocke .btn-backup-copy {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  color: #ffffff;
+}
+
+.gacha-nuzlocke .btn-backup-copy:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.gacha-nuzlocke .btn-backup-import {
+  background: linear-gradient(135deg, #f97316, #dc2626);
+  color: #ffffff;
+}
+
+.gacha-nuzlocke .btn-backup-import:hover {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+}
+
+.gacha-nuzlocke .backup-alert-warning {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.3);
+  color: #fdba74;
+}
+
+.gacha-nuzlocke .backup-alert-error {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .backup-alert-success {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #a7f3d0;
+}
+
+/* ── Donation Popup ── */
+.donation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: overlay-fade-in 0.25s ease both;
+}
+
+.donation-modal {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+  width: 100%;
+  max-width: 400px;
+  padding: 2.5rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: center;
+  animation: modal-slide-in 0.3s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+
+.donation-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.9rem;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.07);
+  color: #4b5563;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.donation-close:hover {
+  background: rgba(223, 10, 129, 0.12);
+  color: #DF0A81;
+}
+
+.donation-icon {
+  font-size: 3rem;
+  line-height: 1;
+  animation: heartbeat 1.2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  15%       { transform: scale(1.18); }
+  30%       { transform: scale(1); }
+  45%       { transform: scale(1.1); }
+  60%       { transform: scale(1); }
+}
+
+.donation-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.donation-message {
+  font-size: 0.88rem;
+  color: #4b5563;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.donation-link {
+  display: inline-block;
+  padding: 0.55rem 1.6rem;
+  background: linear-gradient(135deg, #DF0A81 0%, #F79321 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.92rem;
+  border-radius: 50px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(223, 10, 129, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.donation-link:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 22px rgba(223, 10, 129, 0.5);
+}
+
+.donation-sub {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.donation-btn-close {
+  margin-top: 0.25rem;
+  padding: 0.45rem 1.8rem;
+  border: 1.5px solid rgba(0, 164, 165, 0.4);
+  border-radius: 50px;
+  background: transparent;
+  color: #00A4A5;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.donation-btn-close:hover {
+  background: rgba(0, 164, 165, 0.08);
+  border-color: #00A4A5;
+}
+
+/* Nuzlocke dark variant */
+.donation-modal--nuzlocke {
+  background: #1a0a0a;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.donation-modal--nuzlocke .donation-title {
+  color: #fca5a5;
+}
+
+.donation-modal--nuzlocke .donation-message {
+  color: #fca5a5;
+  opacity: 0.8;
+}
+
+.donation-modal--nuzlocke .donation-link {
+  background: linear-gradient(135deg, #dc2626 0%, #f97316 100%);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+}
+
+.donation-modal--nuzlocke .donation-link:hover {
+  box-shadow: 0 8px 22px rgba(220, 38, 38, 0.55);
+}
+
+.donation-modal--nuzlocke .donation-sub {
+  color: #991b1b;
+}
+
+.donation-modal--nuzlocke .donation-btn-close {
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #ef4444;
+}
+
+.donation-modal--nuzlocke .donation-btn-close:hover {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: #ef4444;
+}
+
+.donation-modal--nuzlocke .donation-close {
+  background: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
+}
+
+.donation-modal--nuzlocke .donation-close:hover {
+  background: rgba(220, 38, 38, 0.3);
+  color: #ef4444;
+}

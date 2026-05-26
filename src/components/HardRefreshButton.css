@@ -1,0 +1,111 @@
+/* ──────────────────────────────────────────────────────────
+   Hard Refresh Button — global floating action button
+   ────────────────────────────────────────────────────────── */
+
+.hard-refresh-btn {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 9999;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  padding: 0.55rem 1.1rem 0.55rem 0.75rem;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #ffffff;
+
+  background: linear-gradient(135deg, #1a1a2e 0%, #2a2a4e 100%);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.25s ease,
+    opacity 0.2s ease;
+
+  /* prevent the button from being clipped on scaled tierlist pages */
+  transform-origin: bottom right;
+}
+
+.hard-refresh-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  background: linear-gradient(135deg, #216D94 0%, #00A4A5 100%);
+}
+
+.hard-refresh-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+
+.hard-refresh-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+/* ── Spinning state ── */
+.hard-refresh-btn--refreshing {
+  background: linear-gradient(135deg, #216D94 0%, #00A4A5 100%);
+  pointer-events: none;
+}
+
+.hard-refresh-btn--refreshing .hard-refresh-icon svg {
+  animation: hr-spin 0.9s linear infinite;
+}
+
+/* ── Icon ── */
+.hard-refresh-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hard-refresh-icon svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ── Label ── */
+.hard-refresh-label {
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* ── Spin keyframe ── */
+@keyframes hr-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Mobile: icon-only pill to save space ── */
+@media (max-width: 480px) {
+  .hard-refresh-btn {
+    padding: 0.65rem;
+    bottom: 1rem;
+    right: 1rem;
+    border-radius: 50%;
+  }
+
+  .hard-refresh-label {
+    display: none;
+  }
+
+  .hard-refresh-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
