@@ -1,7 +1,7 @@
 // ─── Rarity Configuration ────────────────────────────────────────────────────
 export const RARITY_CONFIG = {
   common: { label: 'Common', color: '#a0a0b0', glow: '#a0a0b0', weight: 58 },
-  uncommon: { label: 'Uncommon', color: '#4ade80', glow: '#22c55e', weight: 20 },
+  uncommon: { label: 'Uncommon', color: '#4ade80', glow: '#22c55e', weight: 31 },
   rare: { label: 'Rare', color: '#60a5fa', glow: '#3b82f6', weight: 10 },
   ultraRare: { label: 'Ultra Rare', color: '#f59e0b', glow: '#f97316', weight: 1 },
 }
@@ -17,7 +17,7 @@ export const CARDS = {
     { id: 'c6', rarity: 'common', name: 'Kimmy 1/4', img: '/asset/Gacha/Common/Kimmy 8-14.png' },
     { id: 'c7', rarity: 'common', name: 'Lana 1/8', img: '/asset/Gacha/Common/Lana 1-7.png' },
     { id: 'c8', rarity: 'common', name: 'Virgi 1/10', img: '/asset/Gacha/Common/Virgi 1-7.png' },
-    { id: 'c9', rarity: 'common', name: 'Atin 1/1', img: '/asset/Gacha/Common/Atin 6-10.png' },
+    { id: 'c9', rarity: 'common', name: 'Atin 1/2', img: '/asset/Gacha/Common/Atin 6-10.png' },
     { id: 'c10', rarity: 'common', name: 'Auwia 1/1', img: '/asset/Gacha/Common/Auwia 1-5.png' },
     { id: 'c11', rarity: 'common', name: 'Cepio 1/1', img: '/asset/Gacha/Common/Cepio 1-5.png' },
     { id: 'c12', rarity: 'common', name: 'Christy 1/1', img: '/asset/Gacha/Common/Christy 6-10.png' },
@@ -78,7 +78,7 @@ export const CARDS = {
     { id: 'r27', rarity: 'rare', name: 'Virgi 4/10', img: '/asset/Gacha/Rare/Virgi 3.png' },
     { id: 'r28', rarity: 'rare', name: 'Virgi 5/10', img: '/asset/Gacha/Rare/Virgi 4 (Keep).png' },
     { id: 'r29', rarity: 'rare', name: 'Alya 1/1', img: '/asset/Gacha/Rare/Alya 3.png' },
-    { id: 'r30', rarity: 'rare', name: 'Atin 2/1', img: '/asset/Gacha/Rare/Atin 1.png' },
+    { id: 'r30', rarity: 'rare', name: 'Atin 2/2', img: '/asset/Gacha/Rare/Atin 1.png' },
     { id: 'r31', rarity: 'rare', name: 'Ciput 4/10 (Alt)', img: '/asset/Gacha/Rare/Ciput 1.png' },
     { id: 'r32', rarity: 'rare', name: 'Erine 2/5 (Alt)', img: '/asset/Gacha/Rare/Erine 3.png' },
     { id: 'r33', rarity: 'rare', name: 'Fiony 1/1', img: '/asset/Gacha/Rare/Fiony 3.png' },

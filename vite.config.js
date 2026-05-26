@@ -16,7 +16,7 @@ export default defineConfig({
     plugins: [
         react(),
         VitePWA({
-            registerType: 'autoUpdate',
+            registerType: 'prompt',
             includeAssets: ['asset/icon/TierlistIcon_compressed.png', 'asset/icon/HomepageLogo_compressed.png'],
             manifest: {
                 name: 'JKT48 Tierlist',

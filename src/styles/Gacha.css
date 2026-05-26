@@ -1442,3 +1442,216 @@
   letter-spacing: 0.08em;
   background: rgba(0, 0, 0, 0.5);
 }
+
+/* ── Nuzlocke Mode — Red Color Scheme ── */
+.gacha-nuzlocke {
+  background: #1a0a0a;
+}
+
+.gacha-nuzlocke .gacha-header-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(220, 38, 38, 0.15) 0%, transparent 70%),
+    linear-gradient(180deg, #2d0a0a 0%, #1a0a0a 100%);
+}
+
+.gacha-nuzlocke .btn-back-home {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.gacha-nuzlocke .btn-back-home:hover {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.6);
+}
+
+.gacha-nuzlocke .gacha-eyebrow {
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .gacha-title {
+  background: linear-gradient(135deg, #dc2626 0%, #f97316 50%, #991b1b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gacha-nuzlocke .gacha-subtitle {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .gacha-main {
+  background: #1a0a0a;
+}
+
+.gacha-nuzlocke .pack-status-panel {
+  background: rgba(220, 38, 38, 0.05);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.gacha-nuzlocke .pack-status-label {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .pack-status-value {
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .odds-panel {
+  background: rgba(220, 38, 38, 0.05);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.gacha-nuzlocke .odds-title {
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .odds-label {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .odds-pct {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .odds-guarantee-item {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .odds-note {
+  color: #991b1b;
+}
+
+.gacha-nuzlocke .btn-collection-open {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  color: #fff;
+}
+
+.gacha-nuzlocke .btn-collection-open:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.gacha-nuzlocke .history-section-header {
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.gacha-nuzlocke .history-title {
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .history-item {
+  background: rgba(220, 38, 38, 0.05);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.gacha-nuzlocke .history-num {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .pack-click-hint {
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .pack-click-hint.cooldown-hint {
+  color: #991b1b;
+}
+
+.gacha-nuzlocke .collection-modal {
+  background: #1a0a0a;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.gacha-nuzlocke .collection-modal-header {
+  background: #2d0a0a;
+  border-bottom-color: rgba(220, 38, 38, 0.2);
+}
+
+.gacha-nuzlocke .collection-modal-title {
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .collection-modal-close {
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .collection-modal-close:hover {
+  background: rgba(220, 38, 38, 0.4);
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .collection-modal-body {
+  background: #1a0a0a;
+}
+
+.gacha-nuzlocke .collection-rarity-count {
+  color: #991b1b;
+}
+
+.gacha-nuzlocke .collection-card-name {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .collection-card-locked-wrap {
+  background: #0d0505 !important;
+  border-color: #3d1515;
+}
+
+.gacha-nuzlocke .collection-card-question {
+  color: #3d1515;
+}
+
+.gacha-nuzlocke .collection-card-name-locked {
+  color: #3d1515 !important;
+}
+
+.gacha-nuzlocke .card-zoom-overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.gacha-nuzlocke .card-zoom-close {
+  background: rgba(220, 38, 38, 0.2);
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .card-zoom-close:hover {
+  background: rgba(220, 38, 38, 0.4);
+}
+
+.gacha-nuzlocke .btn-open-pack {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+}
+
+.gacha-nuzlocke .btn-open-pack:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.gacha-nuzlocke .nav-btn {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .nav-btn:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.6);
+}
+
+.gacha-nuzlocke .card-counter {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .ur-banner {
+  background: linear-gradient(135deg, #dc2626, #f97316);
+  color: #fff;
+}
+
+.gacha-nuzlocke .progress-dot {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.gacha-nuzlocke .progress-dot.dot-current {
+  border-color: #ef4444;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
+}

@@ -18,6 +18,7 @@ const Calculator      = lazy(() => import('./Calculator'))
 const DreamSetlist    = lazy(() => import('./Dream_Setlist'))
 const RoulettePage    = lazy(() => import('./roulette'))
 const GachaPage       = lazy(() => import('./Gacha'))
+const GachaNuzlocke   = lazy(() => import('./Gacha_Nuzlocke'))
 const MobileTierlist  = lazy(() => import('./Mobile_Tierlist'))
 const GuessWho        = lazy(() => import('./GuessWho'))
 const TicketHistory   = lazy(() => import('./TicketHistory'))
@@ -73,6 +74,7 @@ function App() {
               <Route path="/roulette" element={<RoulettePage />} />
               <Route path="/mobile-tierlist" element={<MobileTierlist />} />
               <Route path="/gacha" element={<GachaPage />} />
+              <Route path="/gacha/nuzlocke" element={<GachaNuzlocke />} />
               <Route path="/guess-who" element={<GuessWho />} />
               <Route path="/ticket-history" element={<TicketHistory />} />
               <Route path="/this-or-that/*" element={<DisabledFeature />} />

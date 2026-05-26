@@ -4,72 +4,31 @@ import { CARDS, ALL_CARDS, RARITY_CONFIG } from './data/gachaCards'
 import './styles/Gacha.css'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
-const UR_PITY_LIMIT = 10
-const LS_KEY_PITY       = 'gacha_ur_pity'
-const LS_KEY_OWNED      = 'gacha_owned_urs'
-const LS_KEY_COLLECTION = 'gacha_collection'
-const LS_KEY_PACK_TIMESTAMPS = 'gacha_pack_timestamps'
-const LS_KEY_HISTORY = 'gacha_history'
+const LS_KEY_COLLECTION = 'nuzlocke_collection'
+const LS_KEY_PACK_TIMESTAMPS = 'nuzlocke_pack_timestamps'
+const LS_KEY_HISTORY = 'nuzlocke_history'
 const COOLDOWN_MS = 60 * 60 * 1000 // 1 hour
 const MAX_PACKS = 10
 
-// ─── Gacha Engine ──────────────────────────────────────────────────────────
+// ─── Gacha Engine (Nuzlocke - Pure Random) ─────────────────────────────────
 function pickRandom(pool) {
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
-function rollNonGuaranteed() {
-  const roll = Math.random() * 90
-  if (roll < 0.9) return 'ultraRare'
-  if (roll < 9.9) return 'rare'
-  if (roll < 37.8) return 'uncommon'
+function rollRarity() {
+  const roll = Math.random() * 100
+  if (roll < 0.5) return 'ultraRare'
+  if (roll < 5) return 'rare'
+  if (roll < 40) return 'uncommon'
   return 'common'
 }
 
-function buildPack(packsWithoutUR, ownedURs = new Set()) {
-  const usedIds  = new Set()
-  const slots    = []
-  const urForced = (packsWithoutUR + 1) >= UR_PITY_LIMIT
-
-  const pickUR = () => {
-    // 1. Try to get un-owned UR
-    let pool = CARDS.ultraRare.filter(c => !usedIds.has(c.id) && !ownedURs.has(c.id))
-    // 2. If user owns all URs, fallback to picking any available UR to prevent crash
-    if (pool.length === 0) {
-      pool = CARDS.ultraRare.filter(c => !usedIds.has(c.id))
-    }
-    return pickRandom(pool)
-  }
-
-  // Slot 0: Rare guarantee (upgraded to UR on pity or lucky roll)
-  if (urForced) {
-    const card = pickUR()
-    usedIds.add(card.id)
-    slots.push(card)
-  } else {
-    const rarity = Math.random() < 0.01 ? 'ultraRare' : 'rare'
-    const card = rarity === 'ultraRare' 
-      ? pickUR() 
-      : pickRandom(CARDS[rarity].filter(c => !usedIds.has(c.id)))
-    usedIds.add(card.id)
-    slots.push(card)
-  }
-
-  // Remaining 4 slots: standard weighted pull
-  while (slots.length < 5) {
-    let rarity = rollNonGuaranteed()
-    let card = null
-
-    if (rarity === 'ultraRare') {
-      card = pickUR()
-    } else {
-      let pool = CARDS[rarity].filter(c => !usedIds.has(c.id))
-      // Absolute fallback just in case we run out of a specific rarity pool
-      if (pool.length === 0) pool = ALL_CARDS.filter(c => !usedIds.has(c.id))
-      card = pickRandom(pool)
-    }
-    
-    usedIds.add(card.id)
+function buildPack() {
+  const slots = []
+  
+  for (let i = 0; i < 5; i++) {
+    const rarity = rollRarity()
+    const card = pickRandom(CARDS[rarity])
     slots.push(card)
   }
 
@@ -117,11 +76,18 @@ function RevealCard({ card, isRevealed, onFlip }) {
 }
 
 function RarityOdds() {
+  const NUZLOCKE_RATES = {
+    common: { label: 'Common', color: '#a0a0b0', weight: 60 },
+    uncommon: { label: 'Uncommon', color: '#4ade80', weight: 35 },
+    rare: { label: 'Rare', color: '#60a5fa', weight: 4.5 },
+    ultraRare: { label: 'Ultra Rare', color: '#f59e0b', weight: 0.5 },
+  }
+  
   return (
     <div className="odds-panel">
       <h3 className="odds-title">Pack Odds</h3>
       <div className="odds-list">
-        {Object.entries(RARITY_CONFIG).map(([key, cfg]) => (
+        {Object.entries(NUZLOCKE_RATES).map(([key, cfg]) => (
           <div key={key} className="odds-row">
             <span className="odds-dot" style={{ background: cfg.color }} />
             <span className="odds-label">{cfg.label}</span>
@@ -131,68 +97,30 @@ function RarityOdds() {
       </div>
       <div className="odds-guarantees">
         <p className="odds-guarantee-item">
-          <span className="guarantee-icon rare-icon">R</span>
-          Rare guaranteed every pack
+          <span className="guarantee-icon rare-icon">⚠</span>
+          No guarantees - pure luck
         </p>
         <p className="odds-guarantee-item">
-          <span className="guarantee-icon ur-icon">UR</span>
-          Ultra Rare guaranteed every {UR_PITY_LIMIT} packs
+          <span className="guarantee-icon ur-icon">⚠</span>
+          Duplicates allowed in packs
         </p>
       </div>
-      <p className="odds-note">5 cards per pack · No duplicates</p>
-    </div>
-  )
-}
-
-function PityCounter({ packsWithoutUR }) {
-  const remaining = UR_PITY_LIMIT - packsWithoutUR
-  const pct = (packsWithoutUR / UR_PITY_LIMIT) * 100
-  return (
-    <div className="pity-counter">
-      <div className="pity-header">
-        <span className="pity-label">UR Pity</span>
-        <span className="pity-value" style={{ color: remaining === 1 ? '#DF0A81' : '#00A4A5' }}>
-          {remaining === 0 ? '⚡ GUARANTEED NEXT!' : `${remaining} pack${remaining !== 1 ? 's' : ''} left`}
-        </span>
-      </div>
-      <div className="pity-bar-bg">
-        <div
-          className="pity-bar-fill"
-          style={{
-            width: `${pct}%`,
-            background: pct >= 80
-              ? 'linear-gradient(90deg, #DF0A81, #F79321)'
-              : 'linear-gradient(90deg, #216D94, #00A4A5)',
-          }}
-        />
-      </div>
-      <p className="pity-sub">{packsWithoutUR}/{UR_PITY_LIMIT} packs opened</p>
+      <p className="odds-note">5 cards per pack · Hardcore mode</p>
     </div>
   )
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
-export default function Gacha() {
-  const [packsWithoutUR, setPacksWithoutUR] = useState(() => {
-    try { return parseInt(localStorage.getItem(LS_KEY_PITY) || '0', 10) }
-    catch { return 0 }
-  })
-  
-  const [ownedURs, setOwnedURs] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem(LS_KEY_OWNED) || '[]')) }
-    catch { return new Set() }
-  })
-
-  // cardCollection: { [cardId]: count } — all rarities, duplicates counted
+export default function GachaNuzlocke() {
   const [cardCollection, setCardCollection] = useState(() => {
     try { return JSON.parse(localStorage.getItem(LS_KEY_COLLECTION) || '{}') }
     catch { return {} }
   })
 
-  const [phase,        setPhase]        = useState('idle') // idle | cutting | opening
+  const [phase,        setPhase]        = useState('idle')
   const [pack,         setPack]         = useState([])
-  const [cardIndex,    setCardIndex]    = useState(0)      // card currently on screen
-  const [revealedSet,  setRevealedSet]  = useState(new Set()) // which indices are flipped
+  const [cardIndex,    setCardIndex]    = useState(0)
+  const [revealedSet,  setRevealedSet]  = useState(new Set())
   const [history,      setHistory]      = useState(() => {
     try { return JSON.parse(localStorage.getItem(LS_KEY_HISTORY) || '[]') }
     catch { return [] }
@@ -246,16 +174,6 @@ export default function Gacha() {
   })()
 
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY_PITY, String(packsWithoutUR)) }
-    catch {}
-  }, [packsWithoutUR])
-
-  useEffect(() => {
-    try { localStorage.setItem(LS_KEY_OWNED, JSON.stringify([...ownedURs])) }
-    catch {}
-  }, [ownedURs])
-
-  useEffect(() => {
     try { localStorage.setItem(LS_KEY_COLLECTION, JSON.stringify(cardCollection)) }
     catch {}
   }, [cardCollection])
@@ -275,23 +193,16 @@ export default function Gacha() {
     if (phase !== 'idle') return
     if (availablePacks <= 0) return
 
-    const newPack = buildPack(packsWithoutUR, ownedURs)
+    const newPack = buildPack()
     const hasUR   = newPack.some(c => c.rarity === 'ultraRare')
 
     setPack(newPack)
     setCardIndex(0)
     setRevealedSet(new Set())
     setGotUR(hasUR)
-    setPacksWithoutUR(hasUR ? 0 : packsWithoutUR + 1)
     setPackTimestamps(prev => [...prev, Date.now()])
-    
-    if (hasUR) {
-      // Record any newly pulled URs so they don't roll again
-      const pulledURs = newPack.filter(c => c.rarity === 'ultraRare').map(c => c.id)
-      setOwnedURs(prev => new Set([...prev, ...pulledURs]))
-    }
 
-    // Track ALL pulled cards in the collection (duplicates counted for non-UR)
+    // Track ALL pulled cards in the collection (duplicates counted)
     setCardCollection(prev => {
       const next = { ...prev }
       newPack.forEach(c => {
@@ -305,8 +216,8 @@ export default function Gacha() {
     setPhase('cutting')
     setTimeout(() => {
       setPhase('opening')
-    }, 1200) // Duration of CSS cutting animation
-  }, [packsWithoutUR, phase, availablePacks])
+    }, 1200)
+  }, [phase, availablePacks])
 
   // Mouse move for 3D Pack rotation
   const handlePackHover = useCallback((e) => {
@@ -359,17 +270,17 @@ export default function Gacha() {
   }
 
   return (
-    <div className="gacha-page">
+    <div className="gacha-page gacha-nuzlocke">
       {/* ── Header ── */}
       <header className="gacha-header">
         <div className="gacha-header-bg" />
         <div className="gacha-header-content">
           <div className="back-btn-container">
-            <Link to="/" className="btn-back-home">&#8592; Back to Home</Link>
+            <Link to="/gacha" className="btn-back-home">&#8592; Back to Normal Pack</Link>
           </div>
           <p className="gacha-eyebrow">JKT48 Trading Card Game</p>
-          <h1 className="gacha-title">Pack Opening</h1>
-          <p className="gacha-subtitle">Pull your favorite JKT48 members in card form</p>
+          <h1 className="gacha-title">Nuzlocke Mode</h1>
+          <p className="gacha-subtitle">Hardcore pack opening - no pity, no guarantees</p>
         </div>
       </header>
 
@@ -402,7 +313,6 @@ export default function Gacha() {
               {phase === 'idle' && availablePacks <= 0 && <span className="pack-click-hint cooldown-hint">No packs available - wait for cooldown</span>}
             </div>
 
-            <PityCounter packsWithoutUR={packsWithoutUR} />
             <div className="pack-status-panel">
               <div className="pack-status-item">
                 <span className="pack-status-label">Available Packs</span>
@@ -422,17 +332,12 @@ export default function Gacha() {
             <div className="history-section">
               <div className="history-section-header">
                 <h3 className="history-title">Recent Pulls</h3>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <Link to="/gacha/nuzlocke" className="btn-collection-open" style={{ textDecoration: 'none' }}>
-                    Nuzlocke Mode
-                  </Link>
-                  <button
-                    className="btn-collection-open"
-                    onClick={() => setShowCollection(true)}
-                  >
-                    OshiDex
-                  </button>
-                </div>
+                <button
+                  className="btn-collection-open"
+                  onClick={() => setShowCollection(true)}
+                >
+                  OshiDex
+                </button>
               </div>
               {history.length > 0 && (
                 <div className="history-list">
@@ -480,7 +385,7 @@ export default function Gacha() {
               <div className="card-progress">
                 {pack.map((c, i) => (
                   <span
-                    key={c.id}
+                    key={`${c.id}-${i}`}
                     className={`progress-dot ${revealedSet.has(i) ? 'dot-revealed' : ''} ${i === cardIndex ? 'dot-current' : ''}`}
                     style={revealedSet.has(i) ? { background: RARITY_CONFIG[c.rarity].color } : {}}
                     onClick={() => setCardIndex(i)}
