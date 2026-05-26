@@ -465,8 +465,8 @@ export default function GachaNuzlocke() {
                     </div>
                     <div className="collection-grid">
                       {allOfRarity.map(card => {
-                        const owned = cardCollection[card.id]
-                        if (!owned) {
+                        const owned = cardCollection[card.id] || 0
+                        if (owned === 0) {
                           return (
                             <div key={card.id} className="collection-card collection-card-locked">
                               <div className="collection-card-img-wrap collection-card-locked-wrap">
