@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { CARDS, ALL_CARDS, RARITY_CONFIG } from './data/gachaCards'
 import { simpleEncrypt, simpleDecrypt, lsSetEncrypted, lsGetDecrypted } from './utils/crypto'
@@ -10,6 +10,7 @@ const LS_KEY_PACK_TIMESTAMPS = 'nuzlocke_pack_timestamps'
 const LS_KEY_HISTORY = 'nuzlocke_history'
 const COOLDOWN_MS = 10 * 60 * 1000 // 10 minutes
 const MAX_PACKS = 10
+const GOD_PACK_CHANCE = 0.00001 // 0.001% — 1 in 100,000 (Hardcore: much rarer than Normal)
 
 // ─── Gacha Engine (Nuzlocke - Pure Random) ─────────────────────────────────
 function pickRandom(pool) {
@@ -26,7 +27,20 @@ function rollRarity() {
 
 function buildPack() {
   const slots = []
-  
+
+  // ── God Pack: 0.001% chance — all 5 cards are Ultra Rare ──
+  if (Math.random() < GOD_PACK_CHANCE) {
+    const usedIds = new Set()
+    while (slots.length < 5) {
+      let pool = CARDS.ultraRare.filter(c => !usedIds.has(c.id))
+      if (pool.length === 0) pool = CARDS.ultraRare // fallback if pool exhausted
+      const card = pickRandom(pool)
+      usedIds.add(card.id)
+      slots.push(card)
+    }
+    return { cards: slots, isGodPack: true }
+  }
+
   for (let i = 0; i < 5; i++) {
     const rarity = rollRarity()
     const card = pickRandom(CARDS[rarity])
@@ -35,7 +49,7 @@ function buildPack() {
 
   // Sort lowest → highest rarity (common first, ultraRare last)
   const RARITY_ORDER = { common: 0, uncommon: 1, rare: 2, ultraRare: 3 }
-  return slots.sort((a, b) => RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity])
+  return { cards: slots.sort((a, b) => RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]), isGodPack: false }
 }
 
 // ─── Sub-Components ─────────────────────────────────────────────────────────
@@ -125,7 +139,13 @@ export default function GachaNuzlocke() {
     lsGetDecrypted(LS_KEY_HISTORY, [])
   )
   const [gotUR,        setGotUR]        = useState(false)
+  const [isGodPack,    setIsGodPack]    = useState(false)
   const [packRotY,     setPackRotY]     = useState(0)
+
+  // ── SFX ──
+  const sfxOpen    = useRef(new Audio('/asset/SFX/Opening Pack SFX.mp3'))
+  const sfxFlip    = useRef(new Audio('/asset/SFX/Flip SFX.mp3'))
+  const sfxGodpack = useRef(new Audio('/asset/SFX/Godpack SFX.mp3'))
   const [showCollection, setShowCollection] = useState(false)
   const [zoomedCard,     setZoomedCard]     = useState(null)
   const [packTimestamps, setPackTimestamps] = useState(() => {
@@ -236,13 +256,14 @@ export default function GachaNuzlocke() {
     if (phase !== 'idle') return
     if (availablePacks <= 0) return
 
-    const newPack = buildPack()
+    const { cards: newPack, isGodPack: packIsGod } = buildPack()
     const hasUR   = newPack.some(c => c.rarity === 'ultraRare')
 
     setPack(newPack)
     setCardIndex(0)
     setRevealedSet(new Set())
     setGotUR(hasUR)
+    setIsGodPack(packIsGod)
     // Sequential queue: next pack restores COOLDOWN_MS after the last scheduled restore
     setPackTimestamps(prev => {
       const lastRestore = prev.length > 0 ? Math.max(...prev) : Date.now()
@@ -262,6 +283,10 @@ export default function GachaNuzlocke() {
     // Play cutting animation, then transition to opening
     setPackRotY(0)
     setPhase('cutting')
+    // Play SFX
+    const sfx = packIsGod ? sfxGodpack.current : sfxOpen.current
+    sfx.currentTime = 0
+    sfx.play().catch(() => {})
     setTimeout(() => {
       setPhase('opening')
     }, 1200)
@@ -284,6 +309,8 @@ export default function GachaNuzlocke() {
 
   // Flip the currently shown card
   const handleFlipCurrent = useCallback(() => {
+    sfxFlip.current.currentTime = 0
+    sfxFlip.current.play().catch(() => {})
     setRevealedSet(prev => new Set([...prev, cardIndex]))
   }, [cardIndex])
 
@@ -293,11 +320,12 @@ export default function GachaNuzlocke() {
   }, [])
 
   const handleDone = useCallback(() => {
-    setHistory(prev => [{ cards: pack, timestamp: Date.now() }, ...prev].slice(0, 10))
+    setHistory(prev => [{ cards: pack, timestamp: Date.now(), isGodPack }, ...prev].slice(0, 10))
     setPhase('idle')
+    setIsGodPack(false)
     // Show donation popup when user returns to main page after using the last pack
     if (availablePacks === 0) setShowDonation(true)
-  }, [pack, availablePacks])
+  }, [pack, availablePacks, isGodPack])
 
   const getRarityStats = (p) => {
     const counts = {}
@@ -340,7 +368,7 @@ export default function GachaNuzlocke() {
           <div className="gacha-idle">
             {/* 3D Pack Visual */}
             <div 
-              className={`pack-container ${phase === 'cutting' ? 'is-cutting' : ''}`}
+              className={`pack-container ${phase === 'cutting' ? 'is-cutting' : ''} ${isGodPack ? 'is-god-pack' : ''}`}
               onMouseMove={handlePackHover}
               onMouseLeave={handlePackLeave}
               onClick={phase === 'idle' ? handlePackClick : undefined}
@@ -406,10 +434,12 @@ export default function GachaNuzlocke() {
                   {history.map((h, hi) => {
                     const cards = Array.isArray(h) ? h : h.cards
                     const timestamp = Array.isArray(h) ? null : h.timestamp
+                    const wasGodPack = !Array.isArray(h) && h.isGodPack
                     const stats = getRarityStats(cards)
                     return (
-                      <div key={hi} className="history-item">
+                      <div key={hi} className={`history-item ${wasGodPack ? 'history-item-godpack' : ''}`}>
                         <span className="history-num">{formatTimestamp(timestamp)}</span>
+                        {wasGodPack && <span className="history-badge history-badge-godpack">✨ GOD</span>}
                         <div className="history-badges">
                           {Object.entries(stats).map(([label, count]) => {
                             const cfg = Object.values(RARITY_CONFIG).find(c => c.label === label)
@@ -456,8 +486,14 @@ export default function GachaNuzlocke() {
                 ))}
               </div>
 
-              {/* UR banner */}
-              {gotUR && allRevealed && (
+              {/* God Pack / UR banner */}
+              {isGodPack && allRevealed && (
+                <div className="god-pack-banner">
+                  <span className="god-pack-title">✨ GOD PACK ✨</span>
+                  <span className="god-pack-sub">All 5 Ultra Rare!</span>
+                </div>
+              )}
+              {!isGodPack && gotUR && allRevealed && (
                 <div className="ur-banner">⚡ Ultra Rare Pulled! ⚡</div>
               )}
 
@@ -516,7 +552,7 @@ export default function GachaNuzlocke() {
             <div className="collection-modal-body">
               {['ultraRare', 'rare', 'uncommon', 'common'].map(rarity => {
                 const cfg = RARITY_CONFIG[rarity]
-                const allOfRarity = ALL_CARDS.filter(c => c.rarity === rarity)
+                const allOfRarity = ALL_CARDS.filter(c => c.rarity === rarity).sort((a, b) => a.name.localeCompare(b.name))
                 const collected = allOfRarity.filter(c => cardCollection[c.id])
                 return (
                   <div key={rarity} className="collection-rarity-group">

@@ -2006,3 +2006,139 @@
   background: rgba(220, 38, 38, 0.3);
   color: #ef4444;
 }
+
+/* ─────────────────────────────────────────
+   GOD PACK
+───────────────────────────────────────── */
+
+/* Golden glow on the pack during cutting animation */
+.pack-container.is-god-pack {
+  animation: god-pack-container-glow 0.8s ease-in-out infinite;
+}
+
+@keyframes god-pack-container-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.7))
+            drop-shadow(0 0 40px rgba(255, 165, 0, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1))
+            drop-shadow(0 0 80px rgba(255, 165, 0, 0.8))
+            drop-shadow(0 0 120px rgba(255, 100, 0, 0.4));
+  }
+}
+
+/* God Pack Banner — shown after all 5 cards revealed */
+.god-pack-banner {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.9rem 2.25rem;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 215, 0, 0.6);
+  background: rgba(255, 215, 0, 0.07);
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 0 30px rgba(255, 215, 0, 0.5),
+    0 0 60px rgba(255, 165, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  /* Flex so both spans stack and center on both axes */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  text-align: center;
+  animation: god-pack-banner-pop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.god-pack-title {
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  color: #FFD700;
+  text-shadow:
+    0 0 18px rgba(255, 215, 0, 1),
+    0 0 40px rgba(255, 165, 0, 0.8);
+  line-height: 1;
+}
+
+.god-pack-sub {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: rgba(255, 215, 0, 0.75);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  text-transform: uppercase;
+}
+
+@keyframes god-pack-banner-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-6deg);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes god-pack-text-shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 250% center; }
+}
+
+/* History — God Pack item highlight */
+.history-item-godpack {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.08) 0%,
+    rgba(255, 165, 0, 0.05) 100%
+  ) !important;
+  border-color: rgba(255, 215, 0, 0.45) !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2) !important;
+}
+
+/* History — God Pack badge */
+.history-badge-godpack {
+  background: linear-gradient(135deg, #FFD700, #FF8C00) !important;
+  color: #1a0a00 !important;
+  border: none !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+  animation: god-badge-pulse 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes god-badge-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 215, 0, 0.5); }
+  50%       { box-shadow: 0 0 16px rgba(255, 215, 0, 0.9); }
+}
+
+/* Nuzlocke dark variant overrides */
+.gacha-nuzlocke .god-pack-banner {
+  border-color: rgba(255, 215, 0, 0.5);
+  background-image: linear-gradient(
+    90deg,
+    #FFD700 0%,
+    #FF4500 25%,
+    #FFD700 50%,
+    #FF4500 75%,
+    #FFD700 100%
+  );
+  box-shadow:
+    0 0 30px rgba(255, 69, 0, 0.6),
+    0 0 60px rgba(255, 215, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.gacha-nuzlocke .history-item-godpack {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.06) 0%,
+    rgba(220, 38, 38, 0.06) 100%
+  ) !important;
+  border-color: rgba(255, 165, 0, 0.4) !important;
+}
