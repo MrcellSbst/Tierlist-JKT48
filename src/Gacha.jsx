@@ -15,6 +15,11 @@ const LS_KEY_HISTORY = 'gacha_history'
 const COOLDOWN_MS = 20 * 60 * 1000 // 20 minutes
 const MAX_PACKS = 10
 
+// Nuzlocke mode keys (for unified export/import)
+const NUZLOCKE_LS_KEY_COLLECTION = 'nuzlocke_collection'
+const NUZLOCKE_LS_KEY_PACK_TIMESTAMPS = 'nuzlocke_pack_timestamps'
+const NUZLOCKE_LS_KEY_HISTORY = 'nuzlocke_history'
+
 // ─── Gacha Engine ──────────────────────────────────────────────────────────
 function pickRandom(pool) {
   return pool[Math.floor(Math.random() * pool.length)]
@@ -213,9 +218,16 @@ export default function Gacha() {
   const [packRotY,     setPackRotY]     = useState(0)
 
   // ── SFX ──
-  const sfxOpen    = useRef(new Audio('/asset/SFX/Opening Pack SFX.mp3'))
-  const sfxFlip    = useRef(new Audio('/asset/SFX/Flip SFX.mp3'))
-  const sfxGodpack = useRef(new Audio('/asset/SFX/Godpack SFX.mp3'))
+  const sfxOpen    = useRef(Object.assign(new Audio('/asset/SFX/Opening Pack SFX.mp3'), { preload: 'auto' }))
+  const sfxFlip    = useRef(Object.assign(new Audio('/asset/SFX/Flip SFX.mp3'),         { preload: 'auto' }))
+  const sfxGodpack = useRef(Object.assign(new Audio('/asset/SFX/Godpack SFX.mp3'),      { preload: 'auto' }))
+
+  // Eagerly buffer all SFX so there is no delay on first play
+  useEffect(() => {
+    sfxOpen.current.load()
+    sfxFlip.current.load()
+    sfxGodpack.current.load()
+  }, [])
   const [showCollection, setShowCollection] = useState(false)
   const [zoomedCard,     setZoomedCard]     = useState(null)
   const [packTimestamps, setPackTimestamps] = useState(() => {
@@ -239,12 +251,23 @@ export default function Gacha() {
   const [copyStatus, setCopyStatus] = useState('Copy Code')
 
   const getExportString = useCallback(() => {
+    const nuzlockeCollection = lsGetDecrypted(NUZLOCKE_LS_KEY_COLLECTION, {})
+    const nuzlockeTimestamps = lsGetDecrypted(NUZLOCKE_LS_KEY_PACK_TIMESTAMPS, [])
+    const nuzlockeHistory = lsGetDecrypted(NUZLOCKE_LS_KEY_HISTORY, [])
+    
     const data = {
-      pity: packsWithoutUR,
-      ownedURs: Array.from(ownedURs),
-      collection: cardCollection,
-      timestamps: packTimestamps,
-      history: history
+      normal: {
+        pity: packsWithoutUR,
+        ownedURs: Array.from(ownedURs),
+        collection: cardCollection,
+        timestamps: packTimestamps,
+        history: history
+      },
+      nuzlocke: {
+        collection: nuzlockeCollection,
+        timestamps: nuzlockeTimestamps,
+        history: nuzlockeHistory
+      }
     }
     return simpleEncrypt(JSON.stringify(data))
   }, [packsWithoutUR, ownedURs, cardCollection, packTimestamps, history])
@@ -271,21 +294,50 @@ export default function Gacha() {
       if (typeof data !== 'object' || data === null) {
         throw new Error("Invalid format.")
       }
-      if (
-        typeof data.pity !== 'number' || 
-        !Array.isArray(data.ownedURs) || 
-        typeof data.collection !== 'object' || 
-        !Array.isArray(data.timestamps) || 
-        !Array.isArray(data.history)
-      ) {
-        throw new Error("Missing required backup fields.")
-      }
 
-      setPacksWithoutUR(data.pity)
-      setOwnedURs(new Set(data.ownedURs))
-      setCardCollection(data.collection)
-      setPackTimestamps(data.timestamps)
-      setHistory(data.history)
+      // Handle unified format (both normal and nuzlocke)
+      if (data.normal && data.nuzlocke) {
+        // Restore normal mode data
+        if (typeof data.normal.pity !== 'number' || 
+            !Array.isArray(data.normal.ownedURs) || 
+            typeof data.normal.collection !== 'object' || 
+            !Array.isArray(data.normal.timestamps) || 
+            !Array.isArray(data.normal.history)) {
+          throw new Error("Invalid normal mode data.")
+        }
+        setPacksWithoutUR(data.normal.pity)
+        setOwnedURs(new Set(data.normal.ownedURs))
+        setCardCollection(data.normal.collection)
+        setPackTimestamps(data.normal.timestamps)
+        setHistory(data.normal.history)
+
+        // Restore nuzlocke mode data
+        if (typeof data.nuzlocke.collection !== 'object' || 
+            !Array.isArray(data.nuzlocke.timestamps) || 
+            !Array.isArray(data.nuzlocke.history)) {
+          throw new Error("Invalid nuzlocke mode data.")
+        }
+        lsSetEncrypted(NUZLOCKE_LS_KEY_COLLECTION, data.nuzlocke.collection)
+        lsSetEncrypted(NUZLOCKE_LS_KEY_PACK_TIMESTAMPS, data.nuzlocke.timestamps)
+        lsSetEncrypted(NUZLOCKE_LS_KEY_HISTORY, data.nuzlocke.history)
+      }
+      // Backward compatibility: old normal-only format
+      else if (typeof data.pity === 'number') {
+        if (!Array.isArray(data.ownedURs) || 
+            typeof data.collection !== 'object' || 
+            !Array.isArray(data.timestamps) || 
+            !Array.isArray(data.history)) {
+          throw new Error("Missing required backup fields.")
+        }
+        setPacksWithoutUR(data.pity)
+        setOwnedURs(new Set(data.ownedURs))
+        setCardCollection(data.collection)
+        setPackTimestamps(data.timestamps)
+        setHistory(data.history)
+      }
+      else {
+        throw new Error("Unrecognized backup format.")
+      }
 
       setBackupAlert({ type: 'success', message: 'Backup restored successfully! All data has been updated.' })
       setImportText('')
@@ -375,7 +427,7 @@ export default function Gacha() {
     // Play cutting animation, then transition to opening
     setPackRotY(0)
     setPhase('cutting')
-    // Play SFX
+    // Play SFX at the exact moment the cutting animation begins
     const sfx = packIsGod ? sfxGodpack.current : sfxOpen.current
     sfx.currentTime = 0
     sfx.play().catch(() => {})
@@ -648,7 +700,14 @@ export default function Gacha() {
             <div className="collection-modal-body">
               {['ultraRare', 'rare', 'uncommon', 'common'].map(rarity => {
                 const cfg = RARITY_CONFIG[rarity]
-                const allOfRarity = ALL_CARDS.filter(c => c.rarity === rarity).sort((a, b) => a.name.localeCompare(b.name))
+                const sortCards = (a, b) => {
+                  // Split "Name N/Total" into { base, num } for two-level sort
+                  const parse = n => { const m = n.match(/^(.*?)\s+(\d+)\/\d+$/) ; return m ? { base: m[1], num: parseInt(m[2], 10) } : { base: n, num: 0 } }
+                  const pa = parse(a.name), pb = parse(b.name)
+                  const cmp = pa.base.localeCompare(pb.base)
+                  return cmp !== 0 ? cmp : pa.num - pb.num
+                }
+                const allOfRarity = ALL_CARDS.filter(c => c.rarity === rarity).sort(sortCards)
                 const collected = allOfRarity.filter(c => cardCollection[c.id])
                 return (
                   <div key={rarity} className="collection-rarity-group">

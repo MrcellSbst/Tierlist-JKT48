@@ -361,7 +361,7 @@ export const memberData = {
       nickname: "Chelsea",
       team: "DREAM",
       photo: "Gen11_chelsea_davina.jpg",
-      graduated: false
+      graduated: true
     },
     {
       name: "Cynthia Yaputera",
