@@ -101,7 +101,7 @@ function buildPack(packsWithoutUR, ownedURs = new Set()) {
 
 // ─── Sub-Components ─────────────────────────────────────────────────────────
 
-function RevealCard({ card, isRevealed, onFlip }) {
+function RevealCard({ card, isRevealed, onFlip, onClick }) {
   const cfg = RARITY_CONFIG[card.rarity]
   return (
     <div className="reveal-stage">
@@ -124,7 +124,10 @@ function RevealCard({ card, isRevealed, onFlip }) {
           </div>
 
           {/* Front */}
-          <div className="gacha-card-front">
+          <div 
+            className="gacha-card-front"
+            onClick={() => onClick()}
+          >
             {card.rarity === 'ultraRare' && (
               <div className="holo-overlay" aria-hidden="true" />
             )}
@@ -678,6 +681,7 @@ export default function Gacha() {
                   card={pack[cardIndex]}
                   isRevealed={isRevealed}
                   onFlip={handleFlipCurrent}
+                  onClick={() => handleNav(1)}
                 />
 
                 <button
