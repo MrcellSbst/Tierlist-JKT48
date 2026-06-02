@@ -18,6 +18,7 @@ const NORMAL_LS_KEY_OWNED = 'gacha_owned_urs'
 const NORMAL_LS_KEY_COLLECTION = 'gacha_collection'
 const NORMAL_LS_KEY_PACK_TIMESTAMPS = 'gacha_pack_timestamps'
 const NORMAL_LS_KEY_HISTORY = 'gacha_history'
+const LS_KEY_SFX_MUTED = 'nuzlocke_sfx_muted'
 
 // ─── Gacha Engine (Nuzlocke - Pure Random) ─────────────────────────────────
 function pickRandom(pool) {
@@ -160,6 +161,20 @@ export default function GachaNuzlocke() {
     sfxFlip.current.load()
     sfxGodpack.current.load()
   }, [])
+
+  const [sfxMuted, setSfxMuted] = useState(() =>
+    lsGetDecrypted(LS_KEY_SFX_MUTED, false)
+  )
+
+  useEffect(() => {
+    lsSetEncrypted(LS_KEY_SFX_MUTED, sfxMuted)
+  }, [sfxMuted])
+
+  const playSfx = useCallback((sfx) => {
+    if (sfxMuted) return
+    sfx.currentTime = 0
+    sfx.play().catch(() => {})
+  }, [sfxMuted])
   const [showCollection, setShowCollection] = useState(false)
   const [zoomedCard,     setZoomedCard]     = useState(null)
   const [packTimestamps, setPackTimestamps] = useState(() => {
@@ -338,9 +353,7 @@ export default function GachaNuzlocke() {
     setPackRotY(0)
     setPhase('cutting')
     // Play SFX
-    const sfx = packIsGod ? sfxGodpack.current : sfxOpen.current
-    sfx.currentTime = 0
-    sfx.play().catch(() => {})
+    playSfx(packIsGod ? sfxGodpack.current : sfxOpen.current)
     setTimeout(() => {
       setPhase('opening')
     }, 1200)
@@ -363,10 +376,9 @@ export default function GachaNuzlocke() {
 
   // Flip the currently shown card
   const handleFlipCurrent = useCallback(() => {
-    sfxFlip.current.currentTime = 0
-    sfxFlip.current.play().catch(() => {})
+    playSfx(sfxFlip.current)
     setRevealedSet(prev => new Set([...prev, cardIndex]))
-  }, [cardIndex])
+  }, [cardIndex, playSfx])
 
   // Navigate left / right
   const handleNav = useCallback((dir) => {
@@ -409,6 +421,11 @@ export default function GachaNuzlocke() {
         <div className="gacha-header-content">
           <div className="back-btn-container">
             <Link to="/gacha" className="btn-back-home">&#8592; Back to Normal Pack</Link>
+          </div>
+          <div className="mute-btn-container">
+            <button className="btn-mute" onClick={() => setSfxMuted(prev => !prev)} aria-label={sfxMuted ? 'Unmute' : 'Mute'}>
+              {sfxMuted ? '🔇' : '🔊'}
+            </button>
           </div>
           <p className="gacha-eyebrow">JKT48 Trading Card Game</p>
           <h1 className="gacha-title">Nuzlocke Mode</h1>
@@ -696,6 +713,24 @@ export default function GachaNuzlocke() {
                 </div>
               </div>
             )}
+
+            {/* ── Collection Progress Footer ── */}
+            <div className="collection-modal-footer">
+              <div className="collection-progress-info">
+                <span className="collection-progress-label">Overall Progress</span>
+                <span className="collection-progress-pct">
+                  {ALL_CARDS.filter(c => cardCollection[c.id]).length}/{ALL_CARDS.length} cards
+                </span>
+              </div>
+              <div className="collection-progress-bar-bg">
+                <div
+                  className="collection-progress-bar-fill"
+                  style={{
+                    width: `${(ALL_CARDS.filter(c => cardCollection[c.id]).length / ALL_CARDS.length) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}

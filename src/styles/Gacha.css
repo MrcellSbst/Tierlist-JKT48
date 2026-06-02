@@ -67,6 +67,34 @@
   transform: translateY(-2px);
 }
 
+.mute-btn-container {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 10;
+}
+
+.btn-mute {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(33, 109, 148, 0.25);
+  background: rgba(33, 109, 148, 0.05);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.btn-mute:hover {
+  background: rgba(33, 109, 148, 0.12);
+  border-color: rgba(33, 109, 148, 0.6);
+  transform: translateY(-2px);
+}
+
 .gacha-eyebrow {
   font-size: 0.78rem;
   letter-spacing: 0.22em;
@@ -906,6 +934,50 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* ── Collection Modal Progress Footer ── */
+.collection-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.09);
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.collection-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.collection-progress-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.collection-progress-pct {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.collection-progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.collection-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #216D94, #00A4A5);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
 
 /* ── Secondary Button ── */
 .btn-secondary {
@@ -1465,6 +1537,16 @@
   border-color: rgba(220, 38, 38, 0.6);
 }
 
+.gacha-nuzlocke .btn-mute {
+  border-color: rgba(220, 38, 38, 0.3);
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.gacha-nuzlocke .btn-mute:hover {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.6);
+}
+
 .gacha-nuzlocke .gacha-eyebrow {
   color: #ef4444;
 }
@@ -1582,6 +1664,27 @@
 
 .gacha-nuzlocke .collection-modal-body {
   background: #1a0a0a;
+}
+
+.gacha-nuzlocke .collection-modal-footer {
+  background: #2d0a0a;
+  border-top-color: rgba(220, 38, 38, 0.2);
+}
+
+.gacha-nuzlocke .collection-progress-label {
+  color: #fca5a5;
+}
+
+.gacha-nuzlocke .collection-progress-pct {
+  color: #ef4444;
+}
+
+.gacha-nuzlocke .collection-progress-bar-bg {
+  background: #3d1515;
+}
+
+.gacha-nuzlocke .collection-progress-bar-fill {
+  background: linear-gradient(90deg, #dc2626, #f97316);
 }
 
 .gacha-nuzlocke .collection-rarity-count {
