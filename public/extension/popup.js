@@ -82,8 +82,7 @@ document.getElementById('exportBtn').addEventListener('click', async () => {
         if (otherTab.url && (
           otherTab.url.includes('www.tierlistjkt48.my.id') || 
           otherTab.url.includes('tierlistjkt48.my.id') || 
-          otherTab.url.includes('localhost') ||
-          otherTab.url.includes('vercel.app')
+          otherTab.url.includes('localhost')
         )) {
           console.log('[JKT48 Extension] Found website tab:', otherTab.url);
           try {
@@ -344,8 +343,7 @@ document.getElementById('exportApiBtn').addEventListener('click', async () => {
       for (const t of allTabs) {
         if (t.url && (
           t.url.includes('tierlistjkt48.my.id') || 
-          t.url.includes('localhost') ||
-          t.url.includes('vercel.app')
+          t.url.includes('localhost')
         )) {
           chrome.tabs.sendMessage(t.id, {
             type: 'POINTS_HISTORY_UPDATED',

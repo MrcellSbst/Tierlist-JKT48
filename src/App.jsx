@@ -1,7 +1,5 @@
 import React, { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Box, CircularProgress } from '@mui/material'
 import NotFound from './components/NotFound'
 import Footer from './components/Footer'
@@ -86,8 +84,6 @@ function App() {
         <Footer />
       </Box>
       <HardRefreshButton />
-      <Analytics />
-      <SpeedInsights />
     </Router>
   )
 }

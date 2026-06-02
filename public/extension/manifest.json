@@ -7,7 +7,6 @@
   "host_permissions": [
     "https://jkt48.com/*",
     "http://localhost:*/*",
-    "https://*.vercel.app/*",
     "https://tierlistjkt48.my.id/*",
     "https://www.tierlistjkt48.my.id/*"
   ],
@@ -28,7 +27,6 @@
         "https://jkt48.com/*",
         "https://*.jkt48.com/*",
         "http://localhost:*/*",
-        "https://*.vercel.app/*",
         "https://tierlistjkt48.my.id/*",
         "https://www.tierlistjkt48.my.id/*"
       ],

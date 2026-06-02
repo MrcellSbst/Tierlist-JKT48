@@ -35,8 +35,7 @@ async function broadcastToTierlistTabs(data) {
   for (const t of allTabs) {
     if (t.url && (
       t.url.includes('tierlistjkt48.my.id') ||
-      t.url.includes('localhost') ||
-      t.url.includes('vercel.app')
+      t.url.includes('localhost')
     )) {
       chrome.tabs.sendMessage(t.id, { type: 'POINTS_HISTORY_UPDATED', data }).catch(() => { });
     }
@@ -90,8 +89,7 @@ async function handleApiExport(tabId) {
         for (const t of allTabs) {
           if (t.url && (
             t.url.includes('tierlistjkt48.my.id') ||
-            t.url.includes('localhost') ||
-            t.url.includes('vercel.app')
+            t.url.includes('localhost')
           )) {
             chrome.tabs.sendMessage(t.id, { type: 'USER_PROFILE_UPDATED', data: profile }).catch(() => {});
           }
@@ -288,8 +286,7 @@ async function broadcastTicketsToTierlistTabs(data) {
   for (const t of allTabs) {
     if (t.url && (
       t.url.includes('tierlistjkt48.my.id') ||
-      t.url.includes('localhost') ||
-      t.url.includes('vercel.app')
+      t.url.includes('localhost')
     )) {
       chrome.tabs.sendMessage(t.id, { type: 'TICKETS_HISTORY_UPDATED', data }).catch(() => { });
     }

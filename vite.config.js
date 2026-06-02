@@ -128,14 +128,13 @@ export default defineConfig({
                     if (id.includes('node_modules/@dnd-kit/')) {
                         return 'vendor-dndkit'
                     }
-                    // Recharts, xlsx, date-fns, playroomkit, dom-to-image-more, vercel
+                    // Recharts, xlsx, date-fns, playroomkit, dom-to-image-more
                     if (
                         id.includes('node_modules/recharts') ||
                         id.includes('node_modules/xlsx') ||
                         id.includes('node_modules/date-fns') ||
                         id.includes('node_modules/playroomkit') ||
-                        id.includes('node_modules/dom-to-image-more') ||
-                        id.includes('node_modules/@vercel/')
+                        id.includes('node_modules/dom-to-image-more')
                     ) {
                         return 'vendor-misc'
                     }
